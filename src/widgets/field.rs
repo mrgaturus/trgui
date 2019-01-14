@@ -1,14 +1,15 @@
-use crate::widget::{Widget, WidgetInternal, WidgetBounds};
-use crate::state::{KeyState, MouseState};
+// TODO: Implement unique text field functions for this widget. As this stands for now,
+// it's mostly an adaption of the button widget.
+use crate::widget::{Widget, WidgetInternal, WidgetBounds}
 
-pub struct Button {
+pub struct Field {
     label: String,
     internal: WidgetInternal
 }
 
-impl Button {
+impl Field {
     pub fn new(label: &str, bounds: (usize, usize, usize, usize)) -> Self {
-        Button {
+        Field {
             label: String::from(label),
             internal: WidgetInternal::new(bounds)
         }
@@ -24,13 +25,12 @@ impl Button {
     pub fn set_label(&mut self, label : String) {
         self.label = label;
     }
-
 }
 
-impl Widget for Button {
+impl Widget for Field {
     /// Draw the current widget
     fn draw(&self) {
-        println!("BUTTON: ({}) ({:?})", self.label, self.get_bounds());
+        println!("FIELD: ({}) ({:?})", self.label, self.get_bounds());
     }
     /// Update the status of widget
     fn update(&mut self) {
@@ -39,13 +39,13 @@ impl Widget for Button {
     /// Handle an event state
     fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
         if mouse.clicked() && point_on_area!(mouse.coordinates(), self.get_bounds()) {
-            println!("CLICKED BUTTON: {} ({:?}) ({:?}) ({:?})", self.label, mouse.coordinates(), 
+            println!("CLICKED FIELD: {} ({:?}) ({:?}) ({:?})", self.label, mouse.coordinates(), 
             self.get_bounds(), key.pressed());
         }
     }
 }
 
-impl WidgetBounds for Button {
+impl WidgetBounds for Field {
     type Dim = usize;
 
     fn get_bounds(&self) -> (Self::Dim, Self::Dim, Self::Dim, Self::Dim) {
