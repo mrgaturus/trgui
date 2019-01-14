@@ -1,8 +1,7 @@
 # TRGUI
-My approach for a GUI Toolkit on Rust. It is based on Widget traits and Containers that handle these trait objects
+My approach for a GUI Toolkit on Rust. Based on Widget traits and Containers that can handle trait objects.
 
-Simple Test
------------
+## Simple test or example
 ```rust
 extern crate trgui;
 use trgui::widget::{Widget, WidgetBounds};
@@ -10,7 +9,7 @@ use trgui::window::Window;
 use trgui::widgets::button::Button;
 
 fn main() {
-    // A window that has a root container and event states
+    // Creating a window that has a root container and event states.
     let mut window = Window::new();
     window.set_bounds((0, 0, 200, 200));
     
@@ -19,7 +18,7 @@ fn main() {
     let button2 = Button::new("BUTTON TWO", (50, 50, 10, 10));
     let button3 = Button::new("BUTTON THREE", (100, 100, 10, 10));
 
-    // Buttons are moved to root container
+    // Moving buttons into the root container
     window.root_container_mut().add_widget(Box::new(button));
     window.root_container_mut().add_widget(Box::new(button2));
     window.root_container_mut().add_widget(Box::new(button3));

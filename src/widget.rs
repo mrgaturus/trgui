@@ -1,7 +1,7 @@
 use crate::state::{MouseState, KeyState};
 use crate::window::Window;
 
-/// A Widget trait is used for generalize every widget
+/// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
     fn draw(&self);
@@ -11,6 +11,7 @@ pub trait Widget {
     fn handle(&mut self, mouse: &MouseState, key: &KeyState);
 }
 
+/// WidgetGrab - Needs more commenting on what it actually does!
 pub trait WidgetGrab {
     /// Grab for a window state
     unsafe fn grab(&mut self, window: &mut Window);
@@ -18,6 +19,7 @@ pub trait WidgetGrab {
     unsafe fn ungrab(&mut self, window: &mut Window);
 }
 
+/// WidgetBounds implements get and set methods of the bounds of the current widget.
 pub trait WidgetBounds {
     type Dim;
     /// Get Widget Bounds (x, y, width, height)
@@ -26,18 +28,18 @@ pub trait WidgetBounds {
     fn set_bounds(&mut self, bounds: (Self::Dim, Self::Dim, Self::Dim, Self::Dim));
 }
 
-/// Widget Internal has boundaries and condinates information of the widget. This is used at composition
-/// and can be optional
+/// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
+/// and can be optional.
 pub struct WidgetInternal {
-    // Cordinates and Boundaries as a tuple (x, y, width, height)
+    /// Cordinates and Boundaries as a tuple (x, y, width, height)
     bounds: (usize, usize, usize, usize),
-    // Focus handling
+    /// Focus handling
     focus: bool,
-    // Grab
+    /// Grab
     grab: bool,
-    // Enabled
+    /// Enabled
     enable: bool,
-    // Visible
+    /// Visible
     show: bool
 }
 
@@ -145,8 +147,8 @@ impl WidgetInternal {
         self.enable = enabled;
     }
 
-    /// Toogle if is enabled
-    pub fn toogle_enabled(&mut self) {
+    /// Toggle if is enabled
+    pub fn toggle_enabled(&mut self) {
         self.enable = !self.enable;
     }
 
