@@ -147,8 +147,8 @@ impl WidgetInternal {
         self.enable = enabled;
     }
 
-    /// Toogle if is enabled
-    pub fn toogle_enabled(&mut self) {
+    /// Toggle if is enabled
+    pub fn toggle_enabled(&mut self) {
         self.enable = !self.enable;
     }
 
