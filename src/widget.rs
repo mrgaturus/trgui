@@ -11,7 +11,7 @@ pub trait Widget {
     fn handle(&mut self, mouse: &MouseState, key: &KeyState);
 }
 
-/// WidgetGrab - unsafe methods.
+/// WidgetGrab - NEEDS COMMENTING!
 pub trait WidgetGrab {
     /// Grab for a window state
     unsafe fn grab(&mut self, window: &mut Window);
