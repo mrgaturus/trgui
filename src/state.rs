@@ -4,6 +4,8 @@ pub struct MouseState {
     m_click: bool,
     /// Mouse coordinates
     m_coords: (usize, usize),
+    /// Relative Mouse coordinates
+    m_coords_relative: (usize, usize),
     /// Tablet Pressure Level
     t_pressure: usize
 }
@@ -23,6 +25,7 @@ impl MouseState {
         MouseState {
             m_click: false,
             m_coords: (0,0),
+            m_coords_relative: (0, 0),
             t_pressure: 0
         }
     }
@@ -36,6 +39,10 @@ impl MouseState {
         self.t_pressure = pressure;
     }
 
+    pub fn set_relative(&mut self, bounds: (usize, usize, usize, usize)) {
+        self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
+    }
+
     pub fn clicked(&self) -> bool {
         self.m_click
     }
@@ -44,18 +51,24 @@ impl MouseState {
         self.m_coords
     }
 
+    pub fn coordinates_relative(&self) -> (usize, usize) {
+        self.m_coords_relative
+    }
+
     pub fn tablet_pressure(&self) -> usize {
         self.t_pressure
     }
+}
 
-    pub fn get_relative(&self, bounds: (usize, usize, usize, usize)) -> Self {
-        let relative = relative_pos!(self.coordinates(), bounds);
+impl Clone for MouseState {
+    fn clone(&self) -> Self {
         MouseState {
             m_click: self.m_click,
-            m_coords: relative,
+            m_coords: self.m_coords,
+            m_coords_relative: self.m_coords_relative,
             t_pressure: self.t_pressure
         }
-    }
+    } 
 }
 
 impl KeyState {

@@ -59,7 +59,8 @@ impl Widget for Container {
     }
 
     fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
-        let relative = mouse.get_relative(self.get_bounds());
+        let mut relative = mouse.clone();
+        relative.set_relative(self.get_bounds());
 
         for widget in self.widgets.iter_mut() {
             (*widget).handle(&relative, key);

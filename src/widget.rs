@@ -12,7 +12,7 @@ pub trait Widget {
 }
 
 /// WidgetGrab - Needs more commenting on what it actually does!
-pub trait WidgetGrab {
+pub trait WidgetGrab: Widget {
     /// Grab for a window state
     unsafe fn grab(&mut self, window: &mut Window);
     /// Ungrab from a window state
@@ -20,7 +20,7 @@ pub trait WidgetGrab {
 }
 
 /// WidgetBounds implements get and set methods of the bounds of the current widget.
-pub trait WidgetBounds {
+pub trait WidgetBounds: Widget {
     type Dim;
     /// Get Widget Bounds (x, y, width, height)
     fn get_bounds(&self) -> (Self::Dim, Self::Dim, Self::Dim, Self::Dim);

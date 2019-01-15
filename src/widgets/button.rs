@@ -30,7 +30,7 @@ impl Button {
 impl Widget for Button {
     /// Draw the current widget
     fn draw(&self) {
-        println!("BUTTON: ({}) ({:?})", self.label, self.get_bounds());
+        //println!("BUTTON: ({}) ({:?})", self.label, self.get_bounds());
     }
     /// Update the status of widget
     fn update(&mut self) {
