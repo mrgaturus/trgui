@@ -15,8 +15,8 @@ macro_rules! clamp {
 
 /// Macro for check if a point is on an area
 /// # Arguments
-/// * 'p' - A tuple (x: usize, y: usize)
-/// * 'b' - A tuple (x: usize, y: usize, width: usize, height: usize)
+/// * 'p' - A tuple (x: i32, y: i32)
+/// * 'b' - A tuple (x: i32, y: i32, width: i32, height: i32)
 #[macro_export]
 macro_rules! point_on_area {
     ($p:expr, $b:expr) => {
@@ -38,6 +38,6 @@ macro_rules! absolute_pos {
 #[macro_export]
 macro_rules! relative_pos {
     ($p:expr, $b:expr) => {
-        (clamp!($p.0 - $b.0, 0 as usize, $b.2), clamp!($p.1 - $b.1, 0 as usize, $b.3))
+        (clamp!($p.0 - $b.0, 0 as i32, $b.2), clamp!($p.1 - $b.1, 0 as i32, $b.3))
     };
 }

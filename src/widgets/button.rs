@@ -1,16 +1,18 @@
-use crate::widget::{Widget, WidgetInternal, WidgetBounds};
+use crate::widget::{Widget, WidgetInternal};
 use crate::state::{KeyState, MouseState};
 
 pub struct Button {
     label: String,
-    internal: WidgetInternal
+    internal: WidgetInternal,
+    clicked: bool
 }
 
 impl Button {
-    pub fn new(label: &str, bounds: (usize, usize, usize, usize)) -> Self {
+    pub fn new(label: &str, bounds: (i32, i32, i32, i32)) -> Self {
         Button {
             label: String::from(label),
-            internal: WidgetInternal::new(bounds)
+            internal: WidgetInternal::new(bounds),
+            clicked: false
         }
     }
 
@@ -38,21 +40,21 @@ impl Widget for Button {
     }
     /// Handle an event state
     fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
-        if mouse.clicked() && point_on_area!(mouse.coordinates(), self.get_bounds()) {
-            println!("CLICKED BUTTON: {} ({:?}) ({:?}) ({:?})", self.label, mouse.coordinates(), 
+        if mouse.clicked() && point_on_area!(mouse.coordinates_relative(), self.get_bounds()) {
+            self.clicked = true;
+        }
+        if self.clicked && !mouse.clicked() {
+            println!("CLICKED BUTTON: {} {:?} {:?} ({:?})", self.label, mouse.coordinates_relative(), 
             self.get_bounds(), key.pressed());
+            self.clicked = false;
         }
     }
-}
 
-impl WidgetBounds for Button {
-    type Dim = usize;
-
-    fn get_bounds(&self) -> (Self::Dim, Self::Dim, Self::Dim, Self::Dim) {
+    fn get_bounds(&self) -> (i32, i32, i32, i32) {
         self.internal.boundaries()
     }
 
-    fn set_bounds(&mut self, bounds: (Self::Dim, Self::Dim, Self::Dim, Self::Dim)) {
+    fn set_bounds(&mut self, bounds: (i32, i32, i32, i32)) {
         self.internal.set_boundaries(bounds);
     }
 }

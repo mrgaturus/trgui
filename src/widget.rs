@@ -9,6 +9,10 @@ pub trait Widget {
     fn update(&mut self);
     /// Handle an event state
     fn handle(&mut self, mouse: &MouseState, key: &KeyState);
+    /// Get Widget Bounds (x, y, width, height)
+    fn get_bounds(&self) -> (i32, i32, i32, i32);
+    /// Set Widget Bounds (x, y, width, height)
+    fn set_bounds(&mut self, bounds: (i32, i32, i32, i32));
 }
 
 /// WidgetGrab - Needs more commenting on what it actually does!
@@ -19,20 +23,11 @@ pub trait WidgetGrab: Widget {
     unsafe fn ungrab(&mut self, window: &mut Window);
 }
 
-/// WidgetBounds implements get and set methods of the bounds of the current widget.
-pub trait WidgetBounds: Widget {
-    type Dim;
-    /// Get Widget Bounds (x, y, width, height)
-    fn get_bounds(&self) -> (Self::Dim, Self::Dim, Self::Dim, Self::Dim);
-    /// Set Widget Bounds (x, y, width, height)
-    fn set_bounds(&mut self, bounds: (Self::Dim, Self::Dim, Self::Dim, Self::Dim));
-}
-
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
 /// and can be optional.
 pub struct WidgetInternal {
     /// Cordinates and Boundaries as a tuple (x, y, width, height)
-    bounds: (usize, usize, usize, usize),
+    bounds: (i32, i32, i32, i32),
     /// Focus handling
     focus: bool,
     /// Grab
@@ -45,7 +40,7 @@ pub struct WidgetInternal {
 
 impl WidgetInternal {
     /// Create a new widget internal with coordinates and boundaries tuples
-    pub fn new(bounds: (usize, usize, usize, usize)) -> Self {
+    pub fn new(bounds: (i32, i32, i32, i32)) -> Self {
         WidgetInternal {
             bounds,
             focus: false,
@@ -56,74 +51,74 @@ impl WidgetInternal {
     }
 
     /// Change boundaries
-    pub fn set_boundaries(&mut self, bounds: (usize, usize, usize, usize)) {
+    pub fn set_boundaries(&mut self, bounds: (i32, i32, i32, i32)) {
         self.bounds = bounds;
     }
 
     /// Change coordinates
-    pub fn set_coords(&mut self, x: usize, y: usize) {
+    pub fn set_coords(&mut self, x: i32, y: i32) {
         self.bounds.0 = x;
         self.bounds.1 = y;
     }
 
     /// Change dimensions
-    pub fn set_dimensions(&mut self, width: usize, height: usize) {
+    pub fn set_dimensions(&mut self, width: i32, height: i32) {
         self.bounds.2 = width;
         self.bounds.3 = height;
     }
 
     /// Change x coordinate
-    pub fn set_x(&mut self, x: usize) {
+    pub fn set_x(&mut self, x: i32) {
         self.bounds.0 = x;
     }
 
     /// Change y coordinate
-    pub fn set_y(&mut self, y: usize) {
+    pub fn set_y(&mut self, y: i32) {
         self.bounds.1 = y;
     }
 
     /// Change width
-    pub fn set_width(&mut self, width: usize) {
+    pub fn set_width(&mut self, width: i32) {
         self.bounds.2 = width;
     }
 
     /// Change height
-    pub fn set_height(&mut self, height: usize) {
+    pub fn set_height(&mut self, height: i32) {
         self.bounds.3 = height;
     }
 
     /// Get all boundaries
-    pub fn boundaries(&self) -> (usize, usize, usize, usize) {
+    pub fn boundaries(&self) -> (i32, i32, i32, i32) {
         self.bounds
     }
 
     /// Get coordinates tuple
-    pub fn coordinates(&self) -> (usize, usize) {
+    pub fn coordinates(&self) -> (i32, i32) {
         (self.bounds.0, self.bounds.1)
     }
 
     /// Get boundaries tuple
-    pub fn dimensions(&self) -> (usize, usize) {
+    pub fn dimensions(&self) -> (i32, i32) {
         (self.bounds.2, self.bounds.3)
     }
 
     /// Get x coordinate
-    pub fn x(&self) -> usize {
+    pub fn x(&self) -> i32 {
         self.bounds.0
     }
 
     /// Get y coordinate
-    pub fn y(&self) -> usize {
+    pub fn y(&self) -> i32 {
         self.bounds.1
     }
 
     /// Get width
-    pub fn width(&self) -> usize {
+    pub fn width(&self) -> i32 {
         self.bounds.2
     }
 
     /// Get height
-    pub fn height(&self) -> usize {
+    pub fn height(&self) -> i32 {
         self.bounds.3
     }
 

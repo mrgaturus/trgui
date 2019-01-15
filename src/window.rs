@@ -1,5 +1,5 @@
 use crate::state::{KeyState, MouseState};
-use crate::widget::{Widget, WidgetInternal, WidgetBounds};
+use crate::widget::{Widget, WidgetInternal};
 use crate::container::Container;
 
 pub trait WindowBackend {
@@ -66,17 +66,12 @@ impl Widget for Window {
     fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
         self.root_container.handle(mouse, key);
     }
-}
 
-// TODO: A derive for internal
-impl WidgetBounds for Window {
-    type Dim = usize;
-
-    fn get_bounds(&self) -> (Self::Dim, Self::Dim, Self::Dim, Self::Dim) {
+    fn get_bounds(&self) -> (i32, i32, i32, i32) {
         self.internal.boundaries()
     }
 
-    fn set_bounds(&mut self, bounds: (Self::Dim, Self::Dim, Self::Dim, Self::Dim)) {
+    fn set_bounds(&mut self, bounds: (i32, i32, i32, i32)) {
         self.internal.set_boundaries(bounds);
         self.root_container.set_bounds(bounds);
     }

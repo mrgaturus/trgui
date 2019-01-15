@@ -3,11 +3,11 @@ pub struct MouseState {
     /// Is clicked?
     m_click: bool,
     /// Mouse coordinates
-    m_coords: (usize, usize),
+    m_coords: (i32, i32),
     /// Relative Mouse coordinates
-    m_coords_relative: (usize, usize),
+    m_coords_relative: (i32, i32),
     /// Tablet Pressure Level
-    t_pressure: usize
+    t_pressure: i32
 }
 
 /// A key state
@@ -15,7 +15,7 @@ pub struct KeyState {
     /// Is a key from keyboard pressed?
     k_pressed: bool,
     /// Keycode pressed
-    k_code: usize,
+    k_code: i32,
     /// Modifier (bitflag)
     k_modifiers: u8
 }
@@ -34,12 +34,12 @@ impl MouseState {
         self.m_click = clicked;
     }
 
-    pub fn set_mouse(&mut self, coords: (usize, usize), pressure: usize) {
+    pub fn set_mouse(&mut self, coords: (i32, i32), pressure: i32) {
         self.m_coords = coords;
         self.t_pressure = pressure;
     }
 
-    pub fn set_relative(&mut self, bounds: (usize, usize, usize, usize)) {
+    pub fn set_relative(&mut self, bounds: (i32, i32, i32, i32)) {
         self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
     }
 
@@ -47,15 +47,15 @@ impl MouseState {
         self.m_click
     }
 
-    pub fn coordinates(&self) -> (usize, usize) {
+    pub fn coordinates(&self) -> (i32, i32) {
         self.m_coords
     }
 
-    pub fn coordinates_relative(&self) -> (usize, usize) {
+    pub fn coordinates_relative(&self) -> (i32, i32) {
         self.m_coords_relative
     }
 
-    pub fn tablet_pressure(&self) -> usize {
+    pub fn tablet_pressure(&self) -> i32 {
         self.t_pressure
     }
 }
@@ -84,12 +84,12 @@ impl KeyState {
         self.k_pressed = pressed;
     }
 
-    pub fn set_keys(&mut self, code: usize, modifiers: u8) {
+    pub fn set_keys(&mut self, code: i32, modifiers: u8) {
         self.k_code = code;
         self.k_modifiers = modifiers;
     }
 
-    pub fn keys(&self) -> (usize, u8) {
+    pub fn keys(&self) -> (i32, u8) {
         (self.k_code, self.k_modifiers)
     }
 
