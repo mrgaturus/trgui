@@ -21,7 +21,7 @@ macro_rules! clamp {
 macro_rules! point_on_area {
     ($p:expr, $b:expr) => {
         $p.0 >= $b.0 && $p.0 <= $b.0 + $b.2 &&
-        $p.1 >= $b.0 && $p.1 <= $b.1 + $b.3
+        $p.1 >= $b.1 && $p.1 <= $b.1 + $b.3
     };
 }
 
@@ -38,6 +38,6 @@ macro_rules! absolute_pos {
 #[macro_export]
 macro_rules! relative_pos {
     ($p:expr, $b:expr) => {
-        (clamp!($p.0 - $b.0, 0, $b.2), clamp!($p.1 - $b.1, 0, $b.3))
+        (clamp!($p.0 - $b.0, 0 as usize, $b.2), clamp!($p.1 - $b.1, 0 as usize, $b.3))
     };
 }

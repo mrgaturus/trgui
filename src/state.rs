@@ -47,6 +47,15 @@ impl MouseState {
     pub fn tablet_pressure(&self) -> usize {
         self.t_pressure
     }
+
+    pub fn get_relative(&self, bounds: (usize, usize, usize, usize)) -> Self {
+        let relative = relative_pos!(self.coordinates(), bounds);
+        MouseState {
+            m_click: self.m_click,
+            m_coords: relative,
+            t_pressure: self.t_pressure
+        }
+    }
 }
 
 impl KeyState {
