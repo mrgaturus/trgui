@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Boundaries};
 use crate::state::{KeyState, MouseState};
 
 pub struct Button {
@@ -8,7 +8,7 @@ pub struct Button {
 }
 
 impl Button {
-    pub fn new(label: &str, bounds: Dimensions) -> Self {
+    pub fn new(label: &str, bounds: Boundaries) -> Self {
         Button {
             label: String::from(label),
             internal: WidgetInternal::new(bounds),
@@ -50,11 +50,11 @@ impl Widget for Button {
         }
     }
 
-    fn get_bounds(&self) -> Dimensions {
+    fn get_bounds(&self) -> Boundaries {
         self.internal.boundaries()
     }
 
-    fn set_bounds(&mut self, bounds: Dimensions) {
+    fn set_bounds(&mut self, bounds: Boundaries) {
         self.internal.set_boundaries(bounds);
     }
 }

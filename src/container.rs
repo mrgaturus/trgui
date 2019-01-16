@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Boundaries};
 use crate::state::{MouseState, KeyState};
 
 type WidgetList = Vec<Box<dyn Widget>>;
@@ -67,11 +67,11 @@ impl Widget for Container {
         }
     }
 
-    fn get_bounds(&self) -> Dimensions {
+    fn get_bounds(&self) -> Boundaries {
         self.internal.boundaries()
     }
 
-    fn set_bounds(&mut self, bounds: Dimensions) {
+    fn set_bounds(&mut self, bounds: Boundaries) {
         self.internal.set_boundaries(bounds);
     }
 }

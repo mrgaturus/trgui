@@ -1,11 +1,11 @@
 use crate::state::{KeyState, MouseState};
-use crate::widget::{Widget, WidgetInternal, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Boundaries, Dimensions};
 use crate::container::Container;
 
 pub trait WindowBackend {
     fn show(&mut self);
     fn hide(&mut self);
-    fn resize(&mut self);
+    fn resize(&mut self, dimensions: Dimensions);
     fn close(&mut self);
 }
 
@@ -44,6 +44,23 @@ impl Window {
         self.root_container.handle(&self.mouse_s, &self.key_s);
     }
 
+    // A window can handle other states outside from himself
+    pub fn handle_outside(&mut self, mouse: &MouseState, key: &KeyState) {
+        self.root_container.handle(mouse, key);
+    }
+
+    pub fn draw_window(&self) {
+        self.root_container.draw();
+    }
+
+    pub fn update_window(&mut self) {
+        self.root_container.update();
+    }
+
+    pub fn get_bounds(&self) -> Boundaries {
+        self.internal.boundaries()
+    }
+
     pub fn get_state(&self) -> (&MouseState, &KeyState) {
         (&self.mouse_s, &self.key_s)
     }
@@ -51,28 +68,9 @@ impl Window {
     pub fn get_state_mut(&mut self) -> (&mut MouseState, &mut KeyState) {
         (&mut self.mouse_s, &mut self.key_s)
     }
-}
 
-impl Widget for Window {
-    fn draw(&self) {
-        self.root_container.draw();
-    }
-
-    fn update(&mut self) {
-        self.root_container.update();
-    }
-
-    // A window can handle other states outside from himself
-    fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
-        self.root_container.handle(mouse, key);
-    }
-
-    fn get_bounds(&self) -> Dimensions {
-        self.internal.boundaries()
-    }
-
-    fn set_bounds(&mut self, bounds: Dimensions) {
-        self.internal.set_boundaries(bounds);
-        self.root_container.set_bounds(bounds);
+    pub fn set_dimensions(&mut self, dimensions: Dimensions) {
+        self.internal.set_dimensions(dimensions.0, dimensions.1);
+        self.root_container.set_bounds((0, 0, dimensions.0, dimensions.1));
     }
 }

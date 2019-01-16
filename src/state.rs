@@ -1,4 +1,4 @@
-use crate::widget::Dimensions;
+use crate::widget::Boundaries;
 
 /// A mouse state
 pub type Coordinates = (i32, i32);
@@ -43,7 +43,7 @@ impl MouseState {
         self.t_pressure = pressure;
     }
 
-    pub fn set_relative(&mut self, bounds: Dimensions) {
+    pub fn set_relative(&mut self, bounds: Boundaries) {
         self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
     }
 
