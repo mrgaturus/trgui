@@ -1,6 +1,8 @@
 use crate::state::{MouseState, KeyState};
 use crate::window::Window;
 
+pub type Dimensions = (i32, i32, i32, i32);
+
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
@@ -10,9 +12,9 @@ pub trait Widget {
     /// Handle an event state
     fn handle(&mut self, mouse: &MouseState, key: &KeyState);
     /// Get Widget Bounds (x, y, width, height)
-    fn get_bounds(&self) -> (i32, i32, i32, i32);
+    fn get_bounds(&self) -> Dimensions;
     /// Set Widget Bounds (x, y, width, height)
-    fn set_bounds(&mut self, bounds: (i32, i32, i32, i32));
+    fn set_bounds(&mut self, bounds: Dimensions);
 }
 
 /// WidgetGrab - Needs more commenting on what it actually does!
@@ -27,7 +29,7 @@ pub trait WidgetGrab: Widget {
 /// and can be optional.
 pub struct WidgetInternal {
     /// Cordinates and Boundaries as a tuple (x, y, width, height)
-    bounds: (i32, i32, i32, i32),
+    bounds: Dimensions,
     /// Focus handling
     focus: bool,
     /// Grab
@@ -40,7 +42,7 @@ pub struct WidgetInternal {
 
 impl WidgetInternal {
     /// Create a new widget internal with coordinates and boundaries tuples
-    pub fn new(bounds: (i32, i32, i32, i32)) -> Self {
+    pub fn new(bounds: Dimensions) -> Self {
         WidgetInternal {
             bounds,
             focus: false,
@@ -51,7 +53,7 @@ impl WidgetInternal {
     }
 
     /// Change boundaries
-    pub fn set_boundaries(&mut self, bounds: (i32, i32, i32, i32)) {
+    pub fn set_boundaries(&mut self, bounds: Dimensions) {
         self.bounds = bounds;
     }
 
@@ -88,7 +90,7 @@ impl WidgetInternal {
     }
 
     /// Get all boundaries
-    pub fn boundaries(&self) -> (i32, i32, i32, i32) {
+    pub fn boundaries(&self) -> Dimensions {
         self.bounds
     }
 

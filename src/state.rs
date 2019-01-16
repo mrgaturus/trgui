@@ -1,11 +1,15 @@
+use crate::widget::Dimensions;
+
 /// A mouse state
+pub type Coordinates = (i32, i32);
+
 pub struct MouseState {
     /// Is clicked?
     m_click: bool,
     /// Mouse coordinates
-    m_coords: (i32, i32),
+    m_coords: Coordinates,
     /// Relative Mouse coordinates
-    m_coords_relative: (i32, i32),
+    m_coords_relative: Coordinates,
     /// Tablet Pressure Level
     t_pressure: i32
 }
@@ -34,12 +38,12 @@ impl MouseState {
         self.m_click = clicked;
     }
 
-    pub fn set_mouse(&mut self, coords: (i32, i32), pressure: i32) {
+    pub fn set_mouse(&mut self, coords: Coordinates, pressure: i32) {
         self.m_coords = coords;
         self.t_pressure = pressure;
     }
 
-    pub fn set_relative(&mut self, bounds: (i32, i32, i32, i32)) {
+    pub fn set_relative(&mut self, bounds: Dimensions) {
         self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
     }
 
@@ -47,11 +51,11 @@ impl MouseState {
         self.m_click
     }
 
-    pub fn coordinates(&self) -> (i32, i32) {
+    pub fn coordinates(&self) -> Coordinates {
         self.m_coords
     }
 
-    pub fn coordinates_relative(&self) -> (i32, i32) {
+    pub fn coordinates_relative(&self) -> Coordinates {
         self.m_coords_relative
     }
 
@@ -84,9 +88,12 @@ impl KeyState {
         self.k_pressed = pressed;
     }
 
-    pub fn set_keys(&mut self, code: i32, modifiers: u8) {
+    pub fn set_keys(&mut self, code: i32) {
         self.k_code = code;
-        self.k_modifiers = modifiers;
+    }
+
+    pub fn set_modifier(&mut self, modifiers: u8) {
+        self.k_modifiers = modifiers
     }
 
     pub fn keys(&self) -> (i32, u8) {
