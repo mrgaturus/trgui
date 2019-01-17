@@ -16,8 +16,10 @@ pub trait Widget {
     fn draw(&self);
     /// Update the status of widget
     fn update(&mut self);
-    /// Handle an event state
-    fn handle(&mut self, mouse: &MouseState, key: &KeyState);
+    /// Handle a mouse state
+    fn handle_mouse(&mut self, mouse: &MouseState);
+    /// Handle a keyboard state
+    fn handle_keys(&mut self, key: &KeyState);
     /// Get Widget Bounds (x, y, width, height)
     fn get_bounds(&self) -> Boundaries;
     /// Set Widget Bounds (x, y, width, height)

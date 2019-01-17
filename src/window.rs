@@ -41,12 +41,14 @@ impl Window {
     }
 
     pub fn handle_itself(&mut self) {
-        self.root_container.handle(&self.mouse_s, &self.key_s);
+        self.root_container.handle_keys(&self.key_s);
+        self.root_container.handle_mouse(&self.mouse_s);
     }
 
     // A window can handle other states outside from himself
     pub fn handle_outside(&mut self, mouse: &MouseState, key: &KeyState) {
-        self.root_container.handle(mouse, key);
+        self.root_container.handle_keys(key);
+        self.root_container.handle_mouse(mouse);
     }
 
     pub fn next_focus(&mut self) {

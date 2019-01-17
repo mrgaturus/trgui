@@ -91,12 +91,21 @@ impl Widget for Container {
         }
     }
 
-    fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
+    fn handle_mouse(&mut self, mouse: &MouseState) {
         let mut relative = mouse.clone();
         relative.set_relative(self.get_bounds());
 
         for widget in self.widgets.iter_mut() {
-            (*widget).handle(&relative, key);
+            if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
+                (*widget).handle_mouse(&relative);
+                break;
+            }
+        }
+    }
+
+    fn handle_keys(&mut self, key: &KeyState) {
+        for widget in self.widgets.iter_mut() {
+            (*widget).handle_keys(key);
         }
     }
 
@@ -108,7 +117,7 @@ impl Widget for Container {
         self.internal.set_boundaries(bounds);
     }
 
-    /// Focus the current widget
+    /// Step focus on Widget array
     fn focus(&mut self, back: bool) -> FocusAction {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
@@ -145,7 +154,7 @@ impl Widget for Container {
         FocusAction::False
     }
 
-    /// Unfocus the current widget
+    /// Unfocus container and everything inside
     fn unfocus(&mut self) {
         self.focus_id = Option::None;
 

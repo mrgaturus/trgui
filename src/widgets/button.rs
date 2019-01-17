@@ -39,15 +39,15 @@ impl Widget for Button {
 
     }
     /// Handle an event state
-    fn handle(&mut self, mouse: &MouseState, key: &KeyState) {
-        if mouse.clicked() && point_on_area!(mouse.coordinates_relative(), self.get_bounds()) {
-            self.clicked = true;
+    /// Handle a mouse state
+    fn handle_mouse(&mut self, mouse: &MouseState) {
+        if mouse.clicked() {
+            println!("{} {} {:?} {:?}", "Clicked", self.label, mouse.coordinates_relative(), mouse.coordinates());
         }
-        if self.clicked && !mouse.clicked() {
-            println!("CLICKED BUTTON: {} {:?} {:?} ({:?})", self.label, mouse.coordinates_relative(), 
-            self.get_bounds(), key.pressed());
-            self.clicked = false;
-        }
+    }
+    /// Handle a keyboard state
+    fn handle_keys(&mut self, _key: &KeyState) {
+        
     }
 
     fn get_bounds(&self) -> Boundaries {
