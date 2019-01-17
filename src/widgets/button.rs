@@ -60,11 +60,11 @@ impl Widget for Button {
 
     /// Focus the current widget
     fn focus(&mut self, _back: bool) -> FocusAction {
-            println!("Focused BUTTON: {}", self.label);
+        println!("Focused BUTTON: {}", self.label);
         FocusAction::Ok
     }
     /// Unfocus the current widget
     fn unfocus(&mut self) {
-
+        println!("Un Focused BUTTON: {}", self.label);
     }
 }
