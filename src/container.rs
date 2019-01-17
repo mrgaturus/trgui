@@ -112,15 +112,18 @@ impl Widget for Container {
     fn focus(&mut self, back: bool) -> FocusAction {
         if !self.widgets.is_empty() {
             let mut step = self.step_focus(back);
+
             if step.0 {
                 while let Some(widget) = self.widgets.get_mut(step.1) {
                     let focus = widget.focus(back);
+
                     match focus {
                         FocusAction::Ok => {
                             return FocusAction::Next;
                         },
                         FocusAction::False => {
                             step = self.step_focus(back);
+                            
                             if step.0 {
                                 continue;
                             } else {
