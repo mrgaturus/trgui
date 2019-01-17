@@ -49,6 +49,14 @@ impl Window {
         self.root_container.handle(mouse, key);
     }
 
+    pub fn next_focus(&mut self) {
+        self.root_container.focus(false);
+    }
+
+    pub fn prev_focus(&mut self) {
+        self.root_container.focus(true);
+    }
+
     pub fn draw_window(&self) {
         self.root_container.draw();
     }

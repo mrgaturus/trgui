@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries};
+use crate::widget::{Widget, WidgetInternal, Boundaries, FocusAction};
 use crate::state::{KeyState, MouseState};
 
 pub struct Button {
@@ -56,5 +56,15 @@ impl Widget for Button {
 
     fn set_bounds(&mut self, bounds: Boundaries) {
         self.internal.set_boundaries(bounds);
+    }
+
+    /// Focus the current widget
+    fn focus(&mut self, _back: bool) -> FocusAction {
+            println!("Focused BUTTON: {}", self.label);
+        FocusAction::Ok
+    }
+    /// Unfocus the current widget
+    fn unfocus(&mut self) {
+
     }
 }

@@ -4,6 +4,12 @@ use crate::window::Window;
 pub type Boundaries = (i32, i32, i32, i32);
 pub type Dimensions = (i32, i32);
 
+pub enum FocusAction {
+    Ok,
+    False,
+    Next
+}
+
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
@@ -16,6 +22,10 @@ pub trait Widget {
     fn get_bounds(&self) -> Boundaries;
     /// Set Widget Bounds (x, y, width, height)
     fn set_bounds(&mut self, bounds: Boundaries);
+    /// Focus the current widget
+    fn focus(&mut self, back: bool) -> FocusAction;
+    /// Unfocus the current widget
+    fn unfocus(&mut self);
 }
 
 /// WidgetGrab - Needs more commenting on what it actually does!
