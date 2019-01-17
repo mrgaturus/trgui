@@ -55,30 +55,21 @@ impl Container {
             self.focus_id = Some(val);
 
             (true, val)
-        } else if let Some(id) = self.focus_id {
-            if id > self.widgets.len() - 2 {
+        } else if let Some(mut id) = self.focus_id {
+            if back {
+                id -= 1
+            } else {
+                id += 1
+            }
+            if id > self.widgets.len() - 1 {
                 self.focus_id = None;
                 (false, 0)
             } else {
-                let val;
-                if back {
-                    val = id - 1
-                } else {
-                    val = id + 1
-                }
-                self.focus_id = Some(val);
-                (true, val)
+                self.focus_id = Some(id);
+                (true, id)
             }
         } else {
             (false, 0)
-        }
-    }
-
-    fn step(&self, back: bool, n: &mut usize) {
-        if back {
-            *n -= 1;
-        } else {
-            *n += 1;
         }
     }
 }
@@ -119,43 +110,29 @@ impl Widget for Container {
 
     /// Focus the current widget
     fn focus(&mut self, back: bool) -> FocusAction {
-        //println!("--{:?} {}--", self.focus_id, self.widgets.len());
         if !self.widgets.is_empty() {
-            if let None = self.focus_id {
-                self.step_focus(back);
-                println!("EXTREME {} {}", back, self.focus_id.unwrap());
-                return self.widgets[self.focus_id.unwrap()].focus(back);
-            } else if self.focus_id.is_some() {
-                let mut step = self.step_focus(back);
-                if step.0 {
-                    while let Some(widget) = self.widgets.get_mut(step.1) {
-                        println!("CALL");
-                        let focus = widget.focus(back);
-                        match focus {
-                            FocusAction::Ok => {
-                                println!("OK {:?}", step);
-                                break;
-                            },
-                            FocusAction::False => {
-                                println!("FALSE {:?}", step);
-                                step = self.step_focus(back);
-                                if step.0 {
-                                    continue;
-                                } else {
-                                    break;
-                                }
-                            },
-                            FocusAction::Next => {
-                                println!("NEXT {:?}", step);
-                                self.step_focus(!back);
+            let mut step = self.step_focus(back);
+            if step.0 {
+                while let Some(widget) = self.widgets.get_mut(step.1) {
+                    let focus = widget.focus(back);
+                    match focus {
+                        FocusAction::Ok => {
+                            return FocusAction::Next;
+                        },
+                        FocusAction::False => {
+                            step = self.step_focus(back);
+                            if step.0 {
+                                continue;
+                            } else {
                                 break;
                             }
+                        },
+                        FocusAction::Next => {
+                            self.step_focus(!back);
+                            return FocusAction::Next;
                         }
                     }
-
-                    return FocusAction::Next;
                 }
-
             }
         }
 
