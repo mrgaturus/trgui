@@ -42,13 +42,17 @@ impl Window {
 
     pub fn handle_itself(&mut self) {
         self.root_container.handle_keys(&self.key_s);
-        self.root_container.handle_mouse(&self.mouse_s);
+        self.handle_mouse_itself();
     }
 
-    // A window can handle other states outside from himself
-    pub fn handle_outside(&mut self, mouse: &MouseState, key: &KeyState) {
-        self.root_container.handle_keys(key);
-        self.root_container.handle_mouse(mouse);
+    pub fn handle_mouse_itself(&mut self) {
+        if let Some(widget) = self.grab {
+            unsafe {
+                (*widget).handle_mouse(&self.mouse_s, &mut self.grab);
+            }
+        } else {
+            self.root_container.handle_mouse(&self.mouse_s, &mut self.grab);
+        }
     }
 
     pub fn next_focus(&mut self) {

@@ -91,16 +91,26 @@ impl Widget for Container {
         }
     }
 
-    fn handle_mouse(&mut self, mouse: &MouseState) {
+    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction {
         let mut relative = mouse.clone();
+        let mut id = 0;
+        let action = FocusAction::False;
+        
         relative.set_relative(self.get_bounds());
 
-        for widget in self.widgets.iter_mut() {
+        for (n, widget) in self.widgets.iter_mut().enumerate() {
             if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                (*widget).handle_mouse(&relative);
+                (*widget).handle_mouse(&relative, grab_ptr);
+                id = n;
                 break;
             }
         }
+
+        if let FocusAction::Ok = action {
+            self.focus_id = Some(id);
+        }
+
+        action
     }
 
     fn handle_keys(&mut self, key: &KeyState) {

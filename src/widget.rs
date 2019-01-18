@@ -1,5 +1,4 @@
 use crate::state::{MouseState, KeyState};
-use crate::window::Window;
 
 pub type Boundaries = (i32, i32, i32, i32);
 pub type Dimensions = (i32, i32);
@@ -17,7 +16,7 @@ pub trait Widget {
     /// Update the status of widget
     fn update(&mut self);
     /// Handle a mouse state
-    fn handle_mouse(&mut self, mouse: &MouseState);
+    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction;
     /// Handle a keyboard state
     fn handle_keys(&mut self, key: &KeyState);
     /// Get Widget Bounds (x, y, width, height)
@@ -39,9 +38,9 @@ pub trait Widget {
 /// WidgetGrab - Needs more commenting on what it actually does!
 pub trait WidgetGrab: Widget {
     /// Grab for a window state
-    unsafe fn grab(&mut self, window: &mut Window);
+    unsafe fn grab(&mut self, grab_ptr: &mut Option<*mut Widget>);
     /// Ungrab from a window state
-    unsafe fn ungrab(&mut self, window: &mut Window);
+    unsafe fn ungrab(&mut self, grab_ptr: &mut Option<*mut Widget>);
 }
 
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition

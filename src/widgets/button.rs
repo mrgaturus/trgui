@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries, FocusAction};
+use crate::widget::{Widget, WidgetInternal, Boundaries, FocusAction, WidgetGrab};
 use crate::state::{KeyState, MouseState};
 
 pub struct Button {
@@ -40,10 +40,24 @@ impl Widget for Button {
     }
     /// Handle an event state
     /// Handle a mouse state
-    fn handle_mouse(&mut self, mouse: &MouseState) {
+    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction {
         if mouse.clicked() {
             println!("{} {} {:?} {:?}", "Clicked", self.label, mouse.coordinates_relative(), mouse.coordinates());
+            self.clicked = true;
+            unsafe {
+                self.grab(grab_ptr);
+            }
+            return FocusAction::Ok;
+        } else if self.clicked {
+            self.clicked = false;
+            unsafe {
+                self.ungrab(grab_ptr);
+            }
+        } else {
+            println!("{} {} {:?} {:?}", "Hovered", self.label, mouse.coordinates_relative(), mouse.coordinates());
         }
+
+        FocusAction::False
     }
     /// Handle a keyboard state
     fn handle_keys(&mut self, _key: &KeyState) {
@@ -66,5 +80,24 @@ impl Widget for Button {
     /// Unfocus the current widget
     fn unfocus(&mut self) {
         println!("Un Focused BUTTON: {}", self.label);
+    }
+}
+
+impl WidgetGrab for Button {
+    /// Grab for a window state
+    unsafe fn grab(&mut self, grab_ptr: &mut Option<*mut Widget>) {
+        if !self.internal.grabbed() {
+            if grab_ptr.is_none() {
+                self.internal.set_grab(true);
+                *grab_ptr = Some(self as *mut Widget)
+            }
+        }
+    }
+    /// Ungrab from a window state
+    unsafe fn ungrab(&mut self, grab_ptr: &mut Option<*mut Widget>) {
+        if self.internal.grabbed() {
+            self.internal.set_grab(false);
+            *grab_ptr = None;
+        }
     }
 }
