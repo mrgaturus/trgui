@@ -3,20 +3,14 @@ use crate::state::{MouseState, KeyState};
 pub type Boundaries = (i32, i32, i32, i32);
 pub type Dimensions = (i32, i32);
 
-pub enum FocusAction {
-    Ok,
-    False,
-    Next
-}
-
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
     fn draw(&self);
     /// Update the status of widget
     fn update(&mut self);
-    /// Handle a mouse state
-    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction;
+    /// Handle a mouse state (focus, grab)
+    fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool);
     /// Handle a keyboard state
     fn handle_keys(&mut self, key: &KeyState);
     /// Get Widget Bounds (x, y, width, height)
@@ -24,9 +18,11 @@ pub trait Widget {
     /// Set Widget Bounds (x, y, width, height)
     fn set_bounds(&mut self, bounds: Boundaries);
     /// Focus the current widget
-    fn focus(&mut self, back: bool) -> FocusAction;
+    fn focus(&mut self) -> bool;
     /// Unfocus the current widget
     fn unfocus(&mut self);
+    /// Step the focus
+    fn step_focus(&mut self, back: bool) -> bool;
 
     // Move the widget to the heap
     #[inline]
@@ -38,9 +34,9 @@ pub trait Widget {
 /// WidgetGrab - Needs more commenting on what it actually does!
 pub trait WidgetGrab: Widget {
     /// Grab for a window state
-    unsafe fn grab(&mut self, grab_ptr: &mut Option<*mut Widget>);
+    fn grab(&mut self) -> bool;
     /// Ungrab from a window state
-    unsafe fn ungrab(&mut self, grab_ptr: &mut Option<*mut Widget>);
+    fn ungrab(&mut self) -> bool;
 }
 
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
@@ -165,6 +161,11 @@ impl WidgetInternal {
     /// Toggle if is enabled
     pub fn toggle_enabled(&mut self) {
         self.enable = !self.enable;
+    }
+
+    /// Toggle if is enabled
+    pub fn toggle_focus(&mut self) {
+        self.focus = !self.focus;
     }
 
     /// Check if is enabled

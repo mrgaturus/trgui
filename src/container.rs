@@ -1,10 +1,11 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries, FocusAction};
+use crate::widget::{Widget, WidgetInternal, Boundaries};
 use crate::state::{MouseState, KeyState};
 
 type WidgetList = Vec<Box<dyn Widget>>;
 
 pub struct Container {
     focus_id: Option<usize>,
+    grab_id: Option<usize>,
     layout: Option<Box<dyn Layout>>,
     widgets: WidgetList,
     internal: WidgetInternal
@@ -21,6 +22,7 @@ impl Container {
     pub fn new() -> Self {
         Container {
             focus_id: Option::None,
+            grab_id: Option::None,
             layout: Option::None,
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
@@ -31,6 +33,7 @@ impl Container {
     pub fn new_with_layout(layout: Box<dyn Layout>) -> Self {
         Container {
             focus_id: Option::None,
+            grab_id: Option::None,
             layout: Option::Some(layout),
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
@@ -46,7 +49,7 @@ impl Container {
         self.widgets.push(widget);
     }
 
-    fn step_focus(&mut self, back: bool) -> (bool, usize) {
+    fn step(&mut self, back: bool) -> (bool, usize) {
         if let None = self.focus_id {
             let mut val = 0;
             if back {
@@ -91,26 +94,31 @@ impl Widget for Container {
         }
     }
 
-    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction {
+    fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
         let mut relative = mouse.clone();
-        let mut id = 0;
-        let action = FocusAction::False;
-        
         relative.set_relative(self.get_bounds());
 
         for (n, widget) in self.widgets.iter_mut().enumerate() {
             if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                (*widget).handle_mouse(&relative, grab_ptr);
-                id = n;
-                break;
+                relative.set_relative_recur(widget.get_bounds());
+
+                let action = (*widget).handle_mouse(&relative);
+                if action.0 {
+                    if let Some(id) = self.focus_id {
+                        if id != n {
+                            self.widgets[id].unfocus();
+                        }
+                    }
+                    self.focus_id = Some(n);
+                }
+                if action.1 {
+                    self.grab_id = Some(n);
+                }
+                return action;
             }
         }
 
-        if let FocusAction::Ok = action {
-            self.focus_id = Some(id);
-        }
-
-        action
+        (false, false)
     }
 
     fn handle_keys(&mut self, key: &KeyState) {
@@ -128,48 +136,41 @@ impl Widget for Container {
     }
 
     /// Step focus on Widget array
-    fn focus(&mut self, back: bool) -> FocusAction {
+    fn step_focus(&mut self, back: bool) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
-                self.widgets[id].unfocus();
+                if self.widgets[id].step_focus(back) {
+                    return true;
+                }
             }
-            let mut step = self.step_focus(back);
+            let mut step = self.step(back);
 
             if step.0 {
                 while let Some(widget) = self.widgets.get_mut(step.1) {
-                    let focus = widget.focus(back);
+                    let focus = widget.step_focus(back);
 
-                    match focus {
-                        FocusAction::Ok => {
-                            return FocusAction::Next;
-                        },
-                        FocusAction::False => {
-                            step = self.step_focus(back);
-
-                            if step.0 {
-                                continue;
-                            } else {
-                                break;
-                            }
-                        },
-                        FocusAction::Next => {
-                            self.step_focus(!back);
-                            return FocusAction::Next;
-                        }
+                    if focus {
+                        return focus;
+                    } else {
+                        step = self.step(back);
+                        continue;
                     }
                 }
             }
         }
 
-        FocusAction::False
+        false
+    }
+
+    fn focus(&mut self) -> bool {
+        self.step_focus(false)
     }
 
     /// Unfocus container and everything inside
     fn unfocus(&mut self) {
-        self.focus_id = Option::None;
-
-        for widget in self.widgets.iter_mut() {
-            (*widget).unfocus();
+        if let Some(id) = self.focus_id {
+            self.widgets[id].unfocus();
+            self.focus_id = Option::None;
         }
     }
 }

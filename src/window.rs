@@ -13,8 +13,6 @@ pub struct Window {
     //backend: Box<dyn WindowBackend>,
     root_container: Box<Container>,
     internal: WidgetInternal,
-    // unsafe for now
-    grab: Option<*mut Widget>,
     mouse_s: MouseState,
     key_s: KeyState
 }
@@ -26,7 +24,6 @@ impl Window {
             //backend,
             root_container: Box::new(Container::new()),
             internal: WidgetInternal::new((0, 0, 0, 0)),
-            grab: Option::None,
             mouse_s: MouseState::new(),
             key_s: KeyState::new()
         }
@@ -40,27 +37,25 @@ impl Window {
         &mut self.root_container
     }
 
-    pub fn handle_itself(&mut self) {
-        self.root_container.handle_keys(&self.key_s);
+    pub fn handle_all_itself(&mut self) {
+        self.handle_keys();
         self.handle_mouse_itself();
     }
 
     pub fn handle_mouse_itself(&mut self) {
-        if let Some(widget) = self.grab {
-            unsafe {
-                (*widget).handle_mouse(&self.mouse_s, &mut self.grab);
-            }
-        } else {
-            self.root_container.handle_mouse(&self.mouse_s, &mut self.grab);
-        }
+        self.root_container.handle_mouse(&self.mouse_s);
+    }
+
+    pub fn handle_keys(&mut self) {
+        self.root_container.handle_keys(&self.key_s);
     }
 
     pub fn next_focus(&mut self) {
-        self.root_container.focus(false);
+        self.root_container.step_focus(false);
     }
 
     pub fn prev_focus(&mut self) {
-        self.root_container.focus(true);
+        self.root_container.step_focus(true);
     }
 
     pub fn draw_window(&self) {

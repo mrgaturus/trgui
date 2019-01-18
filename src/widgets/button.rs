@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries, FocusAction, WidgetGrab};
+use crate::widget::{Widget, WidgetInternal, Boundaries, WidgetGrab};
 use crate::state::{KeyState, MouseState};
 
 pub struct Button {
@@ -40,24 +40,19 @@ impl Widget for Button {
     }
     /// Handle an event state
     /// Handle a mouse state
-    fn handle_mouse(&mut self, mouse: &MouseState, grab_ptr: &mut Option<*mut Widget>) -> FocusAction {
+    fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
         if mouse.clicked() {
-            println!("{} {} {:?} {:?}", "Clicked", self.label, mouse.coordinates_relative(), mouse.coordinates());
+            //println!("{} {} {:?} {:?}", "Clicked", self.label, mouse.coordinates_relative(), mouse.coordinates());
             self.clicked = true;
-            unsafe {
-                self.grab(grab_ptr);
-            }
-            return FocusAction::Ok;
+            return (false, self.grab());
         } else if self.clicked {
             self.clicked = false;
-            unsafe {
-                self.ungrab(grab_ptr);
-            }
+            return (self.focus(), self.ungrab());
         } else {
-            println!("{} {} {:?} {:?}", "Hovered", self.label, mouse.coordinates_relative(), mouse.coordinates());
+            //println!("{} {} {:?} {:?}", "Hovered", self.label, mouse.coordinates_relative(), mouse.coordinates());
         }
 
-        FocusAction::False
+        (false, false)
     }
     /// Handle a keyboard state
     fn handle_keys(&mut self, _key: &KeyState) {
@@ -73,31 +68,35 @@ impl Widget for Button {
     }
 
     /// Focus the current widget
-    fn focus(&mut self, _back: bool) -> FocusAction {
-        println!("Focused BUTTON: {}", self.label);
-        FocusAction::Ok
+    fn focus(&mut self) -> bool {
+        self.internal.set_focused(true);
+        true
     }
     /// Unfocus the current widget
     fn unfocus(&mut self) {
-        println!("Un Focused BUTTON: {}", self.label);
+        self.internal.set_focused(false);
+    }
+
+    fn step_focus(&mut self, _back: bool) -> bool {
+        self.internal.toggle_focus();
+        self.internal.focused()
     }
 }
 
 impl WidgetGrab for Button {
     /// Grab for a window state
-    unsafe fn grab(&mut self, grab_ptr: &mut Option<*mut Widget>) {
+    fn grab(&mut self) -> bool {
         if !self.internal.grabbed() {
-            if grab_ptr.is_none() {
-                self.internal.set_grab(true);
-                *grab_ptr = Some(self as *mut Widget)
-            }
+            self.internal.set_grab(true);
+            return true;
         }
+        false
     }
     /// Ungrab from a window state
-    unsafe fn ungrab(&mut self, grab_ptr: &mut Option<*mut Widget>) {
+    fn ungrab(&mut self) -> bool {
         if self.internal.grabbed() {
-            self.internal.set_grab(false);
-            *grab_ptr = None;
+            self.internal.set_grab(false)
         }
+        false
     }
 }

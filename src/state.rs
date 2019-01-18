@@ -47,6 +47,10 @@ impl MouseState {
         self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
     }
 
+    pub fn set_relative_recur(&mut self, bounds: Boundaries) {
+        self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
+    }
+
     pub fn clicked(&self) -> bool {
         self.m_click
     }
