@@ -75,6 +75,17 @@ impl Container {
             (false, 0)
         }
     }
+
+    fn focus_id(&mut self, n: usize) {
+        if let Some(id) = self.focus_id {
+            if id != n {
+                self.widgets[id].unfocus();
+                
+            }
+        }
+        self.focus_id = Some(n);
+        //println!("{:?}", self.focus_id);
+    }
 }
 
 impl Widget for Container {
@@ -97,19 +108,25 @@ impl Widget for Container {
     fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
         let mut relative = mouse.clone();
         relative.set_relative(self.get_bounds());
-
+        
+        if let Some(id) = self.grab_id {
+            //println!("{} {}", "Grabbed", id);
+            let grab = self.widgets[id].handle_mouse(mouse);
+            if !grab.1 {
+                self.grab_id = None;
+            }
+            if grab.0 {
+                self.focus_id(id);
+            }
+            return grab;
+        }
         for (n, widget) in self.widgets.iter_mut().enumerate() {
             if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
                 relative.set_relative_recur(widget.get_bounds());
 
                 let action = (*widget).handle_mouse(&relative);
                 if action.0 {
-                    if let Some(id) = self.focus_id {
-                        if id != n {
-                            self.widgets[id].unfocus();
-                        }
-                    }
-                    self.focus_id = Some(n);
+                    self.focus_id(n);
                 }
                 if action.1 {
                     self.grab_id = Some(n);
@@ -162,8 +179,8 @@ impl Widget for Container {
         false
     }
 
-    fn focus(&mut self) -> bool {
-        self.step_focus(false)
+    fn focus(&mut self) {
+        self.step_focus(false);
     }
 
     /// Unfocus container and everything inside

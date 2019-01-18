@@ -56,6 +56,7 @@ impl Window {
 
     pub fn prev_focus(&mut self) {
         self.root_container.step_focus(true);
+        println!("{}", "----");
     }
 
     pub fn draw_window(&self) {

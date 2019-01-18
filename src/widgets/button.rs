@@ -44,15 +44,17 @@ impl Widget for Button {
         if mouse.clicked() {
             //println!("{} {} {:?} {:?}", "Clicked", self.label, mouse.coordinates_relative(), mouse.coordinates());
             self.clicked = true;
-            return (false, self.grab());
+            self.grab();
         } else if self.clicked {
             self.clicked = false;
-            return (self.focus(), self.ungrab());
+            self.ungrab();
+            self.focus();
+            return (self.internal.focused(), false);
         } else {
             //println!("{} {} {:?} {:?}", "Hovered", self.label, mouse.coordinates_relative(), mouse.coordinates());
         }
 
-        (false, false)
+        (false, self.internal.grabbed())
     }
     /// Handle a keyboard state
     fn handle_keys(&mut self, _key: &KeyState) {
@@ -68,35 +70,34 @@ impl Widget for Button {
     }
 
     /// Focus the current widget
-    fn focus(&mut self) -> bool {
+    fn focus(&mut self) {
+        println!("Focused {}", self.label);
         self.internal.set_focused(true);
-        true
     }
     /// Unfocus the current widget
     fn unfocus(&mut self) {
+        println!("Un Focused {}", self.label);
         self.internal.set_focused(false);
     }
 
     fn step_focus(&mut self, _back: bool) -> bool {
         self.internal.toggle_focus();
+        println!("Step Focus {} {}", self.internal.focused(), self.label);
         self.internal.focused()
     }
 }
 
 impl WidgetGrab for Button {
     /// Grab for a window state
-    fn grab(&mut self) -> bool {
+    fn grab(&mut self) {
         if !self.internal.grabbed() {
             self.internal.set_grab(true);
-            return true;
         }
-        false
     }
     /// Ungrab from a window state
-    fn ungrab(&mut self) -> bool {
+    fn ungrab(&mut self) {
         if self.internal.grabbed() {
-            self.internal.set_grab(false)
+            self.internal.set_grab(false);
         }
-        false
     }
 }

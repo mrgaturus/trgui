@@ -18,7 +18,7 @@ pub trait Widget {
     /// Set Widget Bounds (x, y, width, height)
     fn set_bounds(&mut self, bounds: Boundaries);
     /// Focus the current widget
-    fn focus(&mut self) -> bool;
+    fn focus(&mut self);
     /// Unfocus the current widget
     fn unfocus(&mut self);
     /// Step the focus
@@ -34,9 +34,9 @@ pub trait Widget {
 /// WidgetGrab - Needs more commenting on what it actually does!
 pub trait WidgetGrab: Widget {
     /// Grab for a window state
-    fn grab(&mut self) -> bool;
+    fn grab(&mut self);
     /// Ungrab from a window state
-    fn ungrab(&mut self) -> bool;
+    fn ungrab(&mut self);
 }
 
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
