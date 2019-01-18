@@ -28,6 +28,12 @@ pub trait Widget {
     fn focus(&mut self, back: bool) -> FocusAction;
     /// Unfocus the current widget
     fn unfocus(&mut self);
+
+    // Move the widget to the heap
+    #[inline]
+    fn boxed(self) -> Box<Self> where Self: Sized {
+        Box::new(self)
+    }
 }
 
 /// WidgetGrab - Needs more commenting on what it actually does!
