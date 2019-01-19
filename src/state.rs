@@ -51,6 +51,14 @@ impl MouseState {
         self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
+    pub fn clear_relative(&mut self) {
+        self.m_coords_relative = (-1, -1);
+    }
+
+    pub fn exist_relative(&self) -> bool {
+        self.m_coords_relative.0 >= 0 && self.m_coords_relative.1 >= 0
+    }
+
     pub fn clicked(&self) -> bool {
         self.m_click
     }

@@ -6,6 +6,7 @@ type WidgetList = Vec<Box<dyn Widget>>;
 pub struct Container {
     focus_id: Option<usize>,
     grab_id: Option<usize>,
+    last_id: Option<usize>,
     layout: Option<Box<dyn Layout>>,
     widgets: WidgetList,
     internal: WidgetInternal
@@ -23,6 +24,7 @@ impl Container {
         Container {
             focus_id: Option::None,
             grab_id: Option::None,
+            last_id: Option::None,
             layout: Option::None,
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
@@ -34,6 +36,7 @@ impl Container {
         Container {
             focus_id: Option::None,
             grab_id: Option::None,
+            last_id: Option::None,
             layout: Option::Some(layout),
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
@@ -80,7 +83,6 @@ impl Container {
         if let Some(id) = self.focus_id {
             if id != n {
                 self.widgets[id].unfocus();
-                
             }
         }
         self.focus_id = Some(n);
@@ -112,7 +114,16 @@ impl Widget for Container {
         if !self.internal.grabbed() {
             if let Some(id) = self.grab_id {
                 //println!("{} {}", "Grabbed", id);
-                let grab = self.widgets[id].handle_mouse(mouse);
+                let widget = &mut self.widgets[id];
+
+                if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
+                    relative.set_relative_recur(widget.get_bounds());
+                } else {
+                    relative.clear_relative();
+                }
+                
+                let grab = widget.handle_mouse(&relative);
+                
                 if !grab.1 {
                     self.grab_id = None;
                 }
@@ -132,11 +143,19 @@ impl Widget for Container {
                     if action.1 {
                         self.grab_id = Some(n);
                     }
+                    if let Some(id) = self.last_id {
+                        if id != n {
+                            dbg!(id);
+                            self.unhover();
+                        }
+                    }
+                    self.last_id = Some(n);
                     return action;
                 }
             }
         }
 
+        self.unhover();
         self.internal.set_grab(mouse.clicked());
         (false, self.internal.grabbed())
     }
@@ -192,6 +211,13 @@ impl Widget for Container {
             self.widgets[id].unfocus();
             self.focus_id = Option::None;
         }
+    }
+
+    fn unhover(&mut self) {
+        if let Some(id) = self.last_id {
+            self.widgets[id].unhover();
+        }
+        self.last_id = Option::None;
     }
 }
 

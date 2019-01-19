@@ -23,6 +23,9 @@ pub trait Widget {
     fn unfocus(&mut self);
     /// Step the focus
     fn step_focus(&mut self, back: bool) -> bool;
+    /// When you un hover the widget
+    fn unhover(&mut self);
+
 
     // Move the widget to the heap
     #[inline]
@@ -159,6 +162,11 @@ impl WidgetInternal {
     /// Set if is enabled
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enable = enabled;
+    }
+
+    /// Set if is enabled
+    pub fn set_hover(&mut self, hover: bool) {
+        self.hover = hover;
     }
 
     /// Toggle if is enabled
