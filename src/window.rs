@@ -60,7 +60,7 @@ impl Window {
     }
 
     pub fn draw_window(&self) {
-        self.root_container.draw();
+        self.root_container.draw(&(0, 0));
     }
 
     pub fn update_window(&mut self) {

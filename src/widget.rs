@@ -6,7 +6,7 @@ pub type Dimensions = (i32, i32);
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
-    fn draw(&self);
+    fn draw(&self, position: &(i32, i32));
     /// Update the status of widget
     fn update(&mut self);
     /// Handle a mouse state (focus, grab)
@@ -48,6 +48,8 @@ pub struct WidgetInternal {
     focus: bool,
     /// Grab
     grab: bool,
+    /// Hover
+    hover: bool,
     /// Enabled
     enable: bool,
     /// Visible
@@ -61,6 +63,7 @@ impl WidgetInternal {
             bounds,
             focus: false,
             grab: false,
+            hover: false,
             enable: true,
             show: true
         }
@@ -163,6 +166,10 @@ impl WidgetInternal {
         self.enable = !self.enable;
     }
 
+    pub fn toggle_hovered(&mut self) {
+        self.hover = !self.hover;
+    }
+
     /// Toggle if is enabled
     pub fn toggle_focus(&mut self) {
         self.focus = !self.focus;
@@ -176,6 +183,11 @@ impl WidgetInternal {
     /// Check if is focused
     pub fn focused(&self) -> bool {
         self.focus
+    }
+
+    /// Check if is hovered
+    pub fn hovered(&self) -> bool {
+        self.hover
     }
 
     /// Check if is visible

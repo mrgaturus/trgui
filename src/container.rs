@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries};
+use crate::widget::{Widget, WidgetInternal, Boundaries, WidgetGrab};
 use crate::state::{MouseState, KeyState};
 
 type WidgetList = Vec<Box<dyn Widget>>;
@@ -89,9 +89,10 @@ impl Container {
 }
 
 impl Widget for Container {
-    fn draw(&self) {
+    fn draw(&self, position: &(i32, i32)) {
         for widget in self.widgets.iter() {
-            (*widget).draw();
+            let absolute_widget = absolute_pos!(position, widget.get_bounds());
+            (*widget).draw(&absolute_widget);
         }
     }
 
@@ -108,34 +109,36 @@ impl Widget for Container {
     fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
         let mut relative = mouse.clone();
         relative.set_relative(self.get_bounds());
-        
-        if let Some(id) = self.grab_id {
-            //println!("{} {}", "Grabbed", id);
-            let grab = self.widgets[id].handle_mouse(mouse);
-            if !grab.1 {
-                self.grab_id = None;
-            }
-            if grab.0 {
-                self.focus_id(id);
-            }
-            return grab;
-        }
-        for (n, widget) in self.widgets.iter_mut().enumerate() {
-            if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                relative.set_relative_recur(widget.get_bounds());
-
-                let action = (*widget).handle_mouse(&relative);
-                if action.0 {
-                    self.focus_id(n);
+        if !self.internal.grabbed() {
+            if let Some(id) = self.grab_id {
+                //println!("{} {}", "Grabbed", id);
+                let grab = self.widgets[id].handle_mouse(mouse);
+                if !grab.1 {
+                    self.grab_id = None;
                 }
-                if action.1 {
-                    self.grab_id = Some(n);
+                if grab.0 {
+                    self.focus_id(id);
                 }
-                return action;
+                return grab;
+            }
+            for (n, widget) in self.widgets.iter_mut().enumerate() {
+                if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
+                    relative.set_relative_recur(widget.get_bounds());
+
+                    let action = (*widget).handle_mouse(&relative);
+                    if action.0 {
+                        self.focus_id(n);
+                    }
+                    if action.1 {
+                        self.grab_id = Some(n);
+                    }
+                    return action;
+                }
             }
         }
 
-        (false, false)
+        self.internal.set_grab(mouse.clicked());
+        (false, self.internal.grabbed())
     }
 
     fn handle_keys(&mut self, key: &KeyState) {
@@ -188,6 +191,21 @@ impl Widget for Container {
         if let Some(id) = self.focus_id {
             self.widgets[id].unfocus();
             self.focus_id = Option::None;
+        }
+    }
+}
+
+impl WidgetGrab for Container {
+    /// Grab for a window state
+    fn grab(&mut self) {
+        if !self.internal.grabbed() {
+            self.internal.set_grab(true);
+        }
+    }
+    /// Ungrab from a window state
+    fn ungrab(&mut self) {
+        if self.internal.grabbed() {
+            self.internal.set_grab(false);
         }
     }
 }

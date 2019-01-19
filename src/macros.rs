@@ -29,7 +29,7 @@ macro_rules! point_on_area {
 #[macro_export]
 macro_rules! absolute_pos {
     ($p:expr, $b:expr) => {
-        (clamp!($p.0 + $b.0, 0, $b.2), clamp!($p.1 + $b.1, 0, $b.3))
+        ($p.0 + $b.0, $p.1 + $b.1)
     };
 }
 
