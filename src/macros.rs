@@ -41,3 +41,10 @@ macro_rules! relative_pos {
         ($p.0 - $b.0, $p.1 - $b.1)
     };
 }
+
+#[macro_export]
+macro_rules! relative_pos_clamp {
+    ($p:expr, $b:expr) => {
+        (clamp!($p.0 - $b.0, 0, $b.2), clamp!($p.1 - $b.1, 0, $b.3))
+    };
+}

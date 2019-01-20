@@ -110,18 +110,17 @@ impl Widget for Container {
 
     fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
         let mut relative = mouse.clone();
-        relative.set_relative(self.get_bounds());
+
         if !self.internal.grabbed() {
             if let Some(id) = self.grab_id {
                 self.unhover();
-                //println!("{} {}", "Grabbed", id);
+
                 let widget = &mut self.widgets[id];
-                
                 if !point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
                     relative.enable_relative(false);
                 }
-                relative.set_relative_recur(widget.get_bounds());
-                
+                relative.set_relative(widget.get_bounds());
+                println!("NESTED {:?}", relative.coordinates_relative());
                 let grab = widget.handle_mouse(&relative);
                 
                 if !grab.1 {
@@ -134,7 +133,7 @@ impl Widget for Container {
             }
             for (n, widget) in self.widgets.iter_mut().enumerate() {
                 if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                    relative.set_relative_recur(widget.get_bounds());
+                    relative.set_relative(widget.get_bounds());
 
                     let action = (*widget).handle_mouse(&relative);
                     if action.0 {

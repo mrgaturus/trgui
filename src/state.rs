@@ -43,14 +43,11 @@ impl MouseState {
 
     pub fn set_mouse(&mut self, coords: Coordinates, pressure: i32) {
         self.m_coords = coords;
+        self.m_coords_relative = coords;
         self.t_pressure = pressure;
     }
 
     pub fn set_relative(&mut self, bounds: Boundaries) {
-        self.m_coords_relative = relative_pos!(self.coordinates(), bounds);
-    }
-
-    pub fn set_relative_recur(&mut self, bounds: Boundaries) {
         self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
