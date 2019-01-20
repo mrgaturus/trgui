@@ -113,6 +113,7 @@ impl Widget for Container {
         relative.set_relative(self.get_bounds());
         if !self.internal.grabbed() {
             if let Some(id) = self.grab_id {
+                self.unhover();
                 //println!("{} {}", "Grabbed", id);
                 let widget = &mut self.widgets[id];
                 
@@ -215,8 +216,8 @@ impl Widget for Container {
     fn unhover(&mut self) {
         if let Some(id) = self.last_id {
             self.widgets[id].unhover();
+            self.last_id = Option::None;
         }
-        self.last_id = Option::None;
     }
 }
 
