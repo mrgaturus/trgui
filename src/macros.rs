@@ -38,6 +38,6 @@ macro_rules! absolute_pos {
 #[macro_export]
 macro_rules! relative_pos {
     ($p:expr, $b:expr) => {
-        (clamp!($p.0 - $b.0, 0 as i32, $b.2), clamp!($p.1 - $b.1, 0 as i32, $b.3))
+        ($p.0 - $b.0, $p.1 - $b.1)
     };
 }
