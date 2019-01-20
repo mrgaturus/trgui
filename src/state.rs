@@ -10,6 +10,8 @@ pub struct MouseState {
     m_coords: Coordinates,
     /// Relative Mouse coordinates
     m_coords_relative: Coordinates,
+    /// Check if relative is enabled
+    m_relative: bool,
     /// Tablet Pressure Level
     t_pressure: i32
 }
@@ -30,6 +32,7 @@ impl MouseState {
             m_click: false,
             m_coords: (0,0),
             m_coords_relative: (0, 0),
+            m_relative: true,
             t_pressure: 0
         }
     }
@@ -51,12 +54,12 @@ impl MouseState {
         self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
-    pub fn clear_relative(&mut self) {
-        self.m_coords_relative = (-1, -1);
+    pub fn enable_relative(&mut self, enable: bool) {
+        self.m_relative = enable;
     }
 
     pub fn exist_relative(&self) -> bool {
-        self.m_coords_relative.0 >= 0 && self.m_coords_relative.1 >= 0
+        self.m_relative
     }
 
     pub fn clicked(&self) -> bool {
@@ -82,6 +85,7 @@ impl Clone for MouseState {
             m_click: self.m_click,
             m_coords: self.m_coords,
             m_coords_relative: self.m_coords_relative,
+            m_relative: self.m_relative,
             t_pressure: self.t_pressure
         }
     } 

@@ -115,12 +115,11 @@ impl Widget for Container {
             if let Some(id) = self.grab_id {
                 //println!("{} {}", "Grabbed", id);
                 let widget = &mut self.widgets[id];
-
-                if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                    relative.set_relative_recur(widget.get_bounds());
-                } else {
-                    relative.clear_relative();
+                
+                if !point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
+                    relative.enable_relative(false);
                 }
+                relative.set_relative_recur(widget.get_bounds());
                 
                 let grab = widget.handle_mouse(&relative);
                 
