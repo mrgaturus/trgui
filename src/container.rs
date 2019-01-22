@@ -89,7 +89,7 @@ impl Widget for Container {
 
     fn update(&mut self, layout: bool) {
         if layout {
-            self.layout.layout(&mut self.widgets, &self.internal.boundaries());
+            self.layout.layout(&mut self.widgets, &self.internal.dimensions());
         }
 
         for widget in self.widgets.iter_mut() {
@@ -132,7 +132,6 @@ impl Widget for Container {
                     }
                     if let Some(id) = self.last_id {
                         if id != n {
-                            dbg!(id);
                             self.unhover();
                         }
                     }
@@ -158,7 +157,8 @@ impl Widget for Container {
     }
 
     fn set_bounds(&mut self, bounds: Boundaries) {
-        self.internal.set_boundaries(bounds);
+        self.internal.set_coords(bounds.0, bounds.1);
+        self.set_dim((bounds.2, bounds.3));
     }
 
     /// Set Widget Bounds (x, y, width, height)
@@ -166,7 +166,15 @@ impl Widget for Container {
         self.internal.set_coords(pos.0, pos.1);
     }
     /// Set Widget Bounds (x, y, width, height)
-    fn set_dim(&mut self, dim: (i32, i32)) {
+    fn set_dim(&mut self, mut dim: (i32, i32)) {
+        let minimum = self.layout.minimum_size(&self.widgets);
+        
+        if dim.0 < minimum.0 {
+            dim.0 = minimum.0;
+        } else if dim.1 < minimum.1 {
+            dim.1 = minimum.1;
+        }
+
         self.internal.set_dimensions(dim.0, dim.1);
     }
 
