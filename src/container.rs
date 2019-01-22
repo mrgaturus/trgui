@@ -1,43 +1,26 @@
 use crate::widget::{Widget, WidgetInternal, Boundaries, WidgetGrab};
 use crate::state::{MouseState, KeyState};
+use crate::layout::Layout;
 
-type WidgetList = Vec<Box<dyn Widget>>;
+pub type WidgetList = Vec<Box<dyn Widget>>;
 
 pub struct Container {
     focus_id: Option<usize>,
     grab_id: Option<usize>,
     last_id: Option<usize>,
-    layout: Option<Box<dyn Layout>>,
+    layout: Box<dyn Layout>,
     widgets: WidgetList,
     internal: WidgetInternal
     
 }
 
-pub trait Layout {
-    fn layout(&self, container: &mut WidgetList);
-    fn set_container(&self, container: &Container);
-    fn get_container(&self) -> &Container;
-}
-
 impl Container {
-    pub fn new() -> Self {
+    pub fn new(layout: Box<dyn Layout>) -> Self {
         Container {
             focus_id: Option::None,
             grab_id: Option::None,
             last_id: Option::None,
-            layout: Option::None,
-            widgets: WidgetList::new(),
-            internal: WidgetInternal::new((0, 0, 0, 0))
-            
-        }
-    }
-
-    pub fn new_with_layout(layout: Box<dyn Layout>) -> Self {
-        Container {
-            focus_id: Option::None,
-            grab_id: Option::None,
-            last_id: Option::None,
-            layout: Option::Some(layout),
+            layout,
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
             
@@ -45,11 +28,19 @@ impl Container {
     }
 
     pub fn set_layout(&mut self, layout: Box<dyn Layout>) {
-        self.layout = Option::Some(layout);
+        self.layout = layout;
     }
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>) {
         self.widgets.push(widget);
+    }
+
+    pub fn del_widget(&mut self, _position: (i32, i32)) {
+
+    }
+
+    pub fn get_widgets(&mut self) -> &mut WidgetList {
+        &mut self.widgets
     }
 
     fn step(&mut self, back: bool) -> (bool, usize) {
@@ -98,13 +89,13 @@ impl Widget for Container {
         }
     }
 
-    fn update(&mut self) {
-        if let Some(layout) = &self.layout {
-            (*layout).layout(&mut self.widgets);
+    fn update(&mut self, layout: bool) {
+        if layout {
+            self.layout.layout(&mut self.widgets, &self.internal.boundaries());
         }
 
         for widget in self.widgets.iter_mut() {
-            (*widget).update();
+            (*widget).update(layout);
         }
     }
 
@@ -171,6 +162,15 @@ impl Widget for Container {
 
     fn set_bounds(&mut self, bounds: Boundaries) {
         self.internal.set_boundaries(bounds);
+    }
+
+    /// Set Widget Bounds (x, y, width, height)
+    fn set_pos(&mut self, pos: (i32, i32)) {
+        self.internal.set_coords(pos.0, pos.1);
+    }
+    /// Set Widget Bounds (x, y, width, height)
+    fn set_dim(&mut self, dim: (i32, i32)) {
+        self.internal.set_dimensions(dim.0, dim.1);
     }
 
     /// Step focus on Widget array

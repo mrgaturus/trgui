@@ -1,6 +1,7 @@
 use crate::state::{KeyState, MouseState};
 use crate::widget::{Widget, WidgetInternal, Boundaries, Dimensions};
 use crate::container::Container;
+use crate::layout::{Layout, FixedLayout};
 
 pub trait WindowBackend {
     fn show(&mut self);
@@ -22,7 +23,7 @@ impl Window {
     pub fn new() -> Self {
         Window {
             //backend,
-            root_container: Box::new(Container::new()),
+            root_container: Container::new(FixedLayout::new(false).boxed()).boxed(),
             internal: WidgetInternal::new((0, 0, 0, 0)),
             mouse_s: MouseState::new(),
             key_s: KeyState::new()
@@ -63,7 +64,11 @@ impl Window {
     }
 
     pub fn update_window(&mut self) {
-        self.root_container.update();
+        self.root_container.update(false);
+    }
+
+    pub fn update_layout(&mut self) {
+        self.root_container.update(true);
     }
 
     pub fn get_bounds(&self) -> Boundaries {

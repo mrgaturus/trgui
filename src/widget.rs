@@ -8,7 +8,7 @@ pub trait Widget {
     /// Draw the current widget
     fn draw(&self, position: &(i32, i32));
     /// Update the status of widget
-    fn update(&mut self);
+    fn update(&mut self, layout: bool);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool);
     /// Handle a keyboard state
@@ -17,6 +17,10 @@ pub trait Widget {
     fn get_bounds(&self) -> Boundaries;
     /// Set Widget Bounds (x, y, width, height)
     fn set_bounds(&mut self, bounds: Boundaries);
+    /// Set Widget Bounds (x, y, width, height)
+    fn set_pos(&mut self, pos: Dimensions);
+    /// Set Widget Bounds (x, y, width, height)
+    fn set_dim(&mut self, dim: Dimensions);
     /// Focus the current widget
     fn focus(&mut self);
     /// Unfocus the current widget
