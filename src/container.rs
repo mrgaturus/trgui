@@ -11,7 +11,6 @@ pub struct Container {
     layout: Box<dyn Layout>,
     widgets: WidgetList,
     internal: WidgetInternal
-    
 }
 
 impl Container {
@@ -23,7 +22,6 @@ impl Container {
             layout,
             widgets: WidgetList::new(),
             internal: WidgetInternal::new((0, 0, 0, 0))
-            
         }
     }
 
@@ -111,7 +109,6 @@ impl Widget for Container {
                     relative.enable_relative(false);
                 }
                 relative.set_relative(widget.get_bounds());
-                println!("NESTED {:?}", relative.coordinates_relative());
                 let grab = widget.handle_mouse(&relative);
                 
                 if !grab.1 {
