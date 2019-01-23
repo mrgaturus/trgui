@@ -58,7 +58,7 @@ impl Container {
             } else {
                 id += 1
             }
-            if id > self.widgets.len() - 1 {
+            if id >= self.widgets.len() {
                 self.focus_id = None;
                 (false, 0)
             } else {
@@ -199,7 +199,11 @@ impl Widget for Container {
                         return focus;
                     } else {
                         step = self.step(back);
-                        continue;
+                        if step.0 {
+                            continue;
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
