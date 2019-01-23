@@ -44,7 +44,7 @@ impl Window {
     }
 
     pub fn handle_mouse_itself(&mut self) {
-        self.root_container.handle_mouse(&self.mouse_s);
+        self.root_container.handle_mouse(&self.mouse_s, &mut self.internal);
     }
 
     pub fn handle_keys(&mut self) {
@@ -52,23 +52,23 @@ impl Window {
     }
 
     pub fn next_focus(&mut self) {
-        self.root_container.step_focus(false);
+        self.root_container.step_focus(false, &mut self.internal);
     }
 
     pub fn prev_focus(&mut self) {
-        self.root_container.step_focus(true);
+        self.root_container.step_focus(true, &mut self.internal);
     }
 
     pub fn draw_window(&self) {
-        self.root_container.draw(&(0, 0));
+        self.root_container.draw(&(0, 0), &self.internal);
     }
 
     pub fn update_window(&mut self) {
-        self.root_container.update(false);
+        self.root_container.update(false, &mut self.internal);
     }
 
     pub fn update_layout(&mut self) {
-        self.root_container.update(true);
+        self.root_container.update(true, &mut self.internal);
     }
 
     pub fn get_bounds(&self) -> Boundaries {
@@ -85,6 +85,5 @@ impl Window {
 
     pub fn set_dimensions(&mut self, dimensions: Dimensions) {
         self.internal.set_dimensions(dimensions.0, dimensions.1);
-        self.root_container.set_bounds((0, 0, dimensions.0, dimensions.1));
     }
 }

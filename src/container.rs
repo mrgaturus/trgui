@@ -1,8 +1,9 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries, WidgetGrab};
+use crate::widget::{Widget, WidgetInternal, Dimensions};
 use crate::state::{MouseState, KeyState};
 use crate::layout::Layout;
 
-pub type WidgetList = Vec<Box<dyn Widget>>;
+type WidgetList = Vec<Box<dyn Widget>>;
+pub type BoundList = Vec<WidgetInternal>;
 
 pub struct Container {
     focus_id: Option<usize>,
@@ -10,7 +11,7 @@ pub struct Container {
     last_id: Option<usize>,
     layout: Box<dyn Layout>,
     widgets: WidgetList,
-    internal: WidgetInternal
+    widgets_i: BoundList
 }
 
 impl Container {
@@ -21,7 +22,7 @@ impl Container {
             last_id: Option::None,
             layout,
             widgets: WidgetList::new(),
-            internal: WidgetInternal::new((0, 0, 0, 0))
+            widgets_i: BoundList::new()
         }
     }
 
@@ -29,8 +30,9 @@ impl Container {
         self.layout = layout;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget>) {
-        self.widgets.push(widget);
+    pub fn add_widget(&mut self, widget: (Box<dyn Widget>, WidgetInternal)) {
+        self.widgets.push(widget.0);
+        self.widgets_i.push(widget.1);
     }
 
     pub fn del_widget(&mut self, _position: (i32, i32)) {
@@ -71,79 +73,101 @@ impl Container {
     fn focus_id(&mut self, n: usize) {
         if let Some(id) = self.focus_id {
             if id != n {
-                self.widgets[id].unfocus();
+                self.widgets_i[id].set_focused(false);
             }
         }
         self.focus_id = Some(n);
         //println!("{:?}", self.focus_id);
     }
+
+    fn unfocus(&mut self) {
+        if let Some(id) = self.focus_id {
+            self.widgets_i[id].set_focused(false);
+            self.focus_id = Option::None;
+        }
+    }
 }
 
 impl Widget for Container {
-    fn draw(&self, position: &(i32, i32)) {
-        for widget in self.widgets.iter() {
-            let absolute_widget = absolute_pos!(position, widget.get_bounds());
-            (*widget).draw(&absolute_widget);
+    fn draw(&self, position: &(i32, i32), _internal: &WidgetInternal) {
+        for (widget, w_internal) in self.widgets.iter().zip(self.widgets_i.iter()) {
+            let absolute_widget = absolute_pos!(position, w_internal.coordinates());
+            widget.draw(&absolute_widget, w_internal);
         }
     }
 
-    fn update(&mut self, layout: bool) {
+    fn update(&mut self, layout: bool, internal: &mut WidgetInternal) {
         if layout {
-            self.layout.layout(&mut self.widgets, &self.internal.dimensions());
+            self.layout.layout(&mut self.widgets_i, &internal.dimensions());
+            let min = self.layout.minimum_size(&self.widgets_i);
+            internal.set_dimensions(min.0, min.1);
         }
 
-        for widget in self.widgets.iter_mut() {
-            (*widget).update(layout);
+        for (widget, internal) in self.widgets.iter_mut().zip(self.widgets_i.iter_mut()) {
+            (*widget).update(layout, internal);
         }
     }
 
-    fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool) {
+    fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         let mut relative = mouse.clone();
 
-        if !self.internal.grabbed() {
+        if !internal.grabbed() || self.grab_id.is_some() {
             if let Some(id) = self.grab_id {
                 self.unhover();
 
-                let widget = &mut self.widgets[id];
-                if !point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
+                let widget_i = &mut self.widgets_i[id];
+                if !point_on_area!(relative.coordinates_relative(), widget_i.boundaries()) {
                     relative.enable_relative(false);
                 }
-                relative.set_relative(widget.get_bounds());
-                let grab = widget.handle_mouse(&relative);
+                relative.set_relative(widget_i.boundaries());
+                self.widgets[id].handle_mouse(&relative, widget_i);
                 
-                if !grab.1 {
+                if !widget_i.grabbed() {
                     self.grab_id = None;
+                    internal.set_grab(false);
                 }
-                if grab.0 {
+                if widget_i.focused() {
                     self.focus_id(id);
+                    internal.set_focused(true);
                 }
-                return grab;
-            }
-            for (n, widget) in self.widgets.iter_mut().enumerate() {
-                if point_on_area!(relative.coordinates_relative(), widget.get_bounds()) {
-                    relative.set_relative(widget.get_bounds());
+            } else {
+                let widget_r = self.widgets.iter_mut()
+                    .zip(self.widgets_i.iter_mut())
+                    .enumerate()
+                    .find(|tuple| 
+                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries())             
+                    );
 
-                    let action = (*widget).handle_mouse(&relative);
-                    if action.0 {
-                        self.focus_id(n);
-                    }
-                    if action.1 {
+                if let Some((n, (widget, w_internal))) = widget_r {
+                    relative.set_relative(w_internal.boundaries());
+
+                    (*widget).handle_mouse(&relative, w_internal);
+
+                    if w_internal.grabbed() {
                         self.grab_id = Some(n);
+                        internal.set_grab(true);
                     }
+                    if w_internal.focused() {
+                        self.focus_id(n);
+                        internal.set_focused(true);
+                    }
+
                     if let Some(id) = self.last_id {
                         if id != n {
                             self.unhover();
                         }
                     }
                     self.last_id = Some(n);
-                    return action;
+                } else {
+                    self.unhover();
+                    if self.grab_id.is_none() {
+                        internal.set_grab(mouse.clicked());
+                    }
                 }
             }
+        } else {
+            internal.set_grab(mouse.clicked());
         }
-
-        self.unhover();
-        self.internal.set_grab(mouse.clicked());
-        (false, self.internal.grabbed())
     }
 
     fn handle_keys(&mut self, key: &KeyState) {
@@ -152,37 +176,16 @@ impl Widget for Container {
         }
     }
 
-    fn get_bounds(&self) -> Boundaries {
-        self.internal.boundaries()
-    }
-
-    fn set_bounds(&mut self, bounds: Boundaries) {
-        self.internal.set_coords(bounds.0, bounds.1);
-        self.set_dim((bounds.2, bounds.3));
-    }
-
     /// Set Widget Bounds (x, y, width, height)
-    fn set_pos(&mut self, pos: (i32, i32)) {
-        self.internal.set_coords(pos.0, pos.1);
-    }
-    /// Set Widget Bounds (x, y, width, height)
-    fn set_dim(&mut self, mut dim: (i32, i32)) {
-        let minimum = self.layout.minimum_size(&self.widgets);
-        
-        if dim.0 < minimum.0 {
-            dim.0 = minimum.0;
-        } else if dim.1 < minimum.1 {
-            dim.1 = minimum.1;
-        }
-
-        self.internal.set_dimensions(dim.0, dim.1);
+    fn get_min(&self) -> Dimensions {
+        self.layout.minimum_size(&self.widgets_i)
     }
 
     /// Step focus on Widget array
-    fn step_focus(&mut self, back: bool) -> bool {
+    fn step_focus(&mut self, back: bool, _internal: &mut WidgetInternal) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
-                if self.widgets[id].step_focus(back) {
+                if self.widgets[id].step_focus(back, &mut self.widgets_i[id]) {
                     return true;
                 }
             }
@@ -190,7 +193,7 @@ impl Widget for Container {
 
             if step.0 {
                 while let Some(widget) = self.widgets.get_mut(step.1) {
-                    let focus = widget.step_focus(back);
+                    let focus = widget.step_focus(back, &mut self.widgets_i[step.1]);
 
                     if focus {
                         return focus;
@@ -205,37 +208,11 @@ impl Widget for Container {
         false
     }
 
-    fn focus(&mut self) {
-        self.step_focus(false);
-    }
-
-    /// Unfocus container and everything inside
-    fn unfocus(&mut self) {
-        if let Some(id) = self.focus_id {
-            self.widgets[id].unfocus();
-            self.focus_id = Option::None;
-        }
-    }
-
     fn unhover(&mut self) {
         if let Some(id) = self.last_id {
             self.widgets[id].unhover();
+            self.widgets_i[id].set_hover(false);
             self.last_id = Option::None;
-        }
-    }
-}
-
-impl WidgetGrab for Container {
-    /// Grab for a window state
-    fn grab(&mut self) {
-        if !self.internal.grabbed() {
-            self.internal.set_grab(true);
-        }
-    }
-    /// Ungrab from a window state
-    fn ungrab(&mut self) {
-        if self.internal.grabbed() {
-            self.internal.set_grab(false);
         }
     }
 }

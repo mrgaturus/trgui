@@ -6,28 +6,18 @@ pub type Dimensions = (i32, i32);
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Draw the current widget
-    fn draw(&self, position: &(i32, i32));
+    fn draw(&self, position: &(i32, i32), internal: &WidgetInternal);
     /// Update the status of widget
-    fn update(&mut self, layout: bool);
+    fn update(&mut self, layout: bool, internal: &mut WidgetInternal);
     /// Handle a mouse state (focus, grab)
-    fn handle_mouse(&mut self, mouse: &MouseState) -> (bool, bool);
+    fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal);
     /// Handle a keyboard state
     fn handle_keys(&mut self, key: &KeyState);
-    /// Get Widget Bounds (x, y, width, height)
-    fn get_bounds(&self) -> Boundaries;
-    /// Set Widget Bounds (x, y, width, height)
-    fn set_bounds(&mut self, bounds: Boundaries);
-    /// Set Widget Bounds (x, y, width, height)
-    fn set_pos(&mut self, pos: Dimensions);
-    /// Set Widget Bounds (x, y, width, height)
-    fn set_dim(&mut self, dim: Dimensions);
-    /// Focus the current widget
-    fn focus(&mut self);
-    /// Unfocus the current widget
-    fn unfocus(&mut self);
     /// Step the focus
-    fn step_focus(&mut self, back: bool) -> bool;
-    /// When you un hover the widget
+    fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool;
+    /// Get minimal Dimensions of the Widget
+    fn get_min(&self) -> Dimensions;
+    /// When you unhover the widget
     fn unhover(&mut self);
 
 
@@ -41,9 +31,9 @@ pub trait Widget {
 /// WidgetGrab - Needs more commenting on what it actually does!
 pub trait WidgetGrab: Widget {
     /// Grab for a window state
-    fn grab(&mut self);
+    fn grab(&mut self, internal: &mut WidgetInternal);
     /// Ungrab from a window state
-    fn ungrab(&mut self);
+    fn ungrab(&mut self, internal: &mut WidgetInternal);
 }
 
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
