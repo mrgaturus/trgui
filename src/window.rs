@@ -85,5 +85,6 @@ impl Window {
 
     pub fn set_dimensions(&mut self, dimensions: Dimensions) {
         self.internal.set_dimensions(dimensions.0, dimensions.1);
+        self.update_layout();
     }
 }

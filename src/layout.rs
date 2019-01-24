@@ -51,6 +51,8 @@ impl Layout for FixedLayout {
                 if widget_bounds.0 < 0 || widget_bounds.0 + widget_bounds.2 > dimensions.0 ||
                     widget_bounds.1 < 0 || widget_bounds.1 + widget_bounds.3 > dimensions.1 {
                         widget.set_visible(false);
+                    } else {
+                        widget.set_visible(true);
                     }
             }
         }

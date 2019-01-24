@@ -101,6 +101,13 @@ impl Widget for Container {
             self.layout.layout(&mut self.widgets_i, &internal.dimensions());
             let min = self.layout.minimum_size(&self.widgets_i);
             internal.set_dimensions(min.0, min.1);
+
+            if let Some(id) = self.focus_id {
+                let widget_id = &mut self.widgets_i[id];
+                if !widget_id.visible() {
+                    self.unfocus();
+                }
+            }
         }
 
         for (widget, internal) in self.widgets.iter_mut().zip(self.widgets_i.iter_mut()) {
@@ -111,7 +118,7 @@ impl Widget for Container {
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         let mut relative = mouse.clone();
 
-        if !internal.grabbed() || self.grab_id.is_some() {
+        if self.grab_id.is_some() || !internal.grabbed()  {
             if let Some(id) = self.grab_id {
                 self.unhover();
 
@@ -135,7 +142,8 @@ impl Widget for Container {
                     .zip(self.widgets_i.iter_mut())
                     .enumerate()
                     .find(|tuple| 
-                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries())             
+                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries()) 
+                        && (tuple.1).1.visible()
                     );
 
                 if let Some((n, (widget, w_internal))) = widget_r {
