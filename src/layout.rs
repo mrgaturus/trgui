@@ -2,7 +2,7 @@ use crate::container::BoundList;
 use crate::widget::{Dimensions};
 
 pub trait Layout {
-    fn layout(&mut self, widgets: &mut BoundList, dimensions: &Dimensions);
+    fn layout(&self, widgets: &mut BoundList, dimensions: &Dimensions);
     fn minimum_size(&self, widgets: &BoundList) -> Dimensions;
 
     #[inline]
@@ -24,7 +24,7 @@ impl FixedLayout {
 }
 
 impl Layout for FixedLayout {
-    fn layout(&mut self, widgets: &mut BoundList, dimensions: &Dimensions) {
+    fn layout(&self, widgets: &mut BoundList, dimensions: &Dimensions) {
         for widget in widgets.iter_mut() {
             let widget_bounds = widget.boundaries();
             if self.clamp {
@@ -50,9 +50,9 @@ impl Layout for FixedLayout {
             } else {
                 if widget_bounds.0 < 0 || widget_bounds.0 + widget_bounds.2 > dimensions.0 ||
                     widget_bounds.1 < 0 || widget_bounds.1 + widget_bounds.3 > dimensions.1 {
-                        widget.set_visible(false);
+                        widget.set_visible_layout(false);
                     } else {
-                        widget.set_visible(true);
+                        widget.set_visible_layout(true);
                     }
             }
         }

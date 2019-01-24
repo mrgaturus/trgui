@@ -19,6 +19,8 @@ pub trait Widget {
     fn get_min(&self) -> Dimensions;
     /// When you unhover the widget
     fn unhover(&mut self);
+    /// When you unfocus the widget
+    fn unfocus(&mut self);
 
 
     // Move the widget to the heap
@@ -49,8 +51,8 @@ pub struct WidgetInternal {
     hover: bool,
     /// Enabled
     enable: bool,
-    /// Visible
-    show: bool
+    /// Visible (widget, layout)
+    show: (bool, bool)
 }
 
 impl WidgetInternal {
@@ -62,7 +64,7 @@ impl WidgetInternal {
             grab: false,
             hover: false,
             enable: true,
-            show: true
+            show: (true, true)
         }
     }
 
@@ -145,7 +147,11 @@ impl WidgetInternal {
 
     /// Set if is visible
     pub fn set_visible(&mut self, visible: bool) {
-        self.show = visible;
+        self.show.0 = visible;
+    }
+
+    pub fn set_visible_layout(&mut self, visible: bool) {
+        self.show.1 = visible;
     }
 
     /// Set if is grabbed
@@ -194,7 +200,7 @@ impl WidgetInternal {
 
     /// Check if is visible
     pub fn visible(&self) -> bool {
-        self.show
+        self.show.0 && self.show.1
     }
 
     /// Check if is grabbed

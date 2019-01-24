@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Dimensions, Boundaries};
 use crate::state::{MouseState, KeyState};
 use crate::layout::Layout;
 
@@ -30,9 +30,20 @@ impl Container {
         self.layout = layout;
     }
 
-    pub fn add_widget(&mut self, widget: (Box<dyn Widget>, WidgetInternal)) {
-        self.widgets.push(widget.0);
-        self.widgets_i.push(widget.1);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget>) {
+        self.widgets.push(widget);
+        self.widgets_i.push(WidgetInternal::new((0, 0, 0, 0)));
+    }
+
+    pub fn add_widget_i(&mut self, widget: Box<dyn Widget>, internal: WidgetInternal) {
+        self.widgets.push(widget);
+        self.widgets_i.push(internal)
+    }
+
+    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries) {
+        self.widgets.push(widget);
+        dbg!(bounds);
+        self.widgets_i.push(WidgetInternal::new(bounds));
     }
 
     pub fn del_widget(&mut self, _position: (i32, i32)) {
@@ -79,28 +90,29 @@ impl Container {
         self.focus_id = Some(n);
         //println!("{:?}", self.focus_id);
     }
-
-    fn unfocus(&mut self) {
-        if let Some(id) = self.focus_id {
-            self.widgets_i[id].set_focused(false);
-            self.focus_id = Option::None;
-        }
-    }
 }
 
 impl Widget for Container {
     fn draw(&self, position: &(i32, i32), _internal: &WidgetInternal) {
         for (widget, w_internal) in self.widgets.iter().zip(self.widgets_i.iter()) {
-            let absolute_widget = absolute_pos!(position, w_internal.coordinates());
-            widget.draw(&absolute_widget, w_internal);
+            if w_internal.visible() {
+                let absolute_widget = absolute_pos!(position, w_internal.coordinates());
+                widget.draw(&absolute_widget, w_internal);
+            }
         }
     }
 
     fn update(&mut self, layout: bool, internal: &mut WidgetInternal) {
         if layout {
-            self.layout.layout(&mut self.widgets_i, &internal.dimensions());
-            let min = self.layout.minimum_size(&self.widgets_i);
+            let mut min = self.layout.minimum_size(&self.widgets_i);
+            if internal.width() > min.0 {
+                min.0 = internal.width();
+            }
+            if internal.height() > min.1 {
+                min.1 = internal.height();
+            }
             internal.set_dimensions(min.0, min.1);
+            self.layout.layout(&mut self.widgets_i, &internal.dimensions());
 
             if let Some(id) = self.focus_id {
                 let widget_id = &mut self.widgets_i[id];
@@ -142,7 +154,7 @@ impl Widget for Container {
                     .zip(self.widgets_i.iter_mut())
                     .enumerate()
                     .find(|tuple| 
-                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries()) 
+                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries())
                         && (tuple.1).1.visible()
                     );
 
@@ -190,8 +202,8 @@ impl Widget for Container {
     }
 
     /// Step focus on Widget array
-    fn step_focus(&mut self, back: bool, _internal: &mut WidgetInternal) -> bool {
-        if !self.widgets.is_empty() {
+    fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool {
+        if !self.widgets.is_empty() && internal.visible() {
             if let Some(id) = self.focus_id {
                 if self.widgets[id].step_focus(back, &mut self.widgets_i[id]) {
                     return true;
@@ -225,6 +237,14 @@ impl Widget for Container {
             self.widgets[id].unhover();
             self.widgets_i[id].set_hover(false);
             self.last_id = Option::None;
+        }
+    }
+
+    fn unfocus(&mut self) {
+        if let Some(id) = self.focus_id {
+            self.widgets[id].unfocus();
+            self.widgets_i[id].set_focused(false);
+            self.focus_id = Option::None;
         }
     }
 }
