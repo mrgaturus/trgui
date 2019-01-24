@@ -38,12 +38,12 @@ impl Window {
         &mut self.root_container
     }
 
-    pub fn handle_all_itself(&mut self) {
+    pub fn handle_all(&mut self) {
         self.handle_keys();
-        self.handle_mouse_itself();
+        self.handle_mouse();
     }
 
-    pub fn handle_mouse_itself(&mut self) {
+    pub fn handle_mouse(&mut self) {
         self.root_container.handle_mouse(&self.mouse_s, &mut self.internal);
     }
 
@@ -84,6 +84,7 @@ impl Window {
     }
 
     pub fn set_dimensions(&mut self, dimensions: Dimensions) {
+        self.root_container_mut().unhover();
         self.internal.set_dimensions(dimensions.0, dimensions.1);
         self.update_layout();
     }
