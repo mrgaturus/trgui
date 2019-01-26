@@ -191,8 +191,8 @@ impl Widget for Container {
     }
 
     fn handle_keys(&mut self, key: &KeyState) {
-        for widget in self.widgets.iter_mut() {
-            (*widget).handle_keys(key);
+        if let Some(id) = self.focus_id {
+            self.widgets[id].handle_keys(key);
         }
     }
 
