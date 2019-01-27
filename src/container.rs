@@ -3,7 +3,7 @@ use crate::state::{MouseState, KeyState};
 use crate::layout::Layout;
 
 type WidgetList = Vec<Box<dyn Widget>>;
-pub type BoundList = Vec<WidgetInternal>;
+pub type InternalList = Vec<WidgetInternal>;
 
 pub struct Container {
     focus_id: Option<usize>,
@@ -11,7 +11,7 @@ pub struct Container {
     hover_id: Option<usize>,
     layout: Box<dyn Layout>,
     widgets: WidgetList,
-    widgets_i: BoundList
+    widgets_i: InternalList
 }
 
 impl Container {
@@ -22,7 +22,7 @@ impl Container {
             hover_id: Option::None,
             layout,
             widgets: WidgetList::new(),
-            widgets_i: BoundList::new()
+            widgets_i: InternalList::new()
         }
     }
 
@@ -70,13 +70,13 @@ impl Container {
 
                 if back {
                     if id == 0 {
-                        self.focus_id = Some(len);
+                        self.focus_id = None;
                         return (false, len);
                     }
                     id -= 1;
                 } else {
                     if id == len {
-                        self.focus_id = Some(0);
+                        self.focus_id = None;
                         return (false, 0);
                     }
                     id += 1;
@@ -214,6 +214,7 @@ impl Widget for Container {
         if !self.widgets.is_empty() && internal.visible() {
             if let Some(id) = self.focus_id {
                 let widget = (&mut self.widgets[id], &mut self.widgets_i[id]);
+
                 if widget.0.step_focus(back, widget.1) {
                     return true;
                 } else {
@@ -222,18 +223,20 @@ impl Widget for Container {
                 }
             }
             let mut step = self.step(back);
-            
-            while let Some(widget) = self.widgets.get_mut(step.1) {
-                let widget_i = &mut self.widgets_i[step.1];
-                let focus = widget.step_focus(back, widget_i);
 
-                if focus {
-                    widget_i.set_focused(true);
-                    return step.0;
-                } else {
-                    step = self.step(back);
-                    if !step.0 {
-                        break;
+            if step.0 {
+                while let Some(widget) = self.widgets.get_mut(step.1) {
+                    let widget_i = &mut self.widgets_i[step.1];
+                    let focus = widget.step_focus(back, widget_i);
+
+                    if focus {
+                        widget_i.set_focused(true);
+                        return focus;
+                    } else {
+                        step = self.step(back);
+                        if !step.0 {
+                            break;
+                        }
                     }
                 }
             }

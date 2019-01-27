@@ -52,11 +52,15 @@ impl Window {
     }
 
     pub fn next_focus(&mut self) {
-        self.root_container.step_focus(false, &mut self.internal);
+        if !self.root_container.step_focus(false, &mut self.internal) {
+            self.root_container.step_focus(false, &mut self.internal);
+        };
     }
 
     pub fn prev_focus(&mut self) {
-        self.root_container.step_focus(true, &mut self.internal);
+        if !self.root_container.step_focus(true, &mut self.internal) {
+            self.root_container.step_focus(true, &mut self.internal);
+        };
     }
 
     pub fn draw_window(&self) {
