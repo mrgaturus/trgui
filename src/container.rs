@@ -8,7 +8,7 @@ pub type BoundList = Vec<WidgetInternal>;
 pub struct Container {
     focus_id: Option<usize>,
     grab_id: Option<usize>,
-    last_id: Option<usize>,
+    hover_id: Option<usize>,
     layout: Box<dyn Layout>,
     widgets: WidgetList,
     widgets_i: BoundList
@@ -19,7 +19,7 @@ impl Container {
         Container {
             focus_id: Option::None,
             grab_id: Option::None,
-            last_id: Option::None,
+            hover_id: Option::None,
             layout,
             widgets: WidgetList::new(),
             widgets_i: BoundList::new()
@@ -180,12 +180,12 @@ impl Widget for Container {
                         internal.set_focused(true);
                     }
 
-                    if let Some(id) = self.last_id {
+                    if let Some(id) = self.hover_id {
                         if id != n {
                             self.unhover();
                         }
                     }
-                    self.last_id = Some(n);
+                    self.hover_id = Some(n);
                 } else {
                     self.unhover();
                     if self.grab_id.is_none() {
@@ -243,10 +243,10 @@ impl Widget for Container {
     }
 
     fn unhover(&mut self) {
-        if let Some(id) = self.last_id {
+        if let Some(id) = self.hover_id {
             self.widgets[id].unhover();
             self.widgets_i[id].set_hover(false);
-            self.last_id = Option::None;
+            self.hover_id = Option::None;
         }
     }
 
