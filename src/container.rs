@@ -55,35 +55,43 @@ impl Container {
     }
 
     fn step(&mut self, back: bool) -> (bool, usize) {
-        if let None = self.focus_id {
-            let mut val = 0;
-            if back {
-                val = self.widgets.len() - 1;
-            }
-            self.focus_id = Some(val);
+        match self.focus_id {
+            None => {
+                let mut val = 0;
+                if back {
+                    val = self.widgets.len() - 1;
+                }
+                self.focus_id = Some(val);
 
-            (true, val)
-        } else if let Some(mut id) = self.focus_id {
-            if back {
-                id -= 1
-            } else {
-                id += 1
-            }
-            if id >= self.widgets.len() {
-                self.focus_id = None;
-                (false, 0)
-            } else {
+                (true, val)
+            },
+            Some(mut id) => {
+                let len = self.widgets.len() - 1;
+
+                if back {
+                    if id == 0 {
+                        self.focus_id = Some(len);
+                        return (false, len);
+                    }
+                    id -= 1;
+                } else {
+                    if id == len {
+                        self.focus_id = Some(0);
+                        return (false, 0);
+                    }
+                    id += 1;
+                }
+
                 self.focus_id = Some(id);
                 (true, id)
             }
-        } else {
-            (false, 0)
         }
     }
 
     fn focus_id(&mut self, n: usize) {
         if let Some(id) = self.focus_id {
             if id != n {
+                self.widgets[id].unfocus();
                 self.widgets_i[id].set_focused(false);
             }
         }
@@ -205,25 +213,27 @@ impl Widget for Container {
     fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool {
         if !self.widgets.is_empty() && internal.visible() {
             if let Some(id) = self.focus_id {
-                if self.widgets[id].step_focus(back, &mut self.widgets_i[id]) {
+                let widget = (&mut self.widgets[id], &mut self.widgets_i[id]);
+                if widget.0.step_focus(back, widget.1) {
                     return true;
+                } else {
+                    widget.0.unfocus();
+                    widget.1.set_focused(false);
                 }
             }
             let mut step = self.step(back);
+            
+            while let Some(widget) = self.widgets.get_mut(step.1) {
+                let widget_i = &mut self.widgets_i[step.1];
+                let focus = widget.step_focus(back, widget_i);
 
-            if step.0 {
-                while let Some(widget) = self.widgets.get_mut(step.1) {
-                    let focus = widget.step_focus(back, &mut self.widgets_i[step.1]);
-
-                    if focus {
-                        return focus;
-                    } else {
-                        step = self.step(back);
-                        if step.0 {
-                            continue;
-                        } else {
-                            break;
-                        }
+                if focus {
+                    widget_i.set_focused(true);
+                    return step.0;
+                } else {
+                    step = self.step(back);
+                    if !step.0 {
+                        break;
                     }
                 }
             }
