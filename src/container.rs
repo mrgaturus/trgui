@@ -6,12 +6,12 @@ type WidgetList = Vec<Box<dyn Widget>>;
 pub type InternalList = Vec<WidgetInternal>;
 
 pub struct Container {
+    widgets: WidgetList,
+    widgets_i: InternalList,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
     hover_id: Option<usize>,
-    layout: Box<dyn Layout>,
-    widgets: WidgetList,
-    widgets_i: InternalList
+    layout: Box<dyn Layout>
 }
 
 impl Container {
