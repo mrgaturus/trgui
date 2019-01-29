@@ -52,19 +52,22 @@ pub struct WidgetInternal {
     /// Enabled
     enable: bool,
     /// Visible (widget, layout)
-    show: (bool, bool)
+    show: (bool, bool),
+    /// Needs update?
+    update: bool
 }
 
 impl WidgetInternal {
     /// Create a new widget internal with coordinates and boundaries tuples
-    pub fn new(bounds: Boundaries) -> Self {
+    pub fn new(bounds: Boundaries, update: bool) -> Self {
         WidgetInternal {
             bounds,
             focus: false,
             grab: false,
             hover: false,
             enable: true,
-            show: (true, true)
+            show: (true, true),
+            update
         }
     }
 
@@ -169,18 +172,29 @@ impl WidgetInternal {
         self.hover = hover;
     }
 
-    /// Toggle if is enabled
+    /// Set if needs update
+    pub fn set_update(&mut self, update: bool) {
+        self.update = update;
+    }
+
+    /// Toggle enabled
     pub fn toggle_enabled(&mut self) {
         self.enable = !self.enable;
     }
 
+    /// Toggle hovered
     pub fn toggle_hovered(&mut self) {
         self.hover = !self.hover;
     }
 
-    /// Toggle if is enabled
+    /// Toggle focused
     pub fn toggle_focus(&mut self) {
         self.focus = !self.focus;
+    }
+
+    /// Toggle update
+    pub fn toggle_update(&mut self) {
+        self.update = !self.update;
     }
 
     /// Check if is enabled
@@ -206,5 +220,10 @@ impl WidgetInternal {
     /// Check if is grabbed
     pub fn grabbed(&self) -> bool {
         self.grab
+    }
+
+    /// Check if needs update
+    pub fn need_update(&self) -> bool {
+        self.update
     }
 }

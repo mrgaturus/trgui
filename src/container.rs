@@ -30,9 +30,9 @@ impl Container {
         self.layout = layout;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget>) {
+    pub fn add_widget(&mut self, widget: Box<dyn Widget>, update: bool) {
         self.widgets.push(widget);
-        self.widgets_i.push(WidgetInternal::new((0, 0, 0, 0)));
+        self.widgets_i.push(WidgetInternal::new((0, 0, 0, 0), update));
     }
 
     pub fn add_widget_i(&mut self, widget: Box<dyn Widget>, internal: WidgetInternal) {
@@ -40,10 +40,10 @@ impl Container {
         self.widgets_i.push(internal)
     }
 
-    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries) {
+    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
         self.widgets.push(widget);
         dbg!(bounds);
-        self.widgets_i.push(WidgetInternal::new(bounds));
+        self.widgets_i.push(WidgetInternal::new(bounds, update));
     }
 
     pub fn del_widget(&mut self, _position: (i32, i32)) {
@@ -131,7 +131,9 @@ impl Widget for Container {
         }
 
         for (widget, internal) in self.widgets.iter_mut().zip(self.widgets_i.iter_mut()) {
-            (*widget).update(layout, internal);
+            if internal.need_update() || layout {
+                (*widget).update(layout, internal);
+            }
         }
     }
 

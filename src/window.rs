@@ -24,7 +24,7 @@ impl Window {
         Window {
             //backend,
             root_container: Container::new(FixedLayout::new(false).boxed()).boxed(),
-            internal: WidgetInternal::new((0, 0, 0, 0)),
+            internal: WidgetInternal::new((0, 0, 0, 0), true),
             mouse_s: MouseState::new(),
             key_s: KeyState::new()
         }
