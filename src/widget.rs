@@ -30,14 +30,6 @@ pub trait Widget {
     }
 }
 
-/// WidgetGrab - Needs more commenting on what it actually does!
-pub trait WidgetGrab: Widget {
-    /// Grab for a window state
-    fn grab(&mut self, internal: &mut WidgetInternal);
-    /// Ungrab from a window state
-    fn ungrab(&mut self, internal: &mut WidgetInternal);
-}
-
 /// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
 /// and can be optional.
 pub struct WidgetInternal {
