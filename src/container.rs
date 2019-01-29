@@ -37,7 +37,7 @@ impl Container {
 
     pub fn add_widget_i(&mut self, widget: Box<dyn Widget>, internal: WidgetInternal) {
         self.widgets.push(widget);
-        self.widgets_i.push(internal)
+        self.widgets_i.push(internal);
     }
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
@@ -46,8 +46,31 @@ impl Container {
         self.widgets_i.push(WidgetInternal::new(bounds, update));
     }
 
-    pub fn del_widget(&mut self, _position: (i32, i32)) {
+    pub fn del_widget(&mut self, id: usize) {
+        if let Some(focus) = self.focus_id {
+            if id == focus {
+                self.focus_id = None;
+            } else if id < focus {
+                self.focus_id = Some(focus - 1);
+            }
+        }
+        if let Some(grab) = self.grab_id {
+            if id == grab {
+                self.grab_id = None;
+            } else if id < grab {
+                self.grab_id = Some(grab - 1);
+            }
+        }
+        if let Some(hover) = self.hover_id {
+            if id == hover {
+                self.hover_id = None;
+            } else if id < hover {
+                self.hover_id = Some(hover - 1);
+            }
+        }
 
+        self.widgets.remove(id);
+        self.widgets_i.remove(id);
     }
 
     pub fn get_widgets(&mut self) -> &mut WidgetList {
