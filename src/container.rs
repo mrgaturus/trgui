@@ -42,7 +42,6 @@ impl Container {
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
         self.widgets.push(widget);
-        dbg!(bounds);
         self.widgets_i.push(WidgetInternal::new(bounds, update));
     }
 
@@ -169,7 +168,7 @@ impl Widget for Container {
 
                 let widget_i = &mut self.widgets_i[id];
                 if !point_on_area!(relative.coordinates_relative(), widget_i.boundaries()) {
-                    relative.enable_relative(false);
+                    relative.set_on_area(false);
                 }
                 relative.set_relative(widget_i.boundaries());
                 self.widgets[id].handle_mouse(&relative, widget_i);

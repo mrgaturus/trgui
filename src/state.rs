@@ -51,11 +51,11 @@ impl MouseState {
         self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
-    pub fn enable_relative(&mut self, enable: bool) {
+    pub fn set_on_area(&mut self, enable: bool) {
         self.m_relative = enable;
     }
 
-    pub fn exist_relative(&self) -> bool {
+    pub fn on_area(&self) -> bool {
         self.m_relative
     }
 
