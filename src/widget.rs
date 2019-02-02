@@ -69,6 +69,8 @@ impl WidgetInternal {
     /// Change boundaries
     pub fn set_boundaries(&mut self, bounds: Boundaries) {
         self.bounds = bounds;
+
+        self.check_min();
     }
 
     /// Change coordinates
@@ -86,9 +88,8 @@ impl WidgetInternal {
     }
 
     /// Change minimal dimensions
-    pub fn set_min_dimensions(&mut self, width: i32, height: i32) {
-        self.min_dim.0 = width;
-        self.min_dim.1 = height;
+    pub fn set_min_dimensions(&mut self, dim: Dimensions) {
+        self.min_dim = dim;
 
         self.check_min();
     }
@@ -115,11 +116,15 @@ impl WidgetInternal {
     /// Change width
     pub fn set_width(&mut self, width: i32) {
         self.bounds.2 = width;
+
+        self.check_min();
     }
 
     /// Change height
     pub fn set_height(&mut self, height: i32) {
         self.bounds.3 = height;
+
+        self.check_min();
     }
 
     /// Get all boundaries

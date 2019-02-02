@@ -31,8 +31,11 @@ impl Container {
     }
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>, update: bool) {
+        let mut internal = WidgetInternal::new((0, 0, 0, 0), update);
+        internal.set_min_dimensions(widget.get_min());
+
         self.widgets.push(widget);
-        self.widgets_i.push(WidgetInternal::new((0, 0, 0, 0), update));
+        self.widgets_i.push(internal);
     }
 
     pub fn add_widget_i(&mut self, widget: Box<dyn Widget>, internal: WidgetInternal) {
@@ -41,8 +44,11 @@ impl Container {
     }
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
+        let mut internal = WidgetInternal::new(bounds, update);
+        internal.set_min_dimensions(widget.get_min());
+
         self.widgets.push(widget);
-        self.widgets_i.push(WidgetInternal::new(bounds, update));
+        self.widgets_i.push(internal);
     }
 
     pub fn del_widget(&mut self, id: usize) {
