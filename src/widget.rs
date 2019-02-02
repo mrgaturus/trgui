@@ -30,11 +30,13 @@ pub trait Widget {
     }
 }
 
-/// WidgetInternal holds all boundary and coordinate information of the widget. This is used at composition
+/// WidgetInternal holds all boundaries and coordinates information of the widget. This is used at composition
 /// and can be optional.
 pub struct WidgetInternal {
     /// Cordinates and Boundaries as a tuple (x, y, width, height)
     bounds: Boundaries,
+    /// Minimun dimensions
+    min_dim: Dimensions,
     /// Focus handling
     focus: bool,
     /// Grab
@@ -54,6 +56,7 @@ impl WidgetInternal {
     pub fn new(bounds: Boundaries, update: bool) -> Self {
         WidgetInternal {
             bounds,
+            min_dim: (0, 0),
             focus: false,
             grab: false,
             hover: false,
@@ -78,6 +81,25 @@ impl WidgetInternal {
     pub fn set_dimensions(&mut self, width: i32, height: i32) {
         self.bounds.2 = width;
         self.bounds.3 = height;
+
+        self.check_min();
+    }
+
+    /// Change minimal dimensions
+    pub fn set_min_dimensions(&mut self, width: i32, height: i32) {
+        self.min_dim.0 = width;
+        self.min_dim.1 = height;
+
+        self.check_min();
+    }
+
+    fn check_min(&mut self) {
+        if self.bounds.2 < self.min_dim.0 {
+            self.bounds.2 = self.min_dim.0;
+        }
+        if self.bounds.3 < self.min_dim.1 {
+            self.bounds.3 = self.min_dim.1;
+        }
     }
 
     /// Change x coordinate
