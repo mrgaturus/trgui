@@ -16,7 +16,7 @@ pub trait Widget {
     /// Step the focus
     fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool;
     /// Get minimal Dimensions of the Widget
-    fn get_min(&self) -> Dimensions;
+    fn compute_min(&self) -> Dimensions;
     /// When you unhover the widget
     fn unhover(&mut self);
     /// When you unfocus the widget
@@ -141,6 +141,10 @@ impl WidgetInternal {
     pub fn dimensions(&self) -> Dimensions {
         (self.bounds.2, self.bounds.3)
     }
+
+    pub fn min_dimensions(&self) -> Dimensions {
+        self.min_dim
+    } 
 
     /// Get x coordinate
     pub fn x(&self) -> i32 {

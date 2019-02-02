@@ -32,7 +32,7 @@ impl Container {
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>, update: bool) {
         let mut internal = WidgetInternal::new((0, 0, 0, 0), update);
-        internal.set_min_dimensions(widget.get_min());
+        internal.set_min_dimensions(widget.compute_min());
 
         self.widgets.push(widget);
         self.widgets_i.push(internal);
@@ -45,7 +45,7 @@ impl Container {
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
         let mut internal = WidgetInternal::new(bounds, update);
-        internal.set_min_dimensions(widget.get_min());
+        internal.set_min_dimensions(widget.compute_min());
 
         self.widgets.push(widget);
         self.widgets_i.push(internal);
@@ -235,7 +235,7 @@ impl Widget for Container {
     }
 
     /// Set Widget Bounds (x, y, width, height)
-    fn get_min(&self) -> Dimensions {
+    fn compute_min(&self) -> Dimensions {
         self.layout.minimum_size(&self.widgets_i)
     }
 
