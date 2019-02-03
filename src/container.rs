@@ -17,12 +17,12 @@ pub struct Container {
 impl Container {
     pub fn new(layout: Box<dyn Layout>) -> Self {
         Container {
+            widgets: WidgetList::new(),
+            widgets_i: InternalList::new(),
             focus_id: Option::None,
             grab_id: Option::None,
             hover_id: Option::None,
-            layout,
-            widgets: WidgetList::new(),
-            widgets_i: InternalList::new()
+            layout
         }
     }
 
@@ -129,7 +129,7 @@ impl Container {
 }
 
 impl Widget for Container {
-    fn draw(&self, position: &(i32, i32), _internal: &WidgetInternal) {
+    fn draw(&self, position: &(i32, i32), _: &WidgetInternal) {
         for (widget, w_internal) in self.widgets.iter().zip(self.widgets_i.iter()) {
             if w_internal.visible() {
                 let absolute_widget = absolute_pos!(position, w_internal.coordinates());
@@ -167,7 +167,7 @@ impl Widget for Container {
 
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         let mut relative = mouse.clone();
-
+        dbg!(relative.coordinates_relative());
         if self.grab_id.is_some() || !internal.grabbed()  {
             if let Some(id) = self.grab_id {
                 self.unhover();
@@ -191,9 +191,9 @@ impl Widget for Container {
                 let widget_r = self.widgets.iter_mut()
                     .zip(self.widgets_i.iter_mut())
                     .enumerate()
-                    .find(|tuple| 
-                        point_on_area!(relative.coordinates_relative(), (tuple.1).1.boundaries())
-                        && (tuple.1).1.visible()
+                    .find(|(_, (_, internal))| 
+                        point_on_area!(relative.coordinates_relative(), internal.boundaries())
+                        && internal.visible()
                     );
 
                 if let Some((n, (widget, w_internal))) = widget_r {
