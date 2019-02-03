@@ -30,11 +30,11 @@ impl Window {
         }
     }
 
-    pub fn root_container(&self) -> &Container {
+    pub fn container(&self) -> &Container {
         &self.root_container
     }
 
-    pub fn root_container_mut(&mut self) -> &mut Container {
+    pub fn container_mut(&mut self) -> &mut Container {
         &mut self.root_container
     }
 
@@ -88,7 +88,7 @@ impl Window {
     }
 
     pub fn set_dimensions(&mut self, dimensions: Dimensions) {
-        self.root_container_mut().unhover();
+        self.root_container.unhover();
         self.internal.set_dimensions(dimensions.0, dimensions.1);
         self.update_layout();
     }
