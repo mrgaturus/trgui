@@ -3,6 +3,7 @@ use crate::widget::Boundaries;
 /// A mouse state
 pub type Coordinates = (i32, i32);
 
+#[derive(Clone)]
 pub struct MouseState {
     /// Is clicked?
     m_click: bool,
@@ -10,8 +11,6 @@ pub struct MouseState {
     m_coords: Coordinates,
     /// Relative Mouse coordinates
     m_coords_relative: Coordinates,
-    /// Check if relative is enabled
-    m_relative: bool,
     /// Tablet Pressure Level
     t_pressure: i32
 }
@@ -32,7 +31,6 @@ impl MouseState {
             m_click: false,
             m_coords: (0,0),
             m_coords_relative: (0, 0),
-            m_relative: true,
             t_pressure: 0
         }
     }
@@ -51,14 +49,6 @@ impl MouseState {
         self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
-    pub fn set_on_area(&mut self, enable: bool) {
-        self.m_relative = enable;
-    }
-
-    pub fn on_area(&self) -> bool {
-        self.m_relative
-    }
-
     pub fn clicked(&self) -> bool {
         self.m_click
     }
@@ -74,18 +64,6 @@ impl MouseState {
     pub fn tablet_pressure(&self) -> i32 {
         self.t_pressure
     }
-}
-
-impl Clone for MouseState {
-    fn clone(&self) -> Self {
-        MouseState {
-            m_click: self.m_click,
-            m_coords: self.m_coords,
-            m_coords_relative: self.m_coords_relative,
-            m_relative: self.m_relative,
-            t_pressure: self.t_pressure
-        }
-    } 
 }
 
 impl KeyState {

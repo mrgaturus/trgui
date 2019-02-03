@@ -168,15 +168,16 @@ impl Widget for Container {
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         let mut relative = mouse.clone();
 
-        if self.grab_id.is_some() || !internal.grabbed()  {
+        if self.grab_id.is_some() || !internal.grabbed() {
             if let Some(id) = self.grab_id {
-                self.unhover();
-
                 let widget_i = &mut self.widgets_i[id];
-                if !point_on_area!(relative.coordinates_relative(), widget_i.boundaries()) {
-                    relative.set_on_area(false);
+                {
+                    let r_coords = relative.coordinates_relative();
+                    let i_bounds = widget_i.boundaries();
+
+                    widget_i.set_hover(point_on_area!(r_coords, i_bounds));
+                    relative.set_relative(i_bounds);
                 }
-                relative.set_relative(widget_i.boundaries());
                 self.widgets[id].handle_mouse(&relative, widget_i);
                 
                 if !widget_i.grabbed() {
