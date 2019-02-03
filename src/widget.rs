@@ -176,6 +176,7 @@ impl WidgetInternal {
         self.show.0 = visible;
     }
 
+    /// Decide if layout hide or show the widget
     pub fn set_visible_layout(&mut self, visible: bool) {
         self.show.1 = visible;
     }
@@ -248,5 +249,10 @@ impl WidgetInternal {
     /// Check if needs update
     pub fn need_update(&self) -> bool {
         self.update
+    }
+
+    /// Check if the widget is able to handle mouse
+    pub fn can_point(&self) -> bool {
+        self.show.0 && self.show.1 && self.enable
     }
 }
