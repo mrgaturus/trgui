@@ -8,7 +8,9 @@ pub trait Widget {
     /// Draw the current widget
     fn draw(&self, position: &(i32, i32), internal: &WidgetInternal);
     /// Update the status of widget
-    fn update(&mut self, layout: bool, internal: &mut WidgetInternal);
+    fn update(&mut self, internal: &mut WidgetInternal);
+    /// Update the layout of the widget
+    fn update_layout(&mut self, internal: &WidgetInternal);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal);
     /// Handle a keyboard state

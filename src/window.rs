@@ -68,11 +68,11 @@ impl Window {
     }
 
     pub fn update_window(&mut self) {
-        self.root_container.update(false, &mut self.internal);
+        self.root_container.update(&mut self.internal);
     }
 
     pub fn update_layout(&mut self) {
-        self.root_container.update(true, &mut self.internal);
+        self.root_container.update_layout(&self.internal);
     }
 
     pub fn get_bounds(&self) -> Boundaries {

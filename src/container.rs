@@ -138,30 +138,26 @@ impl Widget for Container {
         }
     }
 
-    fn update(&mut self, layout: bool, internal: &mut WidgetInternal) {
-        if layout {
-            let mut min = self.layout.minimum_size(&self.widgets_i);
-            if internal.width() > min.0 {
-                min.0 = internal.width();
+    fn update(&mut self, _: &mut WidgetInternal) {
+        for (widget, internal) in self.widgets.iter_mut().zip(self.widgets_i.iter_mut()) {
+            if internal.need_update() {
+                (*widget).update(internal);
             }
-            if internal.height() > min.1 {
-                min.1 = internal.height();
-            }
-            internal.set_dimensions(min.0, min.1);
-            self.layout.layout(&mut self.widgets_i, &internal.dimensions());
+        }
+    }
 
-            if let Some(id) = self.focus_id {
-                let widget_id = &mut self.widgets_i[id];
-                if !widget_id.visible() {
-                    self.unfocus();
-                }
+    fn update_layout(&mut self, internal: &WidgetInternal) {
+        self.layout.layout(&mut self.widgets_i, &internal.dimensions());
+
+        if let Some(id) = self.focus_id {
+            let widget_id = &mut self.widgets_i[id];
+            if !widget_id.visible() {
+                self.unfocus();
             }
         }
 
         for (widget, internal) in self.widgets.iter_mut().zip(self.widgets_i.iter_mut()) {
-            if internal.need_update() || layout {
-                (*widget).update(layout, internal);
-            }
+            (*widget).update_layout(internal);
         }
     }
 
