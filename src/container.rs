@@ -189,20 +189,22 @@ impl Widget for Container {
                     internal.set_focused(true);
                 }
             } else {
-                let widget_r = self.widgets.iter_mut()
-                    .zip(self.widgets_i.iter_mut())
-                    .enumerate()
-                    .find(|(_, (_, internal))| {
-                        let r_coords = relative.coordinates_relative();
-                        let i_bounds = internal.boundaries();
+                let widget_r = self.widgets_i.iter_mut()
+                .enumerate()
+                .filter(|(_, internal)| {
+                    internal.can_point()
+                })
+                .find(|(_, internal)| {
+                    let r_coords = relative.coordinates_relative();
+                    let i_bounds = internal.boundaries();
 
-                        point_on_area!(r_coords, i_bounds) && internal.can_point()
-                    });
+                    point_on_area!(r_coords, i_bounds)
+                });
 
-                if let Some((n, (widget, w_internal))) = widget_r {
+                if let Some((n, w_internal)) = widget_r {
                     relative.set_relative(w_internal.boundaries());
 
-                    (*widget).handle_mouse(&relative, w_internal);
+                    self.widgets[n].handle_mouse(&relative, w_internal);
 
                     if w_internal.grabbed() {
                         self.grab_id = Some(n);

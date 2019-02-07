@@ -252,6 +252,7 @@ impl WidgetInternal {
     }
 
     /// Check if the widget is able to handle mouse
+    #[inline]
     pub fn can_point(&self) -> bool {
         self.show.0 && self.show.1 && self.enable
     }
