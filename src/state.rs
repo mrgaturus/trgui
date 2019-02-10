@@ -1,5 +1,3 @@
-use crate::widget::Boundaries;
-
 /// A mouse state
 pub type Coordinates = (i32, i32);
 
@@ -9,8 +7,6 @@ pub struct MouseState {
     m_click: bool,
     /// Mouse coordinates
     m_coords: Coordinates,
-    /// Relative Mouse coordinates
-    m_coords_relative: Coordinates,
     /// Tablet Pressure Level
     t_pressure: i32
 }
@@ -30,7 +26,6 @@ impl MouseState {
         MouseState {
             m_click: false,
             m_coords: (0,0),
-            m_coords_relative: (0, 0),
             t_pressure: 0
         }
     }
@@ -41,12 +36,7 @@ impl MouseState {
 
     pub fn set_mouse(&mut self, coords: Coordinates, pressure: i32) {
         self.m_coords = coords;
-        self.m_coords_relative = coords;
         self.t_pressure = pressure;
-    }
-
-    pub fn set_relative(&mut self, bounds: Boundaries) {
-        self.m_coords_relative = relative_pos!(self.coordinates_relative(), bounds);
     }
 
     pub fn clicked(&self) -> bool {
@@ -55,10 +45,6 @@ impl MouseState {
 
     pub fn coordinates(&self) -> Coordinates {
         self.m_coords
-    }
-
-    pub fn coordinates_relative(&self) -> Coordinates {
-        self.m_coords_relative
     }
 
     pub fn tablet_pressure(&self) -> i32 {

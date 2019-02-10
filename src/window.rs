@@ -1,14 +1,7 @@
 use crate::state::{KeyState, MouseState};
-use crate::widget::{Widget, WidgetInternal, Boundaries, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Dimensions};
 use crate::container::Container;
 use crate::layout::{Layout, FixedLayout};
-
-pub trait WindowBackend {
-    fn show(&mut self);
-    fn hide(&mut self);
-    fn resize(&mut self, dimensions: Dimensions);
-    fn close(&mut self);
-}
 
 pub struct Window {
     //backend: Box<dyn WindowBackend>,
@@ -24,7 +17,7 @@ impl Window {
         Window {
             //backend,
             root_container: Container::new(FixedLayout::new(false).boxed()).boxed(),
-            internal: WidgetInternal::new((0, 0, 0, 0), true),
+            internal: WidgetInternal::new((0, 0, 0, 0), 0b00001000),
             mouse_s: MouseState::new(),
             key_s: KeyState::new()
         }
@@ -48,7 +41,7 @@ impl Window {
     }
 
     pub fn handle_keys(&mut self) {
-        self.root_container.handle_keys(&self.key_s);
+        self.root_container.handle_keys(&self.key_s, &mut self.internal);
     }
 
     pub fn next_focus(&mut self) {
@@ -63,20 +56,16 @@ impl Window {
         };
     }
 
-    pub fn draw_window(&self) {
-        self.root_container.draw(&(0, 0), &self.internal);
-    }
-
     pub fn update_window(&mut self) {
         self.root_container.update(&mut self.internal);
     }
 
     pub fn update_layout(&mut self) {
-        self.root_container.update_layout(&self.internal);
+        self.root_container.update_layout(&mut self.internal);
     }
 
-    pub fn get_bounds(&self) -> Boundaries {
-        self.internal.boundaries()
+    pub fn get_internal(&self) -> &WidgetInternal {
+        &self.internal
     }
 
     pub fn get_state(&self) -> (&MouseState, &KeyState) {
@@ -88,8 +77,8 @@ impl Window {
     }
 
     pub fn set_dimensions(&mut self, dimensions: Dimensions) {
-        self.root_container.unhover();
-        self.internal.set_dimensions(dimensions.0, dimensions.1);
+        self.root_container.unhover(&mut self.internal);
+        self.internal.set_dimensions(dimensions);
         self.update_layout();
     }
 }

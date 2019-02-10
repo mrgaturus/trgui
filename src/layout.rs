@@ -1,9 +1,9 @@
-use crate::container::InternalList;
+use crate::container::BoundList;
 use crate::widget::{Dimensions};
 
 pub trait Layout {
-    fn layout(&self, widgets: &mut InternalList, dimensions: &Dimensions);
-    fn minimum_size(&self, widgets: &InternalList) -> Dimensions;
+    fn layout(&self, widgets: &mut BoundList, dimensions: &Dimensions);
+    fn minimum_size(&self, widgets: &BoundList) -> Dimensions;
 
     #[inline]
     fn boxed(self) -> Box<Self> where Self: Sized {
@@ -24,8 +24,8 @@ impl FixedLayout {
 }
 
 impl Layout for FixedLayout {
-    fn layout(&self, widgets: &mut InternalList, dimensions: &Dimensions) {
-        for widget in widgets.iter_mut() {
+    fn layout(&self, widgets: &mut BoundList, dimensions: &Dimensions) {
+        for widget in widgets {
             let widget_bounds = widget.boundaries();
             if self.clamp {
                 let mut new_pos = (widget_bounds.0, widget_bounds.1);
@@ -46,19 +46,12 @@ impl Layout for FixedLayout {
                     widget_bounds.1
                 };
 
-                widget.set_coords(new_pos.0, new_pos.1);
-            } else {
-                if widget_bounds.0 < 0 || widget_bounds.0 + widget_bounds.2 > dimensions.0 ||
-                    widget_bounds.1 < 0 || widget_bounds.1 + widget_bounds.3 > dimensions.1 {
-                        widget.set_visible_layout(false);
-                    } else {
-                        widget.set_visible_layout(true);
-                    }
+                widget.set_coordinates(new_pos);
             }
         }
     }
 
-    fn minimum_size(&self, _widgets: &InternalList) -> Dimensions {
+    fn minimum_size(&self, _: &BoundList) -> Dimensions {
         (0, 0)
     }
 }

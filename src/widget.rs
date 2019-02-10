@@ -1,3 +1,4 @@
+use std::ops::BitOr;
 use crate::state::{MouseState, KeyState};
 
 pub type Boundaries = (i32, i32, i32, i32);
@@ -5,24 +6,21 @@ pub type Dimensions = (i32, i32);
 
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
-    /// Draw the current widget
-    fn draw(&self, position: &(i32, i32), internal: &WidgetInternal);
-    /// Update the status of widget
     fn update(&mut self, internal: &mut WidgetInternal);
     /// Update the layout of the widget
-    fn update_layout(&mut self, internal: &WidgetInternal);
+    fn update_layout(&mut self, internal: &mut WidgetInternal);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal);
     /// Handle a keyboard state
-    fn handle_keys(&mut self, key: &KeyState);
+    fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
     /// Step the focus
     fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool;
     /// Get minimal Dimensions of the Widget
     fn compute_min(&self) -> Dimensions;
     /// When you unhover the widget
-    fn unhover(&mut self);
+    fn unhover(&mut self, internal: &mut WidgetInternal);
     /// When you unfocus the widget
-    fn unfocus(&mut self);
+    fn unfocus(&mut self, internal: &mut WidgetInternal);
 
 
     // Move the widget to the heap
@@ -32,68 +30,88 @@ pub trait Widget {
     }
 }
 
-/// WidgetInternal holds all boundaries and coordinates information of the widget. This is used at composition
-/// and can be optional.
+pub enum WidgetFlag {
+    Changed,
+    Draw,
+    Update,
+    Visible,
+    Enabled,
+    Hover,
+    Grab,
+    Focus
+}
+
+impl BitOr for WidgetFlag {
+    type Output = u8;
+
+    // rhs is the "right-hand side" of the expression `a | b`
+    fn bitor(self, rhs: Self) -> u8 {
+        (1 << self as u8) | (1 << rhs as u8)
+    }
+}
+
 pub struct WidgetInternal {
-    /// Cordinates and Boundaries as a tuple (x, y, width, height)
+    /// Cordinates and Dimensions as a tuple (x, y, width, height)
     bounds: Boundaries,
     /// Minimun dimensions
     min_dim: Dimensions,
-    /// Focus handling
-    focus: bool,
-    /// Grab
-    grab: bool,
-    /// Hover
-    hover: bool,
-    /// Enabled
-    enable: bool,
-    /// Visible (widget, layout)
-    show: (bool, bool),
-    /// Needs update?
-    update: bool
+    /// Absolute position
+    abs_pos: Dimensions,
+    /// Every Widget Flag
+    flags: u8
 }
 
 impl WidgetInternal {
-    /// Create a new widget internal with coordinates and boundaries tuples
-    pub fn new(bounds: Boundaries, update: bool) -> Self {
+    pub fn new(bounds: Boundaries, flags: u8) -> Self {
         WidgetInternal {
             bounds,
             min_dim: (0, 0),
-            focus: false,
-            grab: false,
-            hover: false,
-            enable: true,
-            show: (true, true),
-            update
+            abs_pos: (0, 0),
+            flags
         }
     }
 
-    /// Change boundaries
-    pub fn set_boundaries(&mut self, bounds: Boundaries) {
-        self.bounds = bounds;
+    // FLAGS
+    pub fn set(&mut self, flag: WidgetFlag, value: bool) {
+        let bit: u8 = flag as u8;
+        let mask: u8 = 1 << bit;
 
-        self.check_min();
+        self.flags = self.flags & !mask | (value as u8) << bit & mask | 1;
     }
 
-    /// Change coordinates
-    pub fn set_coords(&mut self, x: i32, y: i32) {
-        self.bounds.0 = x;
-        self.bounds.1 = y;
+    #[inline]
+    pub fn toggle(&mut self, flag: WidgetFlag) {
+        self.flags ^= 1 << flag as u8;
     }
 
-    /// Change dimensions
-    pub fn set_dimensions(&mut self, width: i32, height: i32) {
-        self.bounds.2 = width;
-        self.bounds.3 = height;
-
-        self.check_min();
+    #[inline]
+    pub fn on(&mut self, flag: WidgetFlag) {
+        self.flags |= (1 << flag as u8) | 1;
     }
 
-    /// Change minimal dimensions
-    pub fn set_min_dimensions(&mut self, dim: Dimensions) {
-        self.min_dim = dim;
+    #[inline]
+    pub fn off(&mut self, flag: WidgetFlag) {
+        self.flags = self.flags & !(1 << flag as u8) | 1;
+    }
 
-        self.check_min();
+    #[inline]
+    pub fn get(&self, flag: WidgetFlag) -> bool {
+        (1 << flag as u8) & self.flags != 0
+    }
+
+    #[inline]
+    pub fn get_u8(&self, flag: u8) -> bool {
+        flag & self.flags != 0
+    }
+
+    #[inline]
+    pub fn changed(&self) -> bool {
+        self.flags & 1 != 0
+    }
+
+    #[inline]
+    pub fn can_point(&self) -> bool {
+        0b00011000 & self.flags != 0
     }
 
     fn check_min(&mut self) {
@@ -103,6 +121,41 @@ impl WidgetInternal {
         if self.bounds.3 < self.min_dim.1 {
             self.bounds.3 = self.min_dim.1;
         }
+    }
+
+    // BOUNDARIES
+
+    /// Change boundaries
+    pub fn set_boundaries(&mut self, bounds: Boundaries) {
+        self.bounds = bounds;
+
+        self.check_min();
+    }
+
+    /// Change coordinates
+    pub fn set_coordinates(&mut self, dim: Dimensions) {
+        self.bounds.0 = dim.0;
+        self.bounds.1 = dim.1;
+    }
+
+    /// Sum absolute position
+    pub fn compute_absolute(&mut self, pos: Dimensions) {
+        self.abs_pos = absolute_pos!(pos, self.bounds);
+    }
+
+    /// Change dimensions
+    pub fn set_dimensions(&mut self, dim: Dimensions) {
+        self.bounds.2 = dim.0;
+        self.bounds.3 = dim.1;
+
+        self.check_min();
+    }
+
+    /// Change minimal dimensions
+    pub fn set_min_dimensions(&mut self, dim: Dimensions) {
+        self.min_dim = dim;
+
+        self.check_min();
     }
 
     /// Change x coordinate
@@ -134,6 +187,11 @@ impl WidgetInternal {
         self.bounds
     }
 
+    /// Get All Boundaries with absolute coordinates
+    pub fn boundaries_abs(&self) -> Boundaries {
+        (self.abs_pos.0, self.abs_pos.1, self.bounds.2, self.bounds.3)
+    }
+
     /// Get coordinates tuple
     pub fn coordinates(&self) -> Dimensions {
         (self.bounds.0, self.bounds.1)
@@ -146,116 +204,9 @@ impl WidgetInternal {
 
     pub fn min_dimensions(&self) -> Dimensions {
         self.min_dim
-    } 
-
-    /// Get x coordinate
-    pub fn x(&self) -> i32 {
-        self.bounds.0
     }
 
-    /// Get y coordinate
-    pub fn y(&self) -> i32 {
-        self.bounds.1
-    }
-
-    /// Get width
-    pub fn width(&self) -> i32 {
-        self.bounds.2
-    }
-
-    /// Get height
-    pub fn height(&self) -> i32 {
-        self.bounds.3
-    }
-
-    /// Set if is focused
-    pub fn set_focused(&mut self, focus: bool) {
-        self.focus = focus;
-    }
-
-    /// Set if is visible
-    pub fn set_visible(&mut self, visible: bool) {
-        self.show.0 = visible;
-    }
-
-    /// Decide if layout hide or show the widget
-    pub fn set_visible_layout(&mut self, visible: bool) {
-        self.show.1 = visible;
-    }
-
-    /// Set if is grabbed
-    pub fn set_grab(&mut self, grab: bool) {
-        self.grab = grab;
-    }
-
-    /// Set if is enabled
-    pub fn set_enabled(&mut self, enabled: bool) {
-        self.enable = enabled;
-    }
-
-    /// Set if is enabled
-    pub fn set_hover(&mut self, hover: bool) {
-        self.hover = hover;
-    }
-
-    /// Set if needs update
-    pub fn set_update(&mut self, update: bool) {
-        self.update = update;
-    }
-
-    /// Toggle enabled
-    pub fn toggle_enabled(&mut self) {
-        self.enable = !self.enable;
-    }
-
-    /// Toggle hovered
-    pub fn toggle_hovered(&mut self) {
-        self.hover = !self.hover;
-    }
-
-    /// Toggle focused
-    pub fn toggle_focus(&mut self) {
-        self.focus = !self.focus;
-    }
-
-    /// Toggle update
-    pub fn toggle_update(&mut self) {
-        self.update = !self.update;
-    }
-
-    /// Check if is enabled
-    pub fn enabled(&self) -> bool {
-        self.enable
-    }
-
-    /// Check if is focused
-    pub fn focused(&self) -> bool {
-        self.focus
-    }
-
-    /// Check if is hovered
-    pub fn hovered(&self) -> bool {
-        self.hover
-    }
-
-    /// Check if is visible
-    pub fn visible(&self) -> bool {
-        self.show.0 && self.show.1
-    }
-
-    /// Check if is grabbed
-    pub fn grabbed(&self) -> bool {
-        self.grab
-    }
-
-    /// Check if needs update
-    pub fn need_update(&self) -> bool {
-        self.update
-    }
-
-    /// Check if the widget is able to handle mouse
-    #[inline]
-    pub fn can_point(&self) -> bool {
-        self.show.0 && self.show.1 && self.enable
+    pub fn absolute_pos(&self) -> Dimensions {
+        self.abs_pos
     }
 }
