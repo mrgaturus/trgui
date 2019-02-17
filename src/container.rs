@@ -1,4 +1,5 @@
-use crate::widget::{Widget, WidgetInternal, WidgetFlag, Dimensions, Boundaries};
+use crate::widget::{Widget, WidgetInternal, Dimensions, Boundaries};
+use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
 use crate::layout::Layout;
 
@@ -30,16 +31,16 @@ impl Container {
         self.layout = layout;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget>, update: bool) {
-        let mut internal = WidgetInternal::new((0, 0, 0, 0), 0b00001000 | (update as u8) << 2);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget>, flags: u8) {
+        let mut internal = WidgetInternal::new((0, 0, 0, 0), flags);
         internal.set_min_dimensions(widget.compute_min());
 
         self.widgets.push( widget );
         self.widgets_i.push( internal );
     }
 
-    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, update: bool) {
-        let mut internal = WidgetInternal::new(bounds, 0b00001000 | (update as u8) << 2);
+    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, flags: u8) {
+        let mut internal = WidgetInternal::new(bounds, flags);
         internal.set_min_dimensions(widget.compute_min());
 
         self.widgets.push( widget );
@@ -111,28 +112,58 @@ impl Container {
         }
     }
 
-    fn focus_id(&mut self, n: usize) {
+    fn focus_id(&mut self, n: usize, internal: &mut WidgetInternal) {
         if let Some(id) = self.focus_id {
             if id != n {
                 let widget_i = &mut self.widgets_i[id];
 
                 self.widgets[id].unfocus(widget_i);
-                self.widgets_i[id].off(WidgetFlag::Focus);
+                if widget_i.changed() {
+                    internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                }
+
+                widget_i.off(FOCUS);
             }
         }
         self.focus_id = Some(n);
-        //println!("{:?}", self.focus_id);
     }
 }
 
 impl Widget for Container {
-    fn update(&mut self, _: &mut WidgetInternal) {
+    fn draw(&mut self, _: &WidgetInternal) -> bool {
+        let mut count: usize = 0;
+
         self.widgets_i.iter_mut()
-            .filter(|w_internal| w_internal.get(WidgetFlag::Update))
+            .filter(|w_internal| w_internal.get(DRAW) )
             .zip(self.widgets.iter_mut())
-            .for_each(|(w_internal, widget)| 
-                widget.update(w_internal)
-            );
+            .for_each(|(w_internal, widget)| {
+                count += 1;
+
+                if !widget.draw(w_internal) {
+                    w_internal.off(DRAW);
+                    count -= 1;
+                }
+            });
+
+        count > 0
+    }
+
+    fn update(&mut self, _: &WidgetInternal) -> bool {
+        let mut count: usize = 0;
+
+        self.widgets_i.iter_mut()
+            .filter(|w_internal| w_internal.get(UPDATE) )
+            .zip(self.widgets.iter_mut())
+            .for_each(|(w_internal, widget)| {
+                count += 1;
+
+                if !widget.update(w_internal) {
+                    w_internal.off(UPDATE);
+                    count -= 1;
+                }
+            });
+
+        count > 0
     }
 
     fn update_layout(&mut self, internal: &mut WidgetInternal) {
@@ -140,39 +171,45 @@ impl Widget for Container {
 
         if let Some(id) = self.focus_id {
             let widget_id = &mut self.widgets_i[id];
-            if !widget_id.get(WidgetFlag::Visible) {
+            if !widget_id.get(VISIBLE) {
                 self.unfocus(internal);
             }
         }
 
-        self.widgets_i.iter_mut()
-            .zip(self.widgets.iter_mut())
-            .for_each(|(w_internal, widget)| {
-                w_internal.compute_absolute(internal.absolute_pos());
-                widget.update_layout(w_internal);
-            });
+        for (w_internal, widget) in self.widgets_i.iter_mut().zip(self.widgets.iter_mut()) {
+            w_internal.compute_absolute(internal.absolute_pos());
+            widget.update_layout(w_internal);
+
+            if w_internal.changed() {
+                internal.replace(w_internal.get_u8(DRAW | UPDATE));
+            }
+        }
     }
 
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
-        if self.grab_id.is_some() || !internal.get(WidgetFlag::Grab) {
+        if self.grab_id.is_some() || !internal.get(GRAB) {
             if let Some(id) = self.grab_id {
                 let widget = &mut self.widgets[id];
                 let widget_i = &mut self.widgets_i[id];
                 {
                     let r_coords = mouse.coordinates();
                     let i_bounds = widget_i.boundaries_abs();
-                    dbg!(r_coords);
-                    widget_i.set(WidgetFlag::Hover, point_on_area!(r_coords, i_bounds));
+
+                    widget_i.set(HOVER, point_on_area!(r_coords, i_bounds));
                 }
                 widget.handle_mouse(&mouse, widget_i);
                 
-                if !widget_i.get(WidgetFlag::Grab) {
-                    self.grab_id = None;
-                    internal.off(WidgetFlag::Grab);
-                }
-                if widget_i.get(WidgetFlag::Focus) {
-                    self.focus_id(id);
-                    internal.on(WidgetFlag::Focus);
+                if widget_i.changed() {
+                    internal.replace(widget_i.get_u8(DRAW | UPDATE));
+
+                    if !widget_i.get(GRAB) {
+                        self.grab_id = None;
+                        internal.off(GRAB);
+                    }
+                    if widget_i.get(FOCUS) {
+                        self.focus_id(id, internal);
+                        internal.on(FOCUS);
+                    }
                 }
             } else {
                 let widget_r = self.widgets_i.iter_mut()
@@ -187,13 +224,17 @@ impl Widget for Container {
                 if let Some( (n, w_internal) ) = widget_r {
                     self.widgets[n].handle_mouse(&mouse, w_internal);
 
-                    if w_internal.get(WidgetFlag::Grab) {
-                        self.grab_id = Some(n);
-                        internal.on(WidgetFlag::Grab);
-                    }
-                    if w_internal.get(WidgetFlag::Focus) {
-                        self.focus_id(n);
-                        internal.on(WidgetFlag::Focus);
+                    if w_internal.changed() {
+                        internal.replace(w_internal.get_u8(DRAW | UPDATE));
+
+                        if w_internal.get(GRAB) {
+                            self.grab_id = Some(n);
+                            internal.on(GRAB);
+                        }
+                        if w_internal.get(FOCUS) {
+                            self.focus_id(n, internal);
+                            internal.on(FOCUS);
+                        }
                     }
 
                     if let Some(id) = self.hover_id {
@@ -205,12 +246,12 @@ impl Widget for Container {
                 } else {
                     self.unhover(internal);
                     if self.grab_id.is_none() {
-                        internal.set(WidgetFlag::Grab, mouse.clicked());
+                        internal.set(GRAB, mouse.clicked());
                     }
                 }
             }
         } else {
-            internal.set(WidgetFlag::Grab, mouse.clicked());
+            internal.set(GRAB, mouse.clicked());
         }
     }
 
@@ -226,16 +267,25 @@ impl Widget for Container {
     }
 
     /// Step focus on Widget array
-    fn step_focus(&mut self, back: bool, _: &mut WidgetInternal) -> bool {
+    fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
                 let widget = (&mut self.widgets[id], &mut self.widgets_i[id]);
+                let focus = widget.0.step_focus(back, widget.1);
 
-                if widget.0.step_focus(back, widget.1) {
+                if widget.1.changed() {
+                    internal.replace(widget.1.get_u8(DRAW | UPDATE));
+                }
+
+                if focus {
                     return true;
                 } else {
                     widget.0.unfocus(widget.1);
-                    widget.1.off(WidgetFlag::Focus);
+                    if widget.1.changed() {
+                        internal.replace(widget.1.get_u8(DRAW | UPDATE));
+                    }
+
+                    widget.1.off(FOCUS);
                 }
             }
             let mut step = self.step(back);
@@ -245,8 +295,12 @@ impl Widget for Container {
                     let widget_i = &mut self.widgets_i[step.1];
                     let focus = widget.step_focus(back, widget_i);
 
+                    if widget_i.changed() {
+                        internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                    }
+
                     if focus {
-                        widget_i.on(WidgetFlag::Focus);
+                        widget_i.on(FOCUS);
                         return focus;
                     } else {
                         step = self.step(back);
@@ -261,22 +315,30 @@ impl Widget for Container {
         false
     }
 
-    fn unhover(&mut self, _: &mut WidgetInternal) {
+    fn unhover(&mut self, internal: &mut WidgetInternal) {
         if let Some(id) = self.hover_id {
             let widget_i = &mut self.widgets_i[id];
 
             self.widgets[id].unhover(widget_i);
-            widget_i.off(WidgetFlag::Hover);
+            if widget_i.changed() {
+                internal.replace(widget_i.get_u8(DRAW | UPDATE));
+            }
+
+            widget_i.off(HOVER);
             self.hover_id = Option::None;
         }
     }
 
-    fn unfocus(&mut self, _: &mut WidgetInternal) {
+    fn unfocus(&mut self, internal: &mut WidgetInternal) {
         if let Some(id) = self.focus_id {
             let widget_i = &mut self.widgets_i[id];
 
             self.widgets[id].unfocus(widget_i);
-            widget_i.off(WidgetFlag::Focus);
+            if widget_i.changed() {
+                internal.replace(widget_i.get_u8(DRAW | UPDATE));
+            }
+
+            widget_i.off(FOCUS);
             self.focus_id = Option::None;
         }
     }

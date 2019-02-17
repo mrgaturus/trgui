@@ -1,12 +1,28 @@
-use std::ops::BitOr;
 use crate::state::{MouseState, KeyState};
 
 pub type Boundaries = (i32, i32, i32, i32);
 pub type Dimensions = (i32, i32);
 
+// BITFLAGS (Sorry for no use the crate)
+const CHANGED: u8 =     0b00000001;
+pub mod flags {
+    pub const DRAW: u8 =    0b00000010;
+    pub const UPDATE: u8 =  0b00000100;
+    pub const VISIBLE: u8 = 0b00001000;
+    pub const ENABLED: u8 = 0b00010000;
+    pub const HOVER: u8 =   0b00100000;
+    pub const GRAB: u8 =    0b01000000;
+    pub const FOCUS: u8 =   0b10000000;
+}
+
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
-    fn update(&mut self, internal: &mut WidgetInternal);
+    /// Get minimal Dimensions of the Widget
+    fn compute_min(&self) -> Dimensions { (0, 0) }
+    /// Draw the widget
+    fn draw(&mut self, internal: &WidgetInternal) -> bool;
+    /// Update the status of the widget
+    fn update(&mut self, internal: &WidgetInternal) -> bool;
     /// Update the layout of the widget
     fn update_layout(&mut self, internal: &mut WidgetInternal);
     /// Handle a mouse state (focus, grab)
@@ -14,39 +30,23 @@ pub trait Widget {
     /// Handle a keyboard state
     fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
     /// Step the focus
-    fn step_focus(&mut self, back: bool, internal: &mut WidgetInternal) -> bool;
-    /// Get minimal Dimensions of the Widget
-    fn compute_min(&self) -> Dimensions;
+    fn step_focus(&mut self, _: bool, internal: &mut WidgetInternal) -> bool {
+        let focus = internal.get(flags::VISIBLE) && !internal.get(flags::FOCUS);
+        if focus {
+            internal.on(flags::DRAW);
+        }
+        
+        focus
+    }
     /// When you unhover the widget
-    fn unhover(&mut self, internal: &mut WidgetInternal);
+    fn unhover(&mut self, internal: &mut WidgetInternal) { internal.on(flags::DRAW); }
     /// When you unfocus the widget
-    fn unfocus(&mut self, internal: &mut WidgetInternal);
-
+    fn unfocus(&mut self, internal: &mut WidgetInternal) { internal.on(flags::DRAW); }
 
     // Move the widget to the heap
     #[inline]
     fn boxed(self) -> Box<Self> where Self: Sized {
         Box::new(self)
-    }
-}
-
-pub enum WidgetFlag {
-    Changed,
-    Draw,
-    Update,
-    Visible,
-    Enabled,
-    Hover,
-    Grab,
-    Focus
-}
-
-impl BitOr for WidgetFlag {
-    type Output = u8;
-
-    // rhs is the "right-hand side" of the expression `a | b`
-    fn bitor(self, rhs: Self) -> u8 {
-        (1 << self as u8) | (1 << rhs as u8)
     }
 }
 
@@ -58,7 +58,7 @@ pub struct WidgetInternal {
     /// Absolute position
     abs_pos: Dimensions,
     /// Every Widget Flag
-    flags: u8
+    pub flags: u8
 }
 
 impl WidgetInternal {
@@ -72,46 +72,55 @@ impl WidgetInternal {
     }
 
     // FLAGS
-    pub fn set(&mut self, flag: WidgetFlag, value: bool) {
-        let bit: u8 = flag as u8;
-        let mask: u8 = 1 << bit;
-
-        self.flags = self.flags & !mask | (value as u8) << bit & mask | 1;
+    pub fn set(&mut self, flag: u8, value: bool) {
+        if value {
+            self.flags |= flag | CHANGED;
+        } else {
+            self.flags = self.flags & !flag | CHANGED;
+        }
     }
 
     #[inline]
-    pub fn toggle(&mut self, flag: WidgetFlag) {
-        self.flags ^= 1 << flag as u8;
+    pub fn replace(&mut self, flags: u8) {
+        self.flags = self.flags & !flags | flags | CHANGED;
     }
 
     #[inline]
-    pub fn on(&mut self, flag: WidgetFlag) {
-        self.flags |= (1 << flag as u8) | 1;
+    pub fn toggle(&mut self, flag: u8) {
+        self.flags ^= flag;
     }
 
     #[inline]
-    pub fn off(&mut self, flag: WidgetFlag) {
-        self.flags = self.flags & !(1 << flag as u8) | 1;
+    pub fn on(&mut self, flag: u8) {
+        self.flags |= flag | CHANGED;
     }
 
     #[inline]
-    pub fn get(&self, flag: WidgetFlag) -> bool {
-        (1 << flag as u8) & self.flags != 0
+    pub fn off(&mut self, flag: u8) {
+        self.flags = self.flags & !flag | CHANGED;
     }
 
     #[inline]
-    pub fn get_u8(&self, flag: u8) -> bool {
+    pub fn get(&self, flag: u8) -> bool {
         flag & self.flags != 0
     }
 
     #[inline]
-    pub fn changed(&self) -> bool {
-        self.flags & 1 != 0
+    pub fn changed(&mut self) -> bool {
+        let ch = self.flags & CHANGED != 0;
+        self.flags &= !CHANGED;
+        
+        ch
     }
 
     #[inline]
     pub fn can_point(&self) -> bool {
         0b00011000 & self.flags != 0
+    }
+
+    #[inline]
+    pub fn get_u8(&self, flag: u8) -> u8 {
+        flag & self.flags
     }
 
     fn check_min(&mut self) {
