@@ -1,5 +1,5 @@
 use crate::state::{KeyState, MouseState};
-use crate::widget::{Widget, WidgetInternal, Dimensions};
+use crate::widget::{Widget, WidgetInternal, Dimensions, flags::{DRAW, UPDATE}};
 use crate::container::Container;
 use crate::layout::{Layout, FixedLayout};
 
@@ -12,7 +12,6 @@ pub struct Window {
 }
 
 impl Window {
-    #[allow(unused_variables)]
     pub fn new() -> Self {
         Window {
             //backend,
@@ -57,26 +56,33 @@ impl Window {
     }
 
     pub fn update_window(&mut self) {
-        self.root_container.update(&mut self.internal);
+        if self.internal.get(UPDATE) {
+            let status = self.root_container.update(&mut self.internal);
+            self.internal.set(UPDATE, status);
+        }
     }
 
     pub fn draw_window(&mut self) {
-        self.root_container.draw(&self.internal);
+        if self.internal.get(DRAW) {
+            let status = self.root_container.draw(&mut self.internal);
+            self.internal.set(DRAW, status);
+        }
+        
     }
 
     pub fn update_layout(&mut self) {
         self.root_container.update_layout(&mut self.internal);
     }
 
-    pub fn get_internal(&self) -> &WidgetInternal {
+    pub fn internal(&self) -> &WidgetInternal {
         &self.internal
     }
 
-    pub fn get_state(&self) -> (&MouseState, &KeyState) {
+    pub fn state(&self) -> (&MouseState, &KeyState) {
         (&self.mouse_s, &self.key_s)
     }
 
-    pub fn get_state_mut(&mut self) -> (&mut MouseState, &mut KeyState) {
+    pub fn state_mut(&mut self) -> (&mut MouseState, &mut KeyState) {
         (&mut self.mouse_s, &mut self.key_s)
     }
 
