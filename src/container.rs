@@ -4,11 +4,11 @@ use crate::state::{MouseState, KeyState};
 use crate::layout::Layout;
 
 type WidgetList = Vec<Box<dyn Widget>>;
-pub type BoundList = Vec<WidgetInternal>;
+pub type InternalList = Vec<WidgetInternal>;
 
 pub struct Container {
     widgets: WidgetList,
-    widgets_i: BoundList,
+    widgets_i: InternalList,
     layout: Box<dyn Layout>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
@@ -19,7 +19,7 @@ impl Container {
     pub fn new(layout: Box<dyn Layout>) -> Self {
         Container {
             widgets: WidgetList::new(),
-            widgets_i: BoundList::new(),
+            widgets_i: InternalList::new(),
             focus_id: Option::None,
             grab_id: Option::None,
             hover_id: Option::None,
@@ -191,12 +191,14 @@ impl Widget for Container {
             if let Some(id) = self.grab_id {
                 let widget = &mut self.widgets[id];
                 let widget_i = &mut self.widgets_i[id];
+
                 {
                     let r_coords = mouse.coordinates();
                     let i_bounds = widget_i.boundaries_abs();
 
                     widget_i.set(HOVER, point_on_area!(r_coords, i_bounds));
                 }
+
                 widget.handle_mouse(&mouse, widget_i);
                 
                 if widget_i.changed() {
@@ -341,5 +343,13 @@ impl Widget for Container {
             widget_i.off(FOCUS);
             self.focus_id = Option::None;
         }
+    }
+
+    #[inline]
+    fn boxed(mut self) -> Box<Self> where Self: Sized {
+        self.widgets.shrink_to_fit();
+        self.widgets_i.shrink_to_fit();
+
+        Box::new(self)
     }
 }

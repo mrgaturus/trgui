@@ -1,7 +1,6 @@
 /// A mouse state
 pub type Coordinates = (i32, i32);
 
-#[derive(Clone)]
 pub struct MouseState {
     /// Is clicked?
     m_click: bool,

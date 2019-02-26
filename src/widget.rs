@@ -15,6 +15,8 @@ pub mod flags {
     pub const FOCUS: u8 =   0b10000000;
 }
 
+// TODO: create a check_bind
+
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
     /// Get minimal Dimensions of the Widget
@@ -58,7 +60,7 @@ pub struct WidgetInternal {
     /// Absolute position
     abs_pos: Dimensions,
     /// Every Widget Flag
-    pub flags: u8
+    flags: u8
 }
 
 impl WidgetInternal {
@@ -192,6 +194,7 @@ impl WidgetInternal {
     }
 
     /// Get all boundaries
+    #[inline]
     pub fn boundaries(&self) -> Boundaries {
         self.bounds
     }

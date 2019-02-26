@@ -1,63 +1,66 @@
 use std::marker::PhantomData;
+// TODO: recreate binding
+
+pub trait Binding<T> {
+    fn proxy(&self) -> BindProxy<T>;
+}
 
 pub struct PointerBinding<'a, T: 'a> {
-    ptr: (bool, *const T),
+    ptr: *const T,
     phantom: PhantomData<&'a T>
 }
 
+pub struct BoxBinding<T> {
+    data: Box<T>
+}
+
 pub struct BindProxy<T> {
-    ptr: *mut (bool, *const T)
+    ptr: *const T
 }
 
 impl <T> BindProxy<T> {
     pub fn act<F>(&self, func: F) where F: Fn(&T) {
         unsafe {
-            if (*self.ptr).0 {
-                (*self.ptr).0 = false;
-                func(&*( (*self.ptr).1 ));
-                (*self.ptr).0 = true;
-            }
+            func(&*self.ptr);
         }
     }
 
     pub fn act_mut<F>(&self, func: F) where F: Fn(&mut T) {
         unsafe {
-            if (*self.ptr).0 {
-                (*self.ptr).0 = false;
-                func(&mut *( (*self.ptr).1 as *mut T ));
-                (*self.ptr).0 = true;
-            }
-        }
-    }
-
-    #[inline]
-    pub fn usable(&self) -> bool {
-        unsafe {
-            (*self.ptr).0
+            func(&mut *( self.ptr as *mut T ));
         }
     }
 }
 
-impl <'a, T: 'a> PointerBinding<'a, T> {
+impl <'a, T> PointerBinding<'a, T> {
     pub fn new(ptr: &'a T) -> Self {
         PointerBinding {
-            ptr: (true, ptr),
+            ptr: ptr as *const T,
             phantom: PhantomData
         }
     }
+}
 
-    pub fn proxy(&self) -> BindProxy<T> {
+impl <'a, T> Binding<T> for PointerBinding<'a, T> {
+    fn proxy(&self) -> BindProxy<T> {
         BindProxy {
-            ptr: &self.ptr as *const _ as *mut (bool, *const T)
-        }    
+            ptr: self.ptr as *const T
+        }
     }
+}
 
-    #[inline]
-    pub fn usable(&self) -> bool {
-        self.ptr.0
+impl <T> BoxBinding<T> {
+    fn new(val: T) -> Self {
+        BoxBinding {
+            data: Box::new(val)
+        }
     }
+}
 
-    pub fn set_usable(&mut self, usable: bool) {
-        self.ptr.0 = usable;
+impl <T> Binding<T> for BoxBinding<T> {
+    fn proxy(&self) -> BindProxy<T> {
+        BindProxy {
+            ptr: self.data.as_ref() as *const T
+        }
     }
 }
