@@ -260,9 +260,24 @@ impl Widget for Container {
         }
     }
 
-    fn handle_keys(&mut self, key: &KeyState, _: &mut WidgetInternal) {
+    fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal) {
         if let Some(id) = self.focus_id {
-            self.widgets[id].handle_keys(key, &mut self.widgets_i[id]);
+            let widget_i = &mut self.widgets_i[id];
+
+            self.widgets[id].handle_keys(key, widget_i);
+
+            if widget_i.changed() {
+                internal.replace(widget_i.val(DRAW | UPDATE));
+
+                if widget_i.check(GRAB) {
+                    self.grab_id = Some(id);
+                    internal.on(GRAB);
+                }
+
+                if !widget_i.check(FOCUS) {
+                    self.unfocus(internal);
+                }
+            }
         }
     }
 
