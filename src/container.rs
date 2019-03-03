@@ -224,6 +224,7 @@ impl Widget for Container {
                 });
 
                 if let Some( (n, w_internal) ) = widget_r {
+                    w_internal.on(HOVER);
                     self.widgets[n].handle_mouse(&mouse, w_internal);
 
                     if w_internal.changed() {
