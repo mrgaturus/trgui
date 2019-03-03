@@ -15,6 +15,8 @@ pub mod flags {
     pub const FOCUS: u8 =   0b10000000;
 }
 
+use flags::{FOCUS, ENABLED, VISIBLE, DRAW};
+
 // TODO: create a check_bind
 
 /// A Widget trait is used for the general methods that can be used on every widget.
@@ -33,17 +35,13 @@ pub trait Widget {
     fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
     /// Step the focus
     fn step_focus(&mut self, _: bool, internal: &mut WidgetInternal) -> bool {
-        let focus = !internal.check(flags::FOCUS | flags::ENABLED);
-        if focus {
-            internal.on(flags::DRAW);
-        }
-        
-        focus
+        internal.on(DRAW);
+        internal.check(ENABLED | VISIBLE) && !internal.check(FOCUS)
     }
     /// When you unhover the widget
-    fn unhover(&mut self, internal: &mut WidgetInternal) { internal.on(flags::DRAW); }
+    fn unhover(&mut self, internal: &mut WidgetInternal) { internal.on(DRAW); }
     /// When you unfocus the widget
-    fn unfocus(&mut self, internal: &mut WidgetInternal) { internal.on(flags::DRAW); }
+    fn unfocus(&mut self, internal: &mut WidgetInternal) { internal.on(DRAW); }
 
     // Move the widget to the heap
     #[inline]
@@ -74,7 +72,7 @@ impl WidgetInternal {
     }
 
     // FLAGS
-    
+
     pub fn set(&mut self, flag: u8, value: bool) {
         if value {
             self.flags |= flag | CHANGED;
@@ -100,7 +98,7 @@ impl WidgetInternal {
 
     #[inline]
     pub fn off(&mut self, flag: u8) {
-        self.flags = self.flags & !flag | CHANGED;
+        self.flags &= !flag | CHANGED;
     }
 
     #[inline]
