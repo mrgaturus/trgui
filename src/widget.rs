@@ -74,6 +74,7 @@ impl WidgetInternal {
     }
 
     // FLAGS
+    
     pub fn set(&mut self, flag: u8, value: bool) {
         if value {
             self.flags |= flag | CHANGED;
@@ -103,7 +104,7 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn check_or(&self, flag: u8) -> bool {
+    pub fn check_any(&self, flag: u8) -> bool {
         flag & self.flags > 0
     }
 
@@ -118,11 +119,6 @@ impl WidgetInternal {
         self.flags &= !CHANGED;
         
         ch
-    }
-
-    #[inline]
-    pub fn can_point(&self) -> bool {
-        0b00011000 & self.flags != 0
     }
 
     #[inline]

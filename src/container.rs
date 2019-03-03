@@ -220,32 +220,34 @@ impl Widget for Container {
                     let r_coords = mouse.coordinates();
                     let i_bounds = w_internal.boundaries_abs();
 
-                    w_internal.can_point() && point_on_area!(r_coords, i_bounds)
+                    point_on_area!(r_coords, i_bounds) && w_internal.check(VISIBLE)
                 });
 
                 if let Some( (n, w_internal) ) = widget_r {
-                    w_internal.on(HOVER);
-                    self.widgets[n].handle_mouse(&mouse, w_internal);
+                    if w_internal.check(ENABLED) {
+                        w_internal.on(HOVER);
+                        self.widgets[n].handle_mouse(&mouse, w_internal);
 
-                    if w_internal.changed() {
-                        internal.replace(w_internal.val(DRAW | UPDATE));
+                        if w_internal.changed() {
+                            internal.replace(w_internal.val(DRAW | UPDATE));
 
-                        if w_internal.check(GRAB) {
-                            self.grab_id = Some(n);
-                            internal.on(GRAB);
+                            if w_internal.check(GRAB) {
+                                self.grab_id = Some(n);
+                                internal.on(GRAB);
+                            }
+                            if w_internal.check(FOCUS) {
+                                self.focus_id(n, internal);
+                                internal.on(FOCUS);
+                            }
                         }
-                        if w_internal.check(FOCUS) {
-                            self.focus_id(n, internal);
-                            internal.on(FOCUS);
+
+                        if let Some(id) = self.hover_id {
+                            if id != n {
+                                self.unhover(internal);
+                            }
                         }
+                        self.hover_id = Some(n);
                     }
-
-                    if let Some(id) = self.hover_id {
-                        if id != n {
-                            self.unhover(internal);
-                        }
-                    }
-                    self.hover_id = Some(n);
                 } else {
                     self.unhover(internal);
                     if self.grab_id.is_none() {
