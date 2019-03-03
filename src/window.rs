@@ -56,14 +56,14 @@ impl Window {
     }
 
     pub fn update_window(&mut self) {
-        if self.internal.get(UPDATE) {
+        if self.internal.check(UPDATE) {
             let status = self.root_container.update(&mut self.internal);
             self.internal.set(UPDATE, status);
         }
     }
 
     pub fn draw_window(&mut self) {
-        if self.internal.get(DRAW) {
+        if self.internal.check(DRAW) {
             let status = self.root_container.draw(&mut self.internal);
             self.internal.set(DRAW, status);
         }

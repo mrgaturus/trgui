@@ -119,7 +119,7 @@ impl Container {
 
                 self.widgets[id].unfocus(widget_i);
                 if widget_i.changed() {
-                    internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                    internal.replace(widget_i.val(DRAW | UPDATE));
                 }
 
                 widget_i.off(FOCUS);
@@ -134,7 +134,7 @@ impl Widget for Container {
         let mut count: usize = 0;
 
         self.widgets_i.iter_mut()
-            .filter(|w_internal| w_internal.get(DRAW) )
+            .filter(|w_internal| w_internal.check(DRAW) )
             .zip(self.widgets.iter_mut())
             .for_each(|(w_internal, widget)| {
                 count += 1;
@@ -152,7 +152,7 @@ impl Widget for Container {
         let mut count: usize = 0;
 
         self.widgets_i.iter_mut()
-            .filter(|w_internal| w_internal.get(UPDATE) )
+            .filter(|w_internal| w_internal.check(UPDATE) )
             .zip(self.widgets.iter_mut())
             .for_each(|(w_internal, widget)| {
                 count += 1;
@@ -171,7 +171,7 @@ impl Widget for Container {
 
         if let Some(id) = self.focus_id {
             let widget_id = &mut self.widgets_i[id];
-            if !widget_id.get(VISIBLE) {
+            if !widget_id.check(VISIBLE) {
                 self.unfocus(internal);
             }
         }
@@ -181,13 +181,13 @@ impl Widget for Container {
             widget.update_layout(w_internal);
 
             if w_internal.changed() {
-                internal.replace(w_internal.get_u8(DRAW | UPDATE));
+                internal.replace(w_internal.val(DRAW | UPDATE));
             }
         }
     }
 
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
-        if self.grab_id.is_some() || !internal.get(GRAB) {
+        if self.grab_id.is_some() || !internal.check(GRAB) {
             if let Some(id) = self.grab_id {
                 let widget = &mut self.widgets[id];
                 let widget_i = &mut self.widgets_i[id];
@@ -202,13 +202,13 @@ impl Widget for Container {
                 widget.handle_mouse(&mouse, widget_i);
                 
                 if widget_i.changed() {
-                    internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                    internal.replace(widget_i.val(DRAW | UPDATE));
 
-                    if !widget_i.get(GRAB) {
+                    if !widget_i.check(GRAB) {
                         self.grab_id = None;
                         internal.off(GRAB);
                     }
-                    if widget_i.get(FOCUS) {
+                    if widget_i.check(FOCUS) {
                         self.focus_id(id, internal);
                         internal.on(FOCUS);
                     }
@@ -228,13 +228,13 @@ impl Widget for Container {
                     self.widgets[n].handle_mouse(&mouse, w_internal);
 
                     if w_internal.changed() {
-                        internal.replace(w_internal.get_u8(DRAW | UPDATE));
+                        internal.replace(w_internal.val(DRAW | UPDATE));
 
-                        if w_internal.get(GRAB) {
+                        if w_internal.check(GRAB) {
                             self.grab_id = Some(n);
                             internal.on(GRAB);
                         }
-                        if w_internal.get(FOCUS) {
+                        if w_internal.check(FOCUS) {
                             self.focus_id(n, internal);
                             internal.on(FOCUS);
                         }
@@ -277,7 +277,7 @@ impl Widget for Container {
                 let focus = widget.0.step_focus(back, widget.1);
 
                 if widget.1.changed() {
-                    internal.replace(widget.1.get_u8(DRAW | UPDATE));
+                    internal.replace(widget.1.val(DRAW | UPDATE));
                 }
 
                 if focus {
@@ -285,7 +285,7 @@ impl Widget for Container {
                 } else {
                     widget.0.unfocus(widget.1);
                     if widget.1.changed() {
-                        internal.replace(widget.1.get_u8(DRAW | UPDATE));
+                        internal.replace(widget.1.val(DRAW | UPDATE));
                     }
 
                     widget.1.off(FOCUS);
@@ -299,7 +299,7 @@ impl Widget for Container {
                     let focus = widget.step_focus(back, widget_i);
 
                     if widget_i.changed() {
-                        internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                        internal.replace(widget_i.val(DRAW | UPDATE));
                     }
 
                     if focus {
@@ -324,7 +324,7 @@ impl Widget for Container {
 
             self.widgets[id].unhover(widget_i);
             if widget_i.changed() {
-                internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                internal.replace(widget_i.val(DRAW | UPDATE));
             }
 
             widget_i.off(HOVER);
@@ -338,7 +338,7 @@ impl Widget for Container {
 
             self.widgets[id].unfocus(widget_i);
             if widget_i.changed() {
-                internal.replace(widget_i.get_u8(DRAW | UPDATE));
+                internal.replace(widget_i.val(DRAW | UPDATE));
             }
 
             widget_i.off(FOCUS);

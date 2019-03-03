@@ -33,7 +33,7 @@ pub trait Widget {
     fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
     /// Step the focus
     fn step_focus(&mut self, _: bool, internal: &mut WidgetInternal) -> bool {
-        let focus = internal.get(flags::VISIBLE) && !internal.get(flags::FOCUS);
+        let focus = !internal.check(flags::FOCUS | flags::ENABLED);
         if focus {
             internal.on(flags::DRAW);
         }
@@ -103,8 +103,13 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn get(&self, flag: u8) -> bool {
-        flag & self.flags != 0
+    pub fn check_or(&self, flag: u8) -> bool {
+        flag & self.flags > 0
+    }
+
+    #[inline]
+    pub fn check(&self, flag: u8) -> bool {
+        flag & self.flags == flag
     }
 
     #[inline]
@@ -121,7 +126,7 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn get_u8(&self, flag: u8) -> u8 {
+    pub fn val(&self, flag: u8) -> u8 {
         flag & self.flags
     }
 
