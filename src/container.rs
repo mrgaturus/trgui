@@ -175,7 +175,6 @@ impl Widget for Container {
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
             if let Some(n) = self.grab_id {
-                let widget = &mut self.widgets[n];
                 let widget_i = &mut self.widgets_i[n];
 
                 {
@@ -185,7 +184,7 @@ impl Widget for Container {
                     widget_i.set(HOVER, point_on_area!(r_coords, i_bounds));
                 }
 
-                widget.handle_mouse(&mouse, widget_i);
+                self.widgets[n].handle_mouse(&mouse, widget_i);
                 
                 if widget_i.changed() {
                     internal.replace(widget_i.val(DRAW | UPDATE));
