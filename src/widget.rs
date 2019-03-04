@@ -35,8 +35,12 @@ pub trait Widget {
     fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
     /// Step the focus
     fn step_focus(&mut self, _: bool, internal: &mut WidgetInternal) -> bool {
-        internal.on(DRAW);
-        internal.check(ENABLED | VISIBLE) && !internal.check(FOCUS)
+        let check = internal.check(ENABLED | VISIBLE) && !internal.check(FOCUS);
+        if check {
+            internal.on(DRAW);
+        }
+        
+        check
     }
     /// When you unhover the widget
     fn unhover(&mut self, internal: &mut WidgetInternal) { internal.on(DRAW); }
@@ -98,7 +102,7 @@ impl WidgetInternal {
 
     #[inline]
     pub fn off(&mut self, flag: u8) {
-        self.flags &= !flag | CHANGED;
+        self.flags = self.flags & !flag | CHANGED;
     }
 
     #[inline]
@@ -120,8 +124,18 @@ impl WidgetInternal {
     }
 
     #[inline]
+    pub fn unchange(&mut self) {
+        self.flags &= !CHANGED;
+    }
+
+    #[inline]
     pub fn val(&self, flag: u8) -> u8 {
         flag & self.flags
+    }
+
+    #[inline]
+    pub fn val_all(&self) -> u8 {
+        self.flags
     }
 
     fn check_min(&mut self) {

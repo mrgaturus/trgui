@@ -111,22 +111,6 @@ impl Container {
             }
         }
     }
-
-    fn focus_id(&mut self, n: usize, internal: &mut WidgetInternal) {
-        if let Some(id) = self.focus_id {
-            if id != n {
-                let widget_i = &mut self.widgets_i[id];
-
-                self.widgets[id].unfocus(widget_i);
-                if widget_i.changed() {
-                    internal.replace(widget_i.val(DRAW | UPDATE));
-                }
-
-                widget_i.off(FOCUS);
-            }
-        }
-        self.focus_id = Some(n);
-    }
 }
 
 impl Widget for Container {
@@ -176,21 +160,23 @@ impl Widget for Container {
             }
         }
 
-        for (w_internal, widget) in self.widgets_i.iter_mut().zip(self.widgets.iter_mut()) {
-            w_internal.compute_absolute(internal.absolute_pos());
-            widget.update_layout(w_internal);
+        self.widgets_i.iter_mut()
+            .zip(self.widgets.iter_mut())
+            .for_each(|(w_internal, widget)| {
+                w_internal.compute_absolute(internal.absolute_pos());
+                widget.update_layout(w_internal);
 
-            if w_internal.changed() {
-                internal.replace(w_internal.val(DRAW | UPDATE));
-            }
-        }
+                if w_internal.changed() {
+                    internal.replace(w_internal.val(DRAW | UPDATE));
+                }
+            });
     }
 
     fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
-            if let Some(id) = self.grab_id {
-                let widget = &mut self.widgets[id];
-                let widget_i = &mut self.widgets_i[id];
+            if let Some(n) = self.grab_id {
+                let widget = &mut self.widgets[n];
+                let widget_i = &mut self.widgets_i[n];
 
                 {
                     let r_coords = mouse.coordinates();
@@ -209,8 +195,13 @@ impl Widget for Container {
                         internal.off(GRAB);
                     }
                     if widget_i.check(FOCUS) {
-                        self.focus_id(id, internal);
-                        internal.on(FOCUS);
+                        if let Some(id) = self.focus_id {
+                            if id != n {
+                                self.unfocus(internal);
+                                internal.on(FOCUS);
+                            }
+                        }
+                        self.focus_id = Some(n);
                     }
                 }
             } else {
@@ -221,33 +212,44 @@ impl Widget for Container {
                     let i_bounds = w_internal.boundaries_abs();
 
                     point_on_area!(r_coords, i_bounds) && w_internal.check(VISIBLE)
+                })
+                .filter(|(_, w_internal)| {
+                    w_internal.check(ENABLED)
                 });
 
                 if let Some( (n, w_internal) ) = widget_r {
-                    if w_internal.check(ENABLED) {
-                        w_internal.on(HOVER);
-                        self.widgets[n].handle_mouse(&mouse, w_internal);
+                    w_internal.on(HOVER);
+                    w_internal.unchange();
 
-                        if w_internal.changed() {
-                            internal.replace(w_internal.val(DRAW | UPDATE));
+                    self.widgets[n].handle_mouse(&mouse, w_internal);
 
-                            if w_internal.check(GRAB) {
-                                self.grab_id = Some(n);
-                                internal.on(GRAB);
-                            }
-                            if w_internal.check(FOCUS) {
-                                self.focus_id(n, internal);
-                                internal.on(FOCUS);
-                            }
+                    if w_internal.changed() {
+                        internal.replace(w_internal.val(DRAW | UPDATE));
+
+                        if w_internal.check(GRAB) {
+                            self.grab_id = Some(n);
+                            internal.on(GRAB);
                         }
 
-                        if let Some(id) = self.hover_id {
-                            if id != n {
-                                self.unhover(internal);
+                        if w_internal.check(FOCUS) {
+                            if let Some(id) = self.focus_id {
+                                if id != n {
+                                    self.unfocus(internal);
+                                    internal.on(FOCUS);
+                                }
                             }
+                            self.focus_id = Some(n);
                         }
-                        self.hover_id = Some(n);
+                    } else {
+                        w_internal.on(1);
                     }
+
+                    if let Some(id) = self.hover_id {
+                        if id != n {
+                            self.unhover(internal);
+                        }
+                    }
+                    self.hover_id = Some(n);
                 } else {
                     self.unhover(internal);
                     if self.grab_id.is_none() {
@@ -265,7 +267,7 @@ impl Widget for Container {
             let widget_i = &mut self.widgets_i[id];
 
             self.widgets[id].handle_keys(key, widget_i);
-
+            
             if widget_i.changed() {
                 internal.replace(widget_i.val(DRAW | UPDATE));
 
@@ -274,7 +276,7 @@ impl Widget for Container {
                     internal.on(GRAB);
                 }
 
-                if !widget_i.check(FOCUS) {
+                if !widget_i.check(FOCUS | ENABLED | VISIBLE) {
                     self.unfocus(internal);
                 }
             }
