@@ -234,4 +234,9 @@ impl WidgetInternal {
     pub fn absolute_pos(&self) -> Dimensions {
         self.abs_pos
     }
+
+    #[inline]
+    pub fn on_area(&self, cursor: Dimensions) -> bool {
+        point_on_area!(cursor, self.boundaries_abs()) && self.check(VISIBLE)
+    }
 }

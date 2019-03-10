@@ -7,8 +7,8 @@ type WidgetList = Vec<Box<dyn Widget>>;
 pub type InternalList = Vec<WidgetInternal>;
 
 pub struct Container {
-    widgets: WidgetList,
     widgets_i: InternalList,
+    widgets: WidgetList,
     layout: Box<dyn Layout>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
@@ -18,8 +18,8 @@ pub struct Container {
 impl Container {
     pub fn new(layout: Box<dyn Layout>) -> Self {
         Container {
-            widgets: WidgetList::new(),
             widgets_i: InternalList::new(),
+            widgets: WidgetList::new(),
             focus_id: Option::None,
             grab_id: Option::None,
             hover_id: Option::None,
@@ -35,16 +35,16 @@ impl Container {
         let mut internal = WidgetInternal::new((0, 0, 0, 0), flags);
         internal.set_min_dimensions(widget.compute_min());
 
-        self.widgets.push( widget );
         self.widgets_i.push( internal );
+        self.widgets.push( widget );
     }
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, flags: u8) {
         let mut internal = WidgetInternal::new(bounds, flags);
         internal.set_min_dimensions(widget.compute_min());
 
-        self.widgets.push( widget );
         self.widgets_i.push( internal );
+        self.widgets.push( widget );
     }
 
     pub fn del_widget(&mut self, id: usize) {
@@ -204,17 +204,22 @@ impl Widget for Container {
                     }
                 }
             } else {
-                let widget_r = self.widgets_i.iter_mut()
-                .enumerate()
-                .find(|(_, w_internal)| {
-                    let r_coords = mouse.coordinates();
-                    let i_bounds = w_internal.boundaries_abs();
-
-                    point_on_area!(r_coords, i_bounds) && w_internal.check(VISIBLE)
-                })
-                .filter(|(_, w_internal)| {
-                    w_internal.check(ENABLED)
-                });
+                let widget_r = if let Some(id) = self.hover_id.filter(|n| {
+                    self.widgets_i[*n].on_area(mouse.coordinates())
+                }) {
+                    Some ( (id, &mut self.widgets_i[id] ) ).filter(|(_, w_internal)| {
+                        w_internal.check(ENABLED)
+                    })
+                } else {
+                    self.widgets_i.iter_mut()
+                        .enumerate()
+                        .find(|(_, w_internal)| {
+                            w_internal.on_area(mouse.coordinates())
+                        })
+                        .filter(|(_, w_internal)| {
+                            w_internal.check(ENABLED)
+                        })
+                };
 
                 if let Some( (n, w_internal) ) = widget_r {
                     w_internal.on(HOVER);
@@ -234,10 +239,11 @@ impl Widget for Container {
                             if let Some(id) = self.focus_id {
                                 if id != n {
                                     self.unfocus(internal);
-                                    internal.on(FOCUS);
                                 }
                             }
+
                             self.focus_id = Some(n);
+                            internal.on(FOCUS);
                         }
                     } else {
                         w_internal.on(1);
@@ -251,6 +257,7 @@ impl Widget for Container {
                     self.hover_id = Some(n);
                 } else {
                     self.unhover(internal);
+
                     if self.grab_id.is_none() {
                         internal.set(GRAB, mouse.clicked());
                     }
