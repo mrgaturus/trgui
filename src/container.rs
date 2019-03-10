@@ -74,10 +74,6 @@ impl Container {
         self.widgets_i.remove(id);
     }
 
-    pub fn get_widgets(&mut self) -> &mut WidgetList {
-        &mut self.widgets
-    }
-
     fn step(&mut self, back: bool) -> (bool, usize) {
         match self.focus_id {
             None => {
