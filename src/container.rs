@@ -226,17 +226,12 @@ impl Widget for Container {
                 let widget_r = if let Some(id) = self.hover_id.filter(|n| {
                     self.widgets_i[*n].on_area(mouse.coordinates())
                 }) {
-                    Some ( (id, &mut self.widgets_i[id] ) ).filter(|(_, w_internal)| {
-                        w_internal.check(ENABLED)
-                    })
+                    Some ( (id, &mut self.widgets_i[id] ) )
                 } else {
                     self.widgets_i.iter_mut()
                         .enumerate()
                         .find(|(_, w_internal)| {
                             w_internal.on_area(mouse.coordinates())
-                        })
-                        .filter(|(_, w_internal)| {
-                            w_internal.check(ENABLED)
                         })
                 };
 
