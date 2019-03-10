@@ -4,15 +4,21 @@ pub type Boundaries = (i32, i32, i32, i32);
 pub type Dimensions = (i32, i32);
 
 // BITFLAGS (Sorry for no use the crate)
-const CHANGED: u8 =     0b00000001;
+type FlagType = u16;
+
+const CHANGED: FlagType =     0b00000001;
 pub mod flags {
-    pub const DRAW: u8 =    0b00000010;
-    pub const UPDATE: u8 =  0b00000100;
-    pub const VISIBLE: u8 = 0b00001000;
-    pub const ENABLED: u8 = 0b00010000;
-    pub const HOVER: u8 =   0b00100000;
-    pub const GRAB: u8 =    0b01000000;
-    pub const FOCUS: u8 =   0b10000000;
+    use crate::widget::FlagType;
+
+    pub const DRAW: FlagType =    0b00000010;
+    pub const UPDATE: FlagType =  0b00000100;
+    pub const VISIBLE: FlagType = 0b00001000;
+    pub const ENABLED: FlagType = 0b00010000;
+    pub const HOVER: FlagType =   0b00100000;
+    pub const GRAB: FlagType =    0b01000000;
+    pub const FOCUS: FlagType =   0b10000000;
+
+    pub const UPDATE_BIND: FlagType = 0b100000000;
 }
 
 use flags::{FOCUS, ENABLED, VISIBLE, DRAW};
@@ -26,7 +32,7 @@ pub trait Widget {
     /// Draw the widget
     fn draw(&mut self, internal: &WidgetInternal) -> bool;
     /// Update the status of the widget
-    fn update(&mut self, internal: &WidgetInternal) -> bool;
+    fn update(&mut self, internal: &mut WidgetInternal, bind: bool);
     /// Update the layout of the widget
     fn update_layout(&mut self, internal: &mut WidgetInternal);
     /// Handle a mouse state (focus, grab)
@@ -62,11 +68,11 @@ pub struct WidgetInternal {
     /// Absolute position
     abs_pos: Dimensions,
     /// Every Widget Flag
-    flags: u8
+    flags: FlagType
 }
 
 impl WidgetInternal {
-    pub fn new(bounds: Boundaries, flags: u8) -> Self {
+    pub fn new(bounds: Boundaries, flags: FlagType) -> Self {
         WidgetInternal {
             bounds,
             min_dim: (0, 0),
@@ -77,7 +83,7 @@ impl WidgetInternal {
 
     // FLAGS
 
-    pub fn set(&mut self, flag: u8, value: bool) {
+    pub fn set(&mut self, flag: FlagType, value: bool) {
         if value {
             self.flags |= flag | CHANGED;
         } else {
@@ -86,32 +92,32 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn replace(&mut self, flags: u8) {
+    pub fn replace(&mut self, flags: FlagType) {
         self.flags = self.flags & !flags | flags | CHANGED;
     }
 
     #[inline]
-    pub fn toggle(&mut self, flag: u8) {
+    pub fn toggle(&mut self, flag: FlagType) {
         self.flags ^= flag;
     }
 
     #[inline]
-    pub fn on(&mut self, flag: u8) {
+    pub fn on(&mut self, flag: FlagType) {
         self.flags |= flag | CHANGED;
     }
 
     #[inline]
-    pub fn off(&mut self, flag: u8) {
+    pub fn off(&mut self, flag: FlagType) {
         self.flags = self.flags & !flag | CHANGED;
     }
 
     #[inline]
-    pub fn check_any(&self, flag: u8) -> bool {
+    pub fn check_any(&self, flag: FlagType) -> bool {
         flag & self.flags > 0
     }
 
     #[inline]
-    pub fn check(&self, flag: u8) -> bool {
+    pub fn check(&self, flag: FlagType) -> bool {
         flag & self.flags == flag
     }
 
@@ -129,12 +135,12 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn val(&self, flag: u8) -> u8 {
+    pub fn val(&self, flag: FlagType) -> FlagType {
         flag & self.flags
     }
 
     #[inline]
-    pub fn val_all(&self) -> u8 {
+    pub fn val_all(&self) -> FlagType {
         self.flags
     }
 

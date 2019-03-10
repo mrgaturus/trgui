@@ -55,10 +55,9 @@ impl Window {
         };
     }
 
-    pub fn update_window(&mut self) {
+    pub fn update_window(&mut self, bind: bool) {
         if self.internal.check(UPDATE) {
-            let status = self.root_container.update(&mut self.internal);
-            self.internal.set(UPDATE, status);
+            self.root_container.update(&mut self.internal, bind);
         }
     }
 
