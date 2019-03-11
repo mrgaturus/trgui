@@ -56,7 +56,7 @@ impl Window {
     }
 
     pub fn update_window(&mut self, bind: bool) {
-        if self.internal.check(UPDATE) {
+        if bind || self.internal.check(UPDATE) {
             self.root_container.update(&mut self.internal, bind);
         }
     }

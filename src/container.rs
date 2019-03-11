@@ -134,7 +134,7 @@ impl Widget for Container {
 
         for ((n, w_internal), widget) in self.widgets_i.iter_mut()
             .enumerate()
-            .filter(|(_, w_internal)| w_internal.check(check_flag) )
+            .filter(|(_, w_internal)| w_internal.check_any(check_flag) )
             .zip(self.widgets.iter_mut())
         {
             widget.update(w_internal, bind);
@@ -154,7 +154,11 @@ impl Widget for Container {
 
                     if let Some(id) = self.focus_id {
                         if id == n {
-                            w_internal.on(FOCUS);
+                            if w_internal.check(ENABLED) {
+                                w_internal.on(FOCUS);
+                            } else {
+                                self.focus_id = None;
+                            }
                         }
                     }
 
