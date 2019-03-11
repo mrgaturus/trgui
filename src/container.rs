@@ -169,9 +169,7 @@ impl Widget for Container {
             }
         }
 
-        if count == 0 {
-            internal.off(UPDATE);
-        }
+        internal.set(UPDATE, count > 0);
     }
 
     fn update_layout(&mut self, internal: &mut WidgetInternal) {
