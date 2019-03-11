@@ -36,22 +36,22 @@ impl Window {
     }
 
     pub fn handle_mouse(&mut self) {
-        self.root_container.handle_mouse(&self.mouse_s, &mut self.internal);
+        self.root_container.handle_mouse(&mut self.internal, &self.mouse_s);
     }
 
     pub fn handle_keys(&mut self) {
-        self.root_container.handle_keys(&self.key_s, &mut self.internal);
+        self.root_container.handle_keys(&mut self.internal, &self.key_s);
     }
 
     pub fn next_focus(&mut self) {
-        if !self.root_container.step_focus(false, &mut self.internal) {
-            self.root_container.step_focus(false, &mut self.internal);
+        if !self.root_container.step_focus(&mut self.internal, false) {
+            self.root_container.step_focus(&mut self.internal, false);
         };
     }
 
     pub fn prev_focus(&mut self) {
-        if !self.root_container.step_focus(true, &mut self.internal) {
-            self.root_container.step_focus(true, &mut self.internal);
+        if !self.root_container.step_focus(&mut self.internal, true) {
+            self.root_container.step_focus(&mut self.internal, true);
         };
     }
 

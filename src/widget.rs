@@ -36,11 +36,11 @@ pub trait Widget {
     /// Update the layout of the widget
     fn update_layout(&mut self, internal: &mut WidgetInternal);
     /// Handle a mouse state (focus, grab)
-    fn handle_mouse(&mut self, mouse: &MouseState, internal: &mut WidgetInternal);
+    fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState);
     /// Handle a keyboard state
-    fn handle_keys(&mut self, key: &KeyState, internal: &mut WidgetInternal);
+    fn handle_keys(&mut self, internal: &mut WidgetInternal, key: &KeyState);
     /// Step the focus
-    fn step_focus(&mut self, _: bool, internal: &mut WidgetInternal) -> bool {
+    fn step_focus(&mut self, internal: &mut WidgetInternal, _: bool) -> bool {
         let check = internal.check(ENABLED | VISIBLE) && !internal.check(FOCUS);
         if check {
             internal.on(DRAW);
