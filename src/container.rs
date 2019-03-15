@@ -200,83 +200,66 @@ impl Widget for Container {
 
     fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
-            if let Some(n) = self.grab_id {
-                let w_internal = &mut self.widgets_i[n];
-                w_internal.set(HOVER, w_internal.on_area(mouse.coordinates()));
-                w_internal.unchange();
-
-                self.widgets[n].handle_mouse(w_internal, mouse);
-                
-                if w_internal.changed() {
-                    internal.replace(w_internal.val(DRAW | UPDATE));
-
-                    if !w_internal.check(GRAB) {
-                        self.grab_id = None;
-                        internal.off(GRAB);
-                    }
-                    if w_internal.check(FOCUS) {
-                        if let Some(id) = self.focus_id {
-                            if id != n {
-                                self.unfocus(internal);
-                                internal.on(FOCUS);
-                            }
-                        }
-                        self.focus_id = Some(n);
-                    }
-                }
-            } else {
-                let widget_r = if let Some(id) = self.hover_id.filter(|n| {
-                    self.widgets_i[*n].on_area(mouse.coordinates())
-                }) {
-                    Some ( (id, &mut self.widgets_i[id] ) )
-                } else {
+            let widget_n = self.grab_id
+                .or(self.hover_id.filter(|n| {
+                        self.widgets_i[*n].on_area(mouse.coordinates())
+                    })
+                )
+                .or_else(|| {
                     self.widgets_i.iter_mut()
                         .enumerate()
                         .find(|(_, w_internal)| {
                             w_internal.on_area(mouse.coordinates())
+                        }).map(|(n, _)| {
+                            n
                         })
+                });
+
+            if let Some(n) = widget_n {
+                // I don't know if i found a NLL bug, this line avoid borrow check for now
+                let w_internal = unsafe { 
+                    &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal)
                 };
 
-                if let Some( (n, w_internal) ) = widget_r {
-                    w_internal.on(HOVER);
-                    w_internal.unchange();
-
-                    self.widgets[n].handle_mouse(w_internal, mouse);
-
-                    if w_internal.changed() {
-                        internal.replace(w_internal.val(DRAW | UPDATE));
-
-                        if w_internal.check(GRAB) {
-                            self.grab_id = Some(n);
-                            internal.on(GRAB);
-                        }
-
-                        if w_internal.check(FOCUS) {
-                            if let Some(id) = self.focus_id {
-                                if id != n {
-                                    self.unfocus(internal);
-                                }
-                            }
-
-                            self.focus_id = Some(n);
-                            internal.on(FOCUS);
-                        }
-                    } else {
-                        w_internal.on(1);
-                    }
-
+                if w_internal.check(GRAB) {
+                    w_internal.set(HOVER, w_internal.on_area(mouse.coordinates()))
+                } else {
                     if let Some(id) = self.hover_id {
                         if id != n {
                             self.unhover(internal);
                         }
                     }
+                    w_internal.on(HOVER);
                     self.hover_id = Some(n);
-                } else {
-                    self.unhover(internal);
+                }
+                w_internal.unchange();
 
-                    if self.grab_id.is_none() {
-                        internal.set(GRAB, mouse.clicked());
+                self.widgets[n].handle_mouse(w_internal, mouse);
+
+                if w_internal.changed() {
+                    internal.replace(w_internal.val(DRAW | UPDATE));
+
+                    internal.set(GRAB, w_internal.check(GRAB));
+                    self.grab_id = Some(n).filter(|_| {
+                        w_internal.check(GRAB)
+                    });
+
+                    if w_internal.check(FOCUS) {
+                        if let Some(id) = self.focus_id {
+                            if id != n {
+                                self.unfocus(internal);
+                            }
+                        }
+
+                        self.focus_id = Some(n);
+                        internal.on(FOCUS);
                     }
+                }
+            } else {
+                self.unhover(internal);
+
+                if self.grab_id.is_none() {
+                    internal.set(GRAB, mouse.clicked());
                 }
             }
         } else {
