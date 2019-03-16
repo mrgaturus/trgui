@@ -76,15 +76,6 @@ impl Container {
 
     fn step(&mut self, back: bool) -> (bool, usize) {
         match self.focus_id {
-            None => {
-                let mut val = 0;
-                if back {
-                    val = self.widgets.len() - 1;
-                }
-                self.focus_id = Some(val);
-
-                (true, val)
-            },
             Some(mut id) => {
                 let len = self.widgets.len() - 1;
 
@@ -104,6 +95,15 @@ impl Container {
 
                 self.focus_id = Some(id);
                 (true, id)
+            },
+            None => {
+                let mut val = 0;
+                if back {
+                    val = self.widgets.len() - 1;
+                }
+                self.focus_id = Some(val);
+
+                (true, val)
             }
         }
     }
@@ -132,44 +132,23 @@ impl Widget for Container {
         let check_flag = if bind { UPDATE | UPDATE_BIND } else { UPDATE };
         let mut count: usize = 0;
 
-        for ((n, w_internal), widget) in self.widgets_i.iter_mut()
-            .enumerate()
-            .filter(|(_, w_internal)| w_internal.check_any(check_flag) )
+        self.widgets_i.iter_mut()
+            .filter(|w_internal| w_internal.check_any(check_flag) )
             .zip(self.widgets.iter_mut())
-        {
-            widget.update(w_internal, bind);
+            .for_each(|(w_internal, widget)| {
+                let backup = w_internal.val(FOCUS | GRAB | HOVER);
+                widget.update(w_internal, bind);
 
-            count += w_internal.check(UPDATE) as usize;
-            if w_internal.changed() {
-                internal.replace(w_internal.val(DRAW));
-
-                if w_internal.check_any(GRAB | FOCUS | HOVER) {
-                    w_internal.off(GRAB | FOCUS | HOVER);
-
-                    if let Some(id) = self.grab_id {
-                        if id == n {
-                            w_internal.on(GRAB);
-                        }
-                    }
-
-                    if let Some(id) = self.focus_id {
-                        if id == n {
-                            if w_internal.check(ENABLED) {
-                                w_internal.on(FOCUS);
-                            } else {
-                                self.focus_id = None;
-                            }
-                        }
-                    }
-
-                    if let Some(id) = self.hover_id {
-                        if id == n {
-                            w_internal.on(HOVER);
-                        }
-                    }
-
+                count += w_internal.check(UPDATE) as usize;
+                if w_internal.changed() {
+                    w_internal.replace(w_internal.val(DRAW) | backup);
                     w_internal.unchange();
                 }
+            });
+
+        if let Some(id) = self.focus_id {
+            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
+                self.unfocus(internal);
             }
         }
 
@@ -208,10 +187,12 @@ impl Widget for Container {
                 .or_else(|| {
                     self.widgets_i.iter_mut()
                         .enumerate()
-                        .find(|(_, w_internal)| {
-                            w_internal.on_area(mouse.coordinates())
-                        }).map(|(n, _)| {
-                            n
+                        .find_map(|(n, w_internal)| {
+                            if w_internal.on_area(mouse.coordinates()) {
+                                Some(n)
+                            } else {
+                                None
+                            }
                         })
                 });
 
@@ -229,8 +210,8 @@ impl Widget for Container {
                             self.unhover(internal);
                         }
                     }
-                    w_internal.on(HOVER);
                     self.hover_id = Some(n);
+                    w_internal.on(HOVER);
                 }
                 w_internal.unchange();
 
