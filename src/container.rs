@@ -141,7 +141,9 @@ impl Widget for Container {
 
                 count += w_internal.check(UPDATE) as usize;
                 if w_internal.changed() {
-                    w_internal.replace(w_internal.val(DRAW) | backup);
+                    internal.replace(w_internal.val(DRAW));
+                    
+                    w_internal.replace(backup);
                     w_internal.unchange();
                 }
             });
