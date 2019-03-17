@@ -281,7 +281,7 @@ impl Widget for Container {
                         internal.replace(w_internal.val(DRAW | UPDATE));
                     }
 
-                    if focus {
+                    if focus && w_internal.check(ENABLED | VISIBLE) {
                         w_internal.on(FOCUS);
                         return focus;
                     } else {

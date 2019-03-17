@@ -21,7 +21,7 @@ pub mod flags {
     pub const UPDATE_BIND: FlagType = 0b100000000;
 }
 
-use flags::{FOCUS, ENABLED, VISIBLE, DRAW};
+use flags::{FOCUS, VISIBLE, DRAW};
 
 // TODO: create a check_bind
 
@@ -41,7 +41,7 @@ pub trait Widget {
     fn handle_keys(&mut self, internal: &mut WidgetInternal, key: &KeyState);
     /// Step the focus
     fn step_focus(&mut self, internal: &mut WidgetInternal, _: bool) -> bool {
-        let check = internal.check(ENABLED | VISIBLE) && !internal.check(FOCUS);
+        let check = !internal.check(FOCUS);
         if check {
             internal.on(DRAW);
         }
