@@ -40,6 +40,7 @@ impl Container {
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>, flags: u16) {
         let mut internal = WidgetInternal::new((0, 0, 0, 0), flags);
+        internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
         self.widgets_i.push( internal );
@@ -48,6 +49,7 @@ impl Container {
 
     pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, flags: u16) {
         let mut internal = WidgetInternal::new(bounds, flags);
+        internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
         self.widgets_i.push( internal );
