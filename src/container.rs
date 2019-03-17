@@ -98,8 +98,8 @@ impl Widget for Container {
         }
 
         self.widgets_i.iter_mut()
-            .filter(|w_internal| w_internal.check(DRAW) )
             .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| w_internal.check(DRAW) )
             .for_each(|(w_internal, widget)| {
                 count += 1;
 
@@ -121,8 +121,8 @@ impl Widget for Container {
         let mut count: usize = 0;
 
         self.widgets_i.iter_mut()
-            .filter(|w_internal| w_internal.check_any(check_flag) )
             .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| w_internal.check_any(check_flag) )
             .for_each(|(w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
                 widget.update(w_internal, bind);
@@ -174,8 +174,8 @@ impl Widget for Container {
     fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
             let widget_n = self.grab_id
-                .or(self.hover_id.filter(|n| {
-                        self.widgets_i[*n].on_area(mouse.coordinates())
+                .or(self.hover_id.filter(|&n| {
+                        self.widgets_i[n].on_area(mouse.coordinates())
                     })
                 )
                 .or_else(|| {
