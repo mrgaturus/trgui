@@ -170,7 +170,9 @@ impl WidgetInternal {
 
     /// Sum absolute position
     pub fn compute_absolute(&mut self, pos: Dimensions) {
-        self.abs_pos = absolute_pos!(pos, self.bounds);
+        let coords = self.coordinates();
+
+        self.abs_pos = (pos.0 + coords.0, pos.1 + coords.1);
     }
 
     /// Change dimensions
@@ -243,6 +245,9 @@ impl WidgetInternal {
 
     #[inline]
     pub fn on_area(&self, cursor: Dimensions) -> bool {
-        point_on_area!(cursor, self.boundaries_abs()) && self.check(VISIBLE)
+        let bounds = self.boundaries_abs();
+
+        self.check(VISIBLE) && cursor.0 >= bounds.0 && cursor.0 <= bounds.0 + bounds.2 &&
+        cursor.1 >= bounds.1 && cursor.1 <= bounds.1 + bounds.3
     }
 }
