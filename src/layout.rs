@@ -3,11 +3,6 @@ use crate::widget::{WidgetInternal, Dimensions};
 pub trait Layout {
     fn layout(&self, widgets: &mut [WidgetInternal], dimensions: &Dimensions);
     fn minimum_size(&self, widgets: &[WidgetInternal]) -> Dimensions;
-
-    #[inline]
-    fn boxed(self) -> Box<Self> where Self: Sized {
-        Box::new(self)
-    }
 }
 
 pub struct FixedLayout { 

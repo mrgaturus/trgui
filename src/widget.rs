@@ -50,12 +50,6 @@ pub trait Widget {
     fn unhover(&mut self, internal: &mut WidgetInternal) { internal.on(DRAW); }
     /// When you unfocus the widget
     fn unfocus(&mut self, internal: &mut WidgetInternal) { internal.on(DRAW); }
-
-    // Move the widget to the heap
-    #[inline]
-    fn boxed(self) -> Box<Self> where Self: Sized {
-        Box::new(self)
-    }
 }
 
 pub struct WidgetInternal {

@@ -3,6 +3,7 @@ use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
 use crate::decorator::Decorator;
 use crate::layout::Layout;
+use crate::Boxed;
 
 type WidgetList = Vec<Box<dyn Widget>>;
 pub type InternalList = Vec<WidgetInternal>;
@@ -340,7 +341,9 @@ impl Widget for Container {
             self.focus_id = Option::None;
         }
     }
+}
 
+impl Boxed for Container {
     #[inline]
     fn boxed(mut self) -> Box<Self> where Self: Sized {
         self.widgets.shrink_to_fit();
