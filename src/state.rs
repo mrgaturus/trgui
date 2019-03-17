@@ -6,6 +6,8 @@ pub struct MouseState {
     m_click: bool,
     /// Mouse coordinates
     m_coords: Coordinates,
+    /// Mouse wheel
+    m_wheel: i32,
     /// Tablet Pressure Level
     t_pressure: i32
 }
@@ -25,6 +27,7 @@ impl MouseState {
         MouseState {
             m_click: false,
             m_coords: (0,0),
+            m_wheel: 0,
             t_pressure: 0
         }
     }
