@@ -42,9 +42,7 @@ pub trait Widget {
     /// Step the focus
     fn step_focus(&mut self, internal: &mut WidgetInternal, _: bool) -> bool {
         let check = !internal.check(FOCUS);
-        if check {
-            internal.on(DRAW);
-        }
+        internal.set(DRAW, check && internal.check(VISIBLE));
         
         check
     }
