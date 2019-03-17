@@ -1,7 +1,7 @@
 use crate::widget::{Widget, WidgetInternal, Dimensions, Boundaries};
 use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
-use crate::decorator::{Decorator, DECORATOR_BEFORE, DECORATOR_AFTER, DECORATOR_UPDATE};
+use crate::decorator::Decorator;
 use crate::layout::Layout;
 
 type WidgetList = Vec<Box<dyn Widget>>;
@@ -95,9 +95,7 @@ impl Widget for Container {
     fn draw(&mut self, internal: &WidgetInternal) -> bool {
         let mut count: usize = 0;
 
-        if internal.check(DECORATOR_BEFORE) {
-            self.decorator.before(internal);
-        }
+        self.decorator.before(internal);
 
         self.widgets_i.iter_mut()
             .zip(self.widgets.iter_mut())
@@ -111,9 +109,7 @@ impl Widget for Container {
                 }
             });
 
-        if internal.check(DECORATOR_AFTER) {
-            self.decorator.after(internal);
-        }
+        self.decorator.after(internal);
 
         count > 0
     }
@@ -168,9 +164,7 @@ impl Widget for Container {
                 }
             });
 
-        if internal.check(DECORATOR_UPDATE) {
-            self.decorator.update(internal);
-        }
+        self.decorator.update(internal);
     }
 
     fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState) {
