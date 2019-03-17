@@ -1,6 +1,7 @@
 use crate::widget::{Widget, WidgetInternal, Dimensions, Boundaries};
 use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
+use crate::decorator::{Decorator, DECORATOR_BEFORE, DECORATOR_AFTER, DECORATOR_UPDATE};
 use crate::layout::Layout;
 
 type WidgetList = Vec<Box<dyn Widget>>;
@@ -9,6 +10,7 @@ pub type InternalList = Vec<WidgetInternal>;
 pub struct Container {
     widgets_i: InternalList,
     widgets: WidgetList,
+    decorator: Box<dyn Decorator>,
     layout: Box<dyn Layout>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
@@ -16,19 +18,24 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(layout: Box<dyn Layout>) -> Self {
+    pub fn new(decorator: Box<dyn Decorator>, layout: Box<dyn Layout>) -> Self {
         Container {
             widgets_i: InternalList::new(),
             widgets: WidgetList::new(),
             focus_id: Option::None,
             grab_id: Option::None,
             hover_id: Option::None,
+            decorator,
             layout
         }
     }
 
     pub fn set_layout(&mut self, layout: Box<dyn Layout>) {
         self.layout = layout;
+    }
+
+    pub fn set_decorator(&mut self, decorator: Box<dyn Decorator>) {
+        self.decorator = decorator;
     }
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>, flags: u16) {
@@ -83,8 +90,12 @@ impl Container {
 }
 
 impl Widget for Container {
-    fn draw(&mut self, _: &WidgetInternal) -> bool {
+    fn draw(&mut self, internal: &WidgetInternal) -> bool {
         let mut count: usize = 0;
+
+        if internal.check(DECORATOR_BEFORE) {
+            self.decorator.before(internal);
+        }
 
         self.widgets_i.iter_mut()
             .filter(|w_internal| w_internal.check(DRAW) )
@@ -97,6 +108,10 @@ impl Widget for Container {
                     count -= 1;
                 }
             });
+
+        if internal.check(DECORATOR_AFTER) {
+            self.decorator.after(internal);
+        }
 
         count > 0
     }
@@ -150,6 +165,10 @@ impl Widget for Container {
                     internal.replace(w_internal.val(DRAW | UPDATE));
                 }
             });
+
+        if internal.check(DECORATOR_UPDATE) {
+            self.decorator.update(internal);
+        }
     }
 
     fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState) {
