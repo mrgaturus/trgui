@@ -294,13 +294,14 @@ impl Widget for Container {
             if step.0 {
                 while let Some(widget) = self.widgets.get_mut(step.1) {
                     let w_internal = &mut self.widgets_i[step.1];
-                    let focus = widget.step_focus(w_internal, back);
+                    let focus = w_internal.check(ENABLED | VISIBLE) 
+                        && widget.step_focus(w_internal, back);
 
                     if w_internal.changed() {
                         internal.replace(w_internal.val(DRAW | UPDATE));
                     }
 
-                    if focus && w_internal.check(ENABLED | VISIBLE) {
+                    if focus {
                         w_internal.on(FOCUS);
                         return focus;
                     } else {
