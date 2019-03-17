@@ -252,22 +252,22 @@ impl Widget for Container {
     fn step_focus(&mut self, internal: &mut WidgetInternal, back: bool) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
-                let widget = (&mut self.widgets[id], &mut self.widgets_i[id]);
-                let focus = widget.0.step_focus(widget.1, back);
+                let widget = (&mut self.widgets_i[id], &mut self.widgets[id]);
+                let focus = widget.1.step_focus(widget.0, back);
 
-                if widget.1.changed() {
-                    internal.replace(widget.1.val(DRAW | UPDATE));
+                if widget.0.changed() {
+                    internal.replace(widget.0.val(DRAW | UPDATE));
                 }
 
                 if focus {
                     return true;
                 } else {
-                    widget.0.unfocus(widget.1);
-                    if widget.1.changed() {
-                        internal.replace(widget.1.val(DRAW | UPDATE));
+                    widget.1.unfocus(widget.0);
+                    if widget.0.changed() {
+                        internal.replace(widget.0.val(DRAW | UPDATE));
                     }
 
-                    widget.1.off(FOCUS);
+                    widget.0.off(FOCUS);
                 }
             }
             let mut step = self.step(back);
