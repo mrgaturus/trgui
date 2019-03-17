@@ -47,33 +47,6 @@ impl Container {
         self.widgets.push( widget );
     }
 
-    pub fn del_widget(&mut self, id: usize) {
-        if let Some(focus) = self.focus_id {
-            if id == focus {
-                self.focus_id = None;
-            } else if id < focus {
-                self.focus_id = Some(focus - 1);
-            }
-        }
-        if let Some(grab) = self.grab_id {
-            if id == grab {
-                self.grab_id = None;
-            } else if id < grab {
-                self.grab_id = Some(grab - 1);
-            }
-        }
-        if let Some(hover) = self.hover_id {
-            if id == hover {
-                self.hover_id = None;
-            } else if id < hover {
-                self.hover_id = Some(hover - 1);
-            }
-        }
-
-        self.widgets.remove(id);
-        self.widgets_i.remove(id);
-    }
-
     fn step(&mut self, back: bool) -> (bool, usize) {
         match self.focus_id {
             Some(mut id) => {
@@ -199,7 +172,6 @@ impl Widget for Container {
                 });
 
             if let Some(n) = widget_n {
-                // I don't know if i found a NLL bug, this line avoid borrow check for now
                 let w_internal = unsafe { 
                     &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal)
                 };
