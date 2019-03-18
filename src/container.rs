@@ -128,9 +128,9 @@ impl Widget for Container {
 
                 count += w_internal.check(UPDATE) as usize;
                 if w_internal.changed() {
-                    internal.replace(w_internal.val(DRAW));
+                    internal.on(w_internal.val(DRAW));
                     
-                    w_internal.replace(backup);
+                    w_internal.on(backup);
                     w_internal.unchange();
                 }
             });
@@ -161,7 +161,7 @@ impl Widget for Container {
                 widget.update_layout(w_internal);
 
                 if w_internal.changed() {
-                    internal.replace(w_internal.val(DRAW | UPDATE));
+                    internal.on(w_internal.val(DRAW | UPDATE));
                 }
             });
 
@@ -208,7 +208,7 @@ impl Widget for Container {
                 self.widgets[n].handle_mouse(w_internal, mouse);
 
                 if w_internal.changed() {
-                    internal.replace(w_internal.val(DRAW | UPDATE));
+                    internal.on(w_internal.val(DRAW | UPDATE));
 
                     internal.set(GRAB, w_internal.check(GRAB));
                     self.grab_id = Some(n).filter(|_| {
@@ -245,7 +245,7 @@ impl Widget for Container {
             self.widgets[id].handle_keys(w_internal, key);
             
             if w_internal.changed() {
-                internal.replace(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(DRAW | UPDATE));
 
                 if w_internal.check(GRAB) {
                     self.grab_id = Some(id);
@@ -272,7 +272,7 @@ impl Widget for Container {
                 let focus = widget.1.step_focus(widget.0, back);
 
                 if widget.0.changed() {
-                    internal.replace(widget.0.val(DRAW | UPDATE));
+                    internal.on(widget.0.val(DRAW | UPDATE));
                 }
 
                 if focus {
@@ -280,7 +280,7 @@ impl Widget for Container {
                 } else {
                     widget.1.unfocus(widget.0);
                     if widget.0.changed() {
-                        internal.replace(widget.0.val(DRAW | UPDATE));
+                        internal.on(widget.0.val(DRAW | UPDATE));
                     }
 
                     widget.0.off(FOCUS);
@@ -295,7 +295,7 @@ impl Widget for Container {
                         && widget.step_focus(w_internal, back);
 
                     if w_internal.changed() {
-                        internal.replace(w_internal.val(DRAW | UPDATE));
+                        internal.on(w_internal.val(DRAW | UPDATE));
                     }
 
                     if focus {
@@ -320,7 +320,7 @@ impl Widget for Container {
 
             self.widgets[id].unhover(w_internal);
             if w_internal.changed() {
-                internal.replace(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(DRAW | UPDATE));
             }
 
             w_internal.off(HOVER);
@@ -334,7 +334,7 @@ impl Widget for Container {
 
             self.widgets[id].unfocus(w_internal);
             if w_internal.changed() {
-                internal.replace(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(DRAW | UPDATE));
             }
 
             w_internal.off(FOCUS);

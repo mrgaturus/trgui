@@ -84,11 +84,6 @@ impl WidgetInternal {
     }
 
     #[inline]
-    pub fn replace(&mut self, flags: FlagType) {
-        self.flags = self.flags & !flags | flags | CHANGED;
-    }
-
-    #[inline]
     pub fn toggle(&mut self, flag: FlagType) {
         self.flags ^= flag;
     }
