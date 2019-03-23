@@ -117,22 +117,23 @@ impl Widget for Container {
 
     fn update(&mut self, internal: &mut WidgetInternal, bind: bool) {
         let check_flag = if bind { UPDATE | UPDATE_BIND } else { UPDATE };
-        let mut count: usize = 0;
+        let count: usize;
 
-        self.widgets_i.iter_mut()
+        count = self.widgets_i.iter_mut()
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.check_any(check_flag) )
-            .for_each(|(w_internal, widget)| {
+            .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
                 widget.update(w_internal, bind);
 
-                count += w_internal.check(UPDATE) as usize;
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW));
                     
                     w_internal.on(backup);
                     w_internal.unchange();
                 }
+
+                w_internal.check(UPDATE) as usize
             });
 
         if let Some(id) = self.focus_id {
