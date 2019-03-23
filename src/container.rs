@@ -94,20 +94,20 @@ impl Container {
 
 impl Widget for Container {
     fn draw(&mut self, internal: &WidgetInternal) -> bool {
-        let mut count: usize = 0;
+        let count: usize;
 
         self.decorator.before(internal);
 
-        self.widgets_i.iter_mut()
+        count = self.widgets_i.iter_mut()
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.check(DRAW) )
-            .for_each(|(w_internal, widget)| {
-                count += 1;
-
-                if !widget.draw(w_internal) {
+            .fold(0, |_, (w_internal, widget)| {
+                let draw = widget.draw(w_internal);
+                if !draw {
                     w_internal.off(DRAW);
-                    count -= 1;
                 }
+
+                draw as usize
             });
 
         self.decorator.after(internal);
@@ -176,7 +176,7 @@ impl Widget for Container {
                     })
                 )
                 .or_else(|| {
-                    self.widgets_i.iter_mut()
+                    self.widgets_i.iter()
                         .enumerate()
                         .find_map(|(n, w_internal)| {
                             if w_internal.on_area(mouse.coordinates()) {
