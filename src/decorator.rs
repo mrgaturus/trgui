@@ -1,4 +1,4 @@
-use crate::widget::{WidgetInternal};
+use crate::widget::WidgetInternal;
 use crate::Boxed;
 
 pub trait Decorator<P, D> {
@@ -9,5 +9,5 @@ pub trait Decorator<P, D> {
 
 pub struct EmptyDecorator;
 
-impl <P, D> Decorator<P, D> for EmptyDecorator {}
+impl<P, D> Decorator<P, D> for EmptyDecorator {}
 impl Boxed for EmptyDecorator {}

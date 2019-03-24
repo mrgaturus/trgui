@@ -10,7 +10,7 @@ pub struct MouseState<P> {
     /// Tablet Pressure Level
     t_pressure: i32,
     /// Keyboard Modifiers
-    k_modifiers: u8
+    k_modifiers: u8,
 }
 
 /// A key state
@@ -20,17 +20,20 @@ pub struct KeyState {
     /// Keycode pressed
     k_code: i32,
     /// Modifier (bitflag)
-    k_modifiers: u8
+    k_modifiers: u8,
 }
 
-impl <P> MouseState<P> where P: Sized + Copy + Clone + Default {
+impl<P> MouseState<P>
+where
+    P: Sized + Copy + Clone + Default,
+{
     pub fn new() -> Self {
         MouseState {
             m_click: false,
             m_coords: (Default::default(), Default::default()),
             m_wheel: 0,
             t_pressure: 0,
-            k_modifiers: 0
+            k_modifiers: 0,
         }
     }
 
@@ -61,7 +64,7 @@ impl KeyState {
         KeyState {
             k_pressed: false,
             k_code: 0,
-            k_modifiers: 0
+            k_modifiers: 0,
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::widget::{WidgetInternal, Dimensions};
+use crate::widget::{Dimensions, WidgetInternal};
 use crate::Boxed;
 
 pub trait Layout<P, D> {
@@ -8,9 +8,12 @@ pub trait Layout<P, D> {
 
 pub struct EmptyLayout;
 
-impl <P, D> Layout<P, D> for EmptyLayout where D: From<u8> {
+impl<P, D> Layout<P, D> for EmptyLayout
+where
+    D: Default,
+{
     fn minimum_size(&self, _: &[WidgetInternal<P, D>]) -> Dimensions<D> {
-        (D::from(0 as u8), D::from(0 as u8))
+        (Default::default(), Default::default())
     }
 }
 impl Boxed for EmptyLayout {}

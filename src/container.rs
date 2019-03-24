@@ -1,8 +1,8 @@
-use crate::widget::{Widget, WidgetInternal, Boundaries, Dimensions, Flags};
-use crate::widget::flags::*;
-use crate::state::{MouseState, KeyState};
 use crate::decorator::Decorator;
 use crate::layout::Layout;
+use crate::state::{KeyState, MouseState};
+use crate::widget::flags::*;
+use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
 use crate::Boxed;
 
 use std::ops::Add;
@@ -17,11 +17,14 @@ pub struct Container<P, D> {
     layout: Box<dyn Layout<P, D>>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
-    hover_id: Option<usize>
+    hover_id: Option<usize>,
 }
 
-impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
-where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
+impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
+where
+    D: PartialOrd + Default,
+    P: Add<Output = P> + PartialOrd + From<D> + Default,
+{
     pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
             widgets_i: InternalList::new(),
@@ -30,7 +33,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             grab_id: Option::None,
             hover_id: Option::None,
             decorator,
-            layout
+            layout,
         }
     }
 
@@ -47,17 +50,23 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
-        self.widgets_i.push( internal );
-        self.widgets.push( widget );
+        self.widgets_i.push(internal);
+        self.widgets.push(widget);
     }
 
-    pub fn add_widget_b(&mut self, widget: Box<dyn Widget<P, D>>, bounds: Boundaries<P, D>, flags: Flags) {
-        let mut internal = WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
+    pub fn add_widget_b(
+        &mut self,
+        widget: Box<dyn Widget<P, D>>,
+        bounds: Boundaries<P, D>,
+        flags: Flags,
+    ) {
+        let mut internal =
+            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
-        self.widgets_i.push( internal );
-        self.widgets.push( widget );
+        self.widgets_i.push(internal);
+        self.widgets.push(widget);
     }
 
     fn step(&mut self, back: bool) -> (bool, usize) {
@@ -81,7 +90,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
 
                 self.focus_id = Some(id);
                 (true, id)
-            },
+            }
             None => {
                 let mut val = 0;
                 if back {
@@ -95,16 +104,21 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
     }
 }
 
-impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
-where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
+impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
+where
+    D: PartialOrd + Default,
+    P: Add<Output = P> + PartialOrd + From<D> + Default,
+{
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
 
         self.decorator.before(internal);
 
-        count = self.widgets_i.iter_mut()
+        count = self
+            .widgets_i
+            .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check(DRAW) )
+            .filter(|(w_internal, _)| w_internal.check(DRAW))
             .fold(0, |_, (w_internal, widget)| {
                 let draw = widget.draw(w_internal);
                 if !draw {
@@ -123,16 +137,18 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
         let check_flag = if bind { UPDATE | UPDATE_BIND } else { UPDATE };
         let count: usize;
 
-        count = self.widgets_i.iter_mut()
+        count = self
+            .widgets_i
+            .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check_any(check_flag) )
+            .filter(|(w_internal, _)| w_internal.check_any(check_flag))
             .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
                 widget.update(w_internal, bind);
 
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW));
-                    
+
                     w_internal.on(backup);
                     w_internal.unchange();
                 }
@@ -150,7 +166,8 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
     }
 
     fn update_layout(&mut self, internal: &mut WidgetInternal<P, D>) {
-        self.layout.layout(&mut self.widgets_i, &internal.dimensions());
+        self.layout
+            .layout(&mut self.widgets_i, &internal.dimensions());
 
         if let Some(id) = self.focus_id {
             let widget_id = &mut self.widgets_i[id];
@@ -159,7 +176,8 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             }
         }
 
-        self.widgets_i.iter_mut()
+        self.widgets_i
+            .iter_mut()
             .zip(self.widgets.iter_mut())
             .for_each(|(w_internal, widget)| {
                 w_internal.compute_absolute(internal.absolute_pos());
@@ -175,13 +193,14 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
 
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
-            let widget_n = self.grab_id
-                .or(self.hover_id.filter(|&n| {
-                        self.widgets_i[n].on_area(mouse.coordinates())
-                    })
-                )
+            let widget_n = self
+                .grab_id
+                .or(self
+                    .hover_id
+                    .filter(|&n| self.widgets_i[n].on_area(mouse.coordinates())))
                 .or_else(|| {
-                    self.widgets_i.iter()
+                    self.widgets_i
+                        .iter()
                         .enumerate()
                         .find_map(|(n, w_internal)| {
                             if w_internal.on_area(mouse.coordinates()) {
@@ -193,7 +212,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
                 });
 
             if let Some(n) = widget_n {
-                let w_internal = unsafe { 
+                let w_internal = unsafe {
                     &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal<P, D>)
                 };
 
@@ -216,9 +235,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
                     internal.on(w_internal.val(DRAW | UPDATE));
 
                     internal.set(GRAB, w_internal.check(GRAB));
-                    self.grab_id = Some(n).filter(|_| {
-                        w_internal.check(GRAB)
-                    });
+                    self.grab_id = Some(n).filter(|_| w_internal.check(GRAB));
 
                     if w_internal.check(FOCUS) {
                         if let Some(id) = self.focus_id {
@@ -248,7 +265,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].handle_keys(w_internal, key);
-            
+
             if w_internal.changed() {
                 internal.on(w_internal.val(DRAW | UPDATE));
 
@@ -296,8 +313,8 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             if step.0 {
                 while let Some(widget) = self.widgets.get_mut(step.1) {
                     let w_internal = &mut self.widgets_i[step.1];
-                    let focus = w_internal.check(ENABLED | VISIBLE) 
-                        && widget.step_focus(w_internal, back);
+                    let focus =
+                        w_internal.check(ENABLED | VISIBLE) && widget.step_focus(w_internal, back);
 
                     if w_internal.changed() {
                         internal.on(w_internal.val(DRAW | UPDATE));
@@ -348,10 +365,16 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
     }
 }
 
-impl <P, D> Boxed for Container<P, D>
-where D: Sized + PartialOrd + From<u8>, P: Sized + Add<Output=P> + PartialOrd + From<D> + From<u8> {
+impl<P, D> Boxed for Container<P, D>
+where
+    D: Sized + PartialOrd + From<u8>,
+    P: Sized + Add<Output = P> + PartialOrd + From<D> + From<u8>,
+{
     #[inline]
-    fn boxed(mut self) -> Box<Self> where Self: Sized {
+    fn boxed(mut self) -> Box<Self>
+    where
+        Self: Sized,
+    {
         self.widgets.shrink_to_fit();
         self.widgets_i.shrink_to_fit();
 

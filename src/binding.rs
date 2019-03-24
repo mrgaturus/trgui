@@ -13,19 +13,20 @@ pub fn changed() -> bool {
 
 pub struct BindProxy<T> {
     ptr: *const T,
-    indicator: bool
+    indicator: bool,
 }
 
-impl <T> BindProxy<T> {
+impl<T> BindProxy<T> {
     pub fn read(&self) -> &T {
-        unsafe {
-            &*self.ptr
-        }
+        unsafe { &*self.ptr }
     }
 
-    pub fn write<F>(&self, func: F) where F: Fn(&mut T) {
+    pub fn write<F>(&self, func: F)
+    where
+        F: Fn(&mut T),
+    {
         unsafe {
-            func(&mut *( self.ptr as *mut T ));
+            func(&mut *(self.ptr as *mut T));
             if self.indicator {
                 CHANGED = true;
             }
@@ -36,7 +37,7 @@ impl <T> BindProxy<T> {
         if self.indicator {
             CHANGED = true;
         }
-        
+
         self.ptr as *mut T
     }
 }
@@ -47,32 +48,32 @@ pub trait Binding<T> {
 
 pub struct PointerBinding<'a, T: 'a> {
     ptr: *const T,
-    phantom: PhantomData<&'a T>
+    phantom: PhantomData<&'a T>,
 }
 
-impl <'a, T> PointerBinding<'a, T> {
+impl<'a, T> PointerBinding<'a, T> {
     pub fn new(ptr: &'a mut T) -> Self {
         PointerBinding {
             ptr: ptr as *const T,
-            phantom: PhantomData
+            phantom: PhantomData,
         }
     }
 }
 
-impl <'a, T> Binding<T> for PointerBinding<'a, T> {
+impl<'a, T> Binding<T> for PointerBinding<'a, T> {
     fn proxy(&self, indicator: bool) -> BindProxy<T> {
         BindProxy {
             ptr: self.ptr as *const T,
-            indicator
+            indicator,
         }
     }
 }
 
-impl <T> Binding<T> for Box<T> {
+impl<T> Binding<T> for Box<T> {
     fn proxy(&self, indicator: bool) -> BindProxy<T> {
         BindProxy {
             ptr: self.as_ref() as *const T,
-            indicator
+            indicator,
         }
     }
 }

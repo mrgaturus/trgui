@@ -1,4 +1,4 @@
-use crate::state::{MouseState, KeyState};
+use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
 pub type Position<P> = (P, P);
@@ -8,28 +8,31 @@ pub type Boundaries<P, D> = (P, P, D, D);
 // BITFLAGS (Sorry for no use the crate)
 pub type Flags = u16;
 
-const CHANGED: Flags =     0b00000001;
+const CHANGED: Flags = 0b00000001;
 pub mod flags {
     use crate::widget::Flags;
 
-    pub const DRAW: Flags =    0b00000010;
-    pub const UPDATE: Flags =  0b00000100;
+    pub const DRAW: Flags = 0b00000010;
+    pub const UPDATE: Flags = 0b00000100;
     pub const VISIBLE: Flags = 0b00001000;
     pub const ENABLED: Flags = 0b00010000;
-    pub const HOVER: Flags =   0b00100000;
-    pub const GRAB: Flags =    0b01000000;
-    pub const FOCUS: Flags =   0b10000000;
+    pub const HOVER: Flags = 0b00100000;
+    pub const GRAB: Flags = 0b01000000;
+    pub const FOCUS: Flags = 0b10000000;
 
     pub const UPDATE_BIND: Flags = 0b100000000;
 }
 
-use flags::{FOCUS, VISIBLE, DRAW};
+use flags::{DRAW, FOCUS, VISIBLE};
 
 // TODO: create a check_bind
 
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget<P: Sized + Copy + Clone, D: Sized + Copy + Clone>
-where D: PartialOrd + Default, P: Sized + Add<Output=P> + PartialOrd + From<D> + Default {
+where
+    D: PartialOrd + Default,
+    P: Sized + Add<Output = P> + PartialOrd + From<D> + Default,
+{
     /// Get minimal (i32, i32) of the Widget
     fn compute_min(&self) -> Dimensions<D>;
     /// Draw the widget
@@ -46,13 +49,17 @@ where D: PartialOrd + Default, P: Sized + Add<Output=P> + PartialOrd + From<D> +
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, _: bool) -> bool {
         let check = !internal.check(FOCUS);
         internal.set(DRAW, check && internal.check(VISIBLE));
-        
+
         check
     }
     /// When you unhover the widget
-    fn unhover(&mut self, internal: &mut WidgetInternal<P, D>) { internal.on(DRAW); }
+    fn unhover(&mut self, internal: &mut WidgetInternal<P, D>) {
+        internal.on(DRAW);
+    }
     /// When you unfocus the widget
-    fn unfocus(&mut self, internal: &mut WidgetInternal<P, D>) { internal.on(DRAW); }
+    fn unfocus(&mut self, internal: &mut WidgetInternal<P, D>) {
+        internal.on(DRAW);
+    }
 }
 
 pub struct WidgetInternal<P, D> {
@@ -65,10 +72,10 @@ pub struct WidgetInternal<P, D> {
     /// Absolute position
     abs_pos: Position<P>,
     /// Every Widget Flags
-    flags: Flags
+    flags: Flags,
 }
 
-impl <P, D> WidgetInternal<P, D> {
+impl<P, D> WidgetInternal<P, D> {
     // FLAGS
     pub fn set(&mut self, flag: Flags, value: bool) {
         if value {
@@ -107,7 +114,7 @@ impl <P, D> WidgetInternal<P, D> {
     pub fn changed(&mut self) -> bool {
         let ch = self.flags & CHANGED != 0;
         self.flags &= !CHANGED;
-        
+
         ch
     }
 
@@ -127,8 +134,11 @@ impl <P, D> WidgetInternal<P, D> {
     }
 }
 
-impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> WidgetInternal<P, D> 
-where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
+impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> WidgetInternal<P, D>
+where
+    D: PartialOrd + Default,
+    P: Add<Output = P> + PartialOrd + From<D> + Default,
+{
     // BOUNDARIES
 
     pub fn new(flags: Flags) -> Self {
@@ -137,7 +147,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             min_dim: (Default::default(), Default::default()),
             rel_pos: (Default::default(), Default::default()),
             abs_pos: (Default::default(), Default::default()),
-            flags
+            flags,
         }
     }
 
@@ -147,7 +157,7 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
             min_dim: (Default::default(), Default::default()),
             rel_pos,
             abs_pos: (Default::default(), Default::default()),
-            flags
+            flags,
         }
     }
 
@@ -253,10 +263,10 @@ where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default
 
     #[inline]
     pub fn on_area(&self, cursor: Position<P>) -> bool {
-        self.check(VISIBLE) && 
-        cursor.0 >= self.abs_pos.0 && 
-        cursor.0 <= self.abs_pos.0 + P::from(self.dim.0) &&
-        cursor.1 >= self.abs_pos.1 && 
-        cursor.1 <= self.abs_pos.1 + P::from(self.dim.1)
+        self.check(VISIBLE)
+            && cursor.0 >= self.abs_pos.0
+            && cursor.0 <= self.abs_pos.0 + P::from(self.dim.0)
+            && cursor.1 >= self.abs_pos.1
+            && cursor.1 <= self.abs_pos.1 + P::from(self.dim.1)
     }
 }
