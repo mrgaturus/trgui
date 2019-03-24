@@ -1,4 +1,4 @@
-use crate::widget::{Widget, WidgetInternal, Dimensions, Boundaries};
+use crate::widget::{Widget, WidgetInternal};
 use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
 use crate::decorator::Decorator;
@@ -40,7 +40,7 @@ impl Container {
     }
 
     pub fn add_widget(&mut self, widget: Box<dyn Widget>, flags: u16) {
-        let mut internal = WidgetInternal::new((0, 0, 0, 0), flags);
+        let mut internal = WidgetInternal::new((0, 0), (0, 0), flags);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -48,8 +48,8 @@ impl Container {
         self.widgets.push( widget );
     }
 
-    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: Boundaries, flags: u16) {
-        let mut internal = WidgetInternal::new(bounds, flags);
+    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: (i32, i32, i32, i32), flags: u16) {
+        let mut internal = WidgetInternal::new((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -150,7 +150,7 @@ impl Widget for Container {
 
         if let Some(id) = self.focus_id {
             let widget_id = &mut self.widgets_i[id];
-            if !widget_id.check(VISIBLE) {
+            if !widget_id.check(VISIBLE | ENABLED) {
                 self.unfocus(internal);
             }
         }
@@ -261,7 +261,7 @@ impl Widget for Container {
     }
 
     /// Set Widget Bounds (x, y, width, height)
-    fn compute_min(&self) -> Dimensions {
+    fn compute_min(&self) -> (i32, i32) {
         self.layout.minimum_size(&self.widgets_i)
     }
 

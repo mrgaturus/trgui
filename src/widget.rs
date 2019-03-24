@@ -1,7 +1,8 @@
 use crate::state::{MouseState, KeyState};
 
-pub type Boundaries = (i32, i32, i32, i32);
-pub type Dimensions = (i32, i32);
+pub type Position<P> = (P, P);
+pub type Dimensions<D> = (D, D);
+pub type Boundaries<P, D> = (P, P, D, D);
 
 // BITFLAGS (Sorry for no use the crate)
 type Flag = u16;
@@ -27,8 +28,8 @@ use flags::{FOCUS, VISIBLE, DRAW};
 
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget {
-    /// Get minimal Dimensions of the Widget
-    fn compute_min(&self) -> Dimensions { (0, 0) }
+    /// Get minimal (i32, i32) of the Widget
+    fn compute_min(&self) -> (i32, i32) { (0, 0) }
     /// Draw the widget
     fn draw(&mut self, internal: &WidgetInternal) -> bool;
     /// Update the status of the widget
@@ -53,21 +54,24 @@ pub trait Widget {
 }
 
 pub struct WidgetInternal {
-    /// Cordinates and Dimensions as a tuple (x, y, width, height)
-    bounds: Boundaries,
+    /// (i32, i32)
+    dim: (i32, i32),
     /// Minimun dimensions
-    min_dim: Dimensions,
+    min_dim: (i32, i32),
+    /// Relative position
+    rel_pos: (i32, i32),
     /// Absolute position
-    abs_pos: Dimensions,
+    abs_pos: (i32, i32),
     /// Every Widget Flag
     flags: Flag
 }
 
 impl WidgetInternal {
-    pub fn new(bounds: Boundaries, flags: Flag) -> Self {
+    pub fn new(rel_pos: (i32, i32), dim: (i32, i32), flags: Flag) -> Self {
         WidgetInternal {
-            bounds,
+            dim,
             min_dim: (0, 0),
+            rel_pos,
             abs_pos: (0, 0),
             flags
         }
@@ -131,47 +135,48 @@ impl WidgetInternal {
         self.flags
     }
 
-    fn check_min(&mut self) {
-        if self.bounds.2 < self.min_dim.0 {
-            self.bounds.2 = self.min_dim.0;
-        }
-        if self.bounds.3 < self.min_dim.1 {
-            self.bounds.3 = self.min_dim.1;
-        }
-    }
+
 
     // BOUNDARIES
 
-    /// Change boundaries
-    pub fn set_boundaries(&mut self, bounds: Boundaries) {
-        self.bounds = bounds;
+    fn check_min(&mut self) {
+        if self.dim.0 < self.min_dim.0 {
+            self.dim.0 = self.min_dim.0;
+        }
+        if self.dim.1 < self.min_dim.1 {
+            self.dim.1 = self.min_dim.1;
+        }
+    }
+
+    /// Set relative position and dimensions with 4 item tuple (x, y, width, height)
+    pub fn set_boundaries(&mut self, bounds: (i32, i32, i32, i32)) {
+        self.rel_pos = (bounds.0, bounds.1);
+        self.dim = (bounds.2, bounds.3);
 
         self.check_min();
     }
 
-    /// Change coordinates
-    pub fn set_coordinates(&mut self, dim: Dimensions) {
-        self.bounds.0 = dim.0;
-        self.bounds.1 = dim.1;
+    /// Change position
+    pub fn set_position(&mut self, pos: (i32, i32)) {
+        self.rel_pos.0 = pos.0;
+        self.rel_pos.1 = pos.1;
     }
 
     /// Sum absolute position
-    pub fn compute_absolute(&mut self, pos: Dimensions) {
-        let coords = self.coordinates();
-
-        self.abs_pos = (pos.0 + coords.0, pos.1 + coords.1);
+    pub fn compute_absolute(&mut self, pos: (i32, i32)) {
+        self.abs_pos = (pos.0 + self.rel_pos.0, pos.1 + self.rel_pos.1);
     }
 
     /// Change dimensions
-    pub fn set_dimensions(&mut self, dim: Dimensions) {
-        self.bounds.2 = dim.0;
-        self.bounds.3 = dim.1;
+    pub fn set_dimensions(&mut self, dim: (i32, i32)) {
+        self.dim.0 = dim.0;
+        self.dim.1 = dim.1;
 
         self.check_min();
     }
 
     /// Change minimal dimensions
-    pub fn set_min_dimensions(&mut self, dim: Dimensions) {
+    pub fn set_min_dimensions(&mut self, dim: (i32, i32)) {
         self.min_dim = dim;
 
         self.check_min();
@@ -179,62 +184,68 @@ impl WidgetInternal {
 
     /// Change x coordinate
     pub fn set_x(&mut self, x: i32) {
-        self.bounds.0 = x;
+        self.rel_pos.0 = x;
     }
 
     /// Change y coordinate
     pub fn set_y(&mut self, y: i32) {
-        self.bounds.1 = y;
+        self.rel_pos.1 = y;
     }
 
     /// Change width
     pub fn set_width(&mut self, width: i32) {
-        self.bounds.2 = width;
+        self.dim.0 = width;
 
         self.check_min();
     }
 
     /// Change height
     pub fn set_height(&mut self, height: i32) {
-        self.bounds.3 = height;
+        self.dim.1 = height;
 
         self.check_min();
     }
 
-    /// Get all boundaries
+    /// Get (i32, i32, i32, i32) with relative position
     #[inline]
-    pub fn boundaries(&self) -> Boundaries {
-        self.bounds
+    pub fn boundaries_rel(&self) -> (i32, i32, i32, i32) {
+        (self.rel_pos.0, self.rel_pos.1, self.dim.0, self.dim.1)
     }
 
-    /// Get All Boundaries with absolute coordinates
-    pub fn boundaries_abs(&self) -> Boundaries {
-        (self.abs_pos.0, self.abs_pos.1, self.bounds.2, self.bounds.3)
+    #[inline]
+    /// Get (i32, i32, i32, i32) with absolute position
+    pub fn boundaries_abs(&self) -> (i32, i32, i32, i32) {
+        (self.abs_pos.0, self.abs_pos.1, self.dim.0, self.dim.1)
     }
 
+    #[inline]
     /// Get coordinates tuple
-    pub fn coordinates(&self) -> Dimensions {
-        (self.bounds.0, self.bounds.1)
+    pub fn relative_pos(&self) -> (i32, i32) {
+        self.rel_pos
     }
 
-    /// Get dimensions tuple
-    pub fn dimensions(&self) -> Dimensions {
-        (self.bounds.2, self.bounds.3)
-    }
-
-    pub fn min_dimensions(&self) -> Dimensions {
-        self.min_dim
-    }
-
-    pub fn absolute_pos(&self) -> Dimensions {
+    #[inline]
+    pub fn absolute_pos(&self) -> (i32, i32) {
         self.abs_pos
     }
 
     #[inline]
-    pub fn on_area(&self, cursor: Dimensions) -> bool {
-        let bounds = self.boundaries_abs();
+    pub fn min_dimensions(&self) -> (i32, i32) {
+        self.min_dim
+    }
 
-        self.check(VISIBLE) && cursor.0 >= bounds.0 && cursor.0 <= bounds.0 + bounds.2 &&
-        cursor.1 >= bounds.1 && cursor.1 <= bounds.1 + bounds.3
+    #[inline]
+    /// Get dimensions tuple
+    pub fn dimensions(&self) -> (i32, i32) {
+        self.dim
+    }
+
+    #[inline]
+    pub fn on_area(&self, cursor: (i32, i32)) -> bool {
+        self.check(VISIBLE) && 
+        cursor.0 >= self.abs_pos.0 && 
+        cursor.0 <= self.abs_pos.0 + self.dim.0 &&
+        cursor.1 >= self.abs_pos.1 && 
+        cursor.1 <= self.abs_pos.1 + self.dim.1
     }
 }
