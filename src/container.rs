@@ -21,7 +21,7 @@ pub struct Container<P, D> {
 }
 
 impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
-where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u8> {
+where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
     pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
             widgets_i: InternalList::new(),
@@ -96,7 +96,7 @@ where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u
 }
 
 impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
-where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u8> {
+where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
 

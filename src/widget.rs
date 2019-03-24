@@ -29,7 +29,7 @@ use flags::{FOCUS, VISIBLE, DRAW};
 
 /// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget<P: Sized + Copy + Clone, D: Sized + Copy + Clone>
-where D: PartialOrd + From<u8>, P: Sized + Add<Output=P> + PartialOrd + From<D> + From<u8> {
+where D: PartialOrd + Default, P: Sized + Add<Output=P> + PartialOrd + From<D> + Default {
     /// Get minimal (i32, i32) of the Widget
     fn compute_min(&self) -> Dimensions<D>;
     /// Draw the widget
@@ -128,15 +128,15 @@ impl <P, D> WidgetInternal<P, D> {
 }
 
 impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> WidgetInternal<P, D> 
-where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u8> {
+where D: PartialOrd + Default, P: Add<Output=P> + PartialOrd + From<D> + Default {
     // BOUNDARIES
 
     pub fn new(flags: Flags) -> Self {
         WidgetInternal {
-            dim: (D::from(0 as u8), D::from(0 as u8)),
-            min_dim: (D::from(0 as u8), D::from(0 as u8)),
-            rel_pos: (P::from(0 as u8), P::from(0 as u8)),
-            abs_pos: (P::from(0 as u8), P::from(0 as u8)),
+            dim: (Default::default(), Default::default()),
+            min_dim: (Default::default(), Default::default()),
+            rel_pos: (Default::default(), Default::default()),
+            abs_pos: (Default::default(), Default::default()),
             flags
         }
     }
@@ -144,9 +144,9 @@ where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u
     pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags) -> Self {
         WidgetInternal {
             dim,
-            min_dim: (D::from(0 as u8), D::from(0 as u8)),
+            min_dim: (Default::default(), Default::default()),
             rel_pos,
-            abs_pos: (P::from(0 as u8), P::from(0 as u8)),
+            abs_pos: (Default::default(), Default::default()),
             flags
         }
     }

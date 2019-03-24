@@ -23,11 +23,11 @@ pub struct KeyState {
     k_modifiers: u8
 }
 
-impl <P> MouseState<P> where P: Sized + Copy + Clone + From<u8> {
+impl <P> MouseState<P> where P: Sized + Copy + Clone + Default {
     pub fn new() -> Self {
         MouseState {
             m_click: false,
-            m_coords: (P::from(0), P::from(0)),
+            m_coords: (Default::default(), Default::default()),
             m_wheel: 0,
             t_pressure: 0,
             k_modifiers: 0
