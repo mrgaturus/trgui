@@ -1,25 +1,28 @@
-use crate::widget::{Widget, WidgetInternal};
+use crate::widget::{Widget, WidgetInternal, Boundaries, Dimensions, Flags};
 use crate::widget::flags::*;
 use crate::state::{MouseState, KeyState};
 use crate::decorator::Decorator;
 use crate::layout::Layout;
 use crate::Boxed;
 
-type WidgetList = Vec<Box<dyn Widget>>;
-pub type InternalList = Vec<WidgetInternal>;
+use std::ops::Add;
 
-pub struct Container {
-    widgets_i: InternalList,
-    widgets: WidgetList,
-    decorator: Box<dyn Decorator>,
-    layout: Box<dyn Layout>,
+type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
+pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
+
+pub struct Container<P, D> {
+    widgets_i: InternalList<P, D>,
+    widgets: WidgetList<P, D>,
+    decorator: Box<dyn Decorator<P, D>>,
+    layout: Box<dyn Layout<P, D>>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
     hover_id: Option<usize>
 }
 
-impl Container {
-    pub fn new(decorator: Box<dyn Decorator>, layout: Box<dyn Layout>) -> Self {
+impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
+where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u8> {
+    pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
             widgets_i: InternalList::new(),
             widgets: WidgetList::new(),
@@ -31,16 +34,16 @@ impl Container {
         }
     }
 
-    pub fn set_layout(&mut self, layout: Box<dyn Layout>) {
+    pub fn set_layout(&mut self, layout: Box<dyn Layout<P, D>>) {
         self.layout = layout;
     }
 
-    pub fn set_decorator(&mut self, decorator: Box<dyn Decorator>) {
+    pub fn set_decorator(&mut self, decorator: Box<dyn Decorator<P, D>>) {
         self.decorator = decorator;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget>, flags: u16) {
-        let mut internal = WidgetInternal::new((0, 0), (0, 0), flags);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags) {
+        let mut internal = WidgetInternal::new(flags);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -48,8 +51,8 @@ impl Container {
         self.widgets.push( widget );
     }
 
-    pub fn add_widget_b(&mut self, widget: Box<dyn Widget>, bounds: (i32, i32, i32, i32), flags: u16) {
-        let mut internal = WidgetInternal::new((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
+    pub fn add_widget_b(&mut self, widget: Box<dyn Widget<P, D>>, bounds: Boundaries<P, D>, flags: Flags) {
+        let mut internal = WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -92,8 +95,9 @@ impl Container {
     }
 }
 
-impl Widget for Container {
-    fn draw(&mut self, internal: &WidgetInternal) -> bool {
+impl <P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
+where D: PartialOrd + From<u8>, P: Add<Output=P> + PartialOrd + From<D> + From<u8> {
+    fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
 
         self.decorator.before(internal);
@@ -115,7 +119,7 @@ impl Widget for Container {
         count > 0
     }
 
-    fn update(&mut self, internal: &mut WidgetInternal, bind: bool) {
+    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: bool) {
         let check_flag = if bind { UPDATE | UPDATE_BIND } else { UPDATE };
         let count: usize;
 
@@ -145,7 +149,7 @@ impl Widget for Container {
         internal.set(UPDATE, count > 0);
     }
 
-    fn update_layout(&mut self, internal: &mut WidgetInternal) {
+    fn update_layout(&mut self, internal: &mut WidgetInternal<P, D>) {
         self.layout.layout(&mut self.widgets_i, &internal.dimensions());
 
         if let Some(id) = self.focus_id {
@@ -169,7 +173,7 @@ impl Widget for Container {
         self.decorator.update(internal);
     }
 
-    fn handle_mouse(&mut self, internal: &mut WidgetInternal, mouse: &MouseState) {
+    fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
             let widget_n = self.grab_id
                 .or(self.hover_id.filter(|&n| {
@@ -190,7 +194,7 @@ impl Widget for Container {
 
             if let Some(n) = widget_n {
                 let w_internal = unsafe { 
-                    &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal)
+                    &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal<P, D>)
                 };
 
                 if w_internal.check(GRAB) {
@@ -239,7 +243,7 @@ impl Widget for Container {
         }
     }
 
-    fn handle_keys(&mut self, internal: &mut WidgetInternal, key: &KeyState) {
+    fn handle_keys(&mut self, internal: &mut WidgetInternal<P, D>, key: &KeyState) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
 
@@ -261,12 +265,12 @@ impl Widget for Container {
     }
 
     /// Set Widget Bounds (x, y, width, height)
-    fn compute_min(&self) -> (i32, i32) {
+    fn compute_min(&self) -> Dimensions<D> {
         self.layout.minimum_size(&self.widgets_i)
     }
 
     /// Step focus on Widget array
-    fn step_focus(&mut self, internal: &mut WidgetInternal, back: bool) -> bool {
+    fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, back: bool) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
                 let widget = (&mut self.widgets_i[id], &mut self.widgets[id]);
@@ -315,7 +319,7 @@ impl Widget for Container {
         false
     }
 
-    fn unhover(&mut self, internal: &mut WidgetInternal) {
+    fn unhover(&mut self, internal: &mut WidgetInternal<P, D>) {
         if let Some(id) = self.hover_id {
             let w_internal = &mut self.widgets_i[id];
 
@@ -329,7 +333,7 @@ impl Widget for Container {
         }
     }
 
-    fn unfocus(&mut self, internal: &mut WidgetInternal) {
+    fn unfocus(&mut self, internal: &mut WidgetInternal<P, D>) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
 
@@ -344,7 +348,8 @@ impl Widget for Container {
     }
 }
 
-impl Boxed for Container {
+impl <P, D> Boxed for Container<P, D>
+where D: Sized + PartialOrd + From<u8>, P: Sized + Add<Output=P> + PartialOrd + From<D> + From<u8> {
     #[inline]
     fn boxed(mut self) -> Box<Self> where Self: Sized {
         self.widgets.shrink_to_fit();

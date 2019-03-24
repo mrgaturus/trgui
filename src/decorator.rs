@@ -1,13 +1,13 @@
 use crate::widget::{WidgetInternal};
 use crate::Boxed;
 
-pub trait Decorator {
-    fn before(&mut self, _: &WidgetInternal) {}
-    fn after(&mut self, _: &WidgetInternal) {}
-    fn update(&mut self, _: &WidgetInternal) {}
+pub trait Decorator<P, D> {
+    fn before(&mut self, _: &WidgetInternal<P, D>) {}
+    fn after(&mut self, _: &WidgetInternal<P, D>) {}
+    fn update(&mut self, _: &WidgetInternal<P, D>) {}
 }
 
 pub struct EmptyDecorator;
 
-impl Decorator for EmptyDecorator {}
+impl <P, D> Decorator<P, D> for EmptyDecorator {}
 impl Boxed for EmptyDecorator {}

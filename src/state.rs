@@ -1,15 +1,16 @@
-/// A mouse state
-pub type Coordinates = (i32, i32);
+use crate::widget::Position;
 
-pub struct MouseState {
+pub struct MouseState<P> {
     /// Is clicked?
     m_click: bool,
     /// Mouse coordinates
-    m_coords: Coordinates,
+    m_coords: Position<P>,
     /// Mouse wheel
     m_wheel: i32,
     /// Tablet Pressure Level
-    t_pressure: i32
+    t_pressure: i32,
+    /// Keyboard Modifiers
+    k_modifiers: u8
 }
 
 /// A key state
@@ -22,13 +23,14 @@ pub struct KeyState {
     k_modifiers: u8
 }
 
-impl MouseState {
+impl <P> MouseState<P> where P: Sized + Copy + Clone + From<u8> {
     pub fn new() -> Self {
         MouseState {
             m_click: false,
-            m_coords: (0,0),
+            m_coords: (P::from(0), P::from(0)),
             m_wheel: 0,
-            t_pressure: 0
+            t_pressure: 0,
+            k_modifiers: 0
         }
     }
 
@@ -36,7 +38,7 @@ impl MouseState {
         self.m_click = clicked;
     }
 
-    pub fn set_mouse(&mut self, coords: Coordinates, pressure: i32) {
+    pub fn set_mouse(&mut self, coords: Position<P>, pressure: i32) {
         self.m_coords = coords;
         self.t_pressure = pressure;
     }
@@ -45,7 +47,7 @@ impl MouseState {
         self.m_click
     }
 
-    pub fn coordinates(&self) -> Coordinates {
+    pub fn coordinates(&self) -> Position<P> {
         self.m_coords
     }
 

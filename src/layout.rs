@@ -1,12 +1,16 @@
-use crate::widget::{WidgetInternal};
+use crate::widget::{WidgetInternal, Dimensions};
 use crate::Boxed;
 
-pub trait Layout {
-    fn layout(&self, _: &mut [WidgetInternal], _: &(i32, i32)) {}
-    fn minimum_size(&self, _: &[WidgetInternal]) -> (i32, i32) { (0, 0) }
+pub trait Layout<P, D> {
+    fn layout(&self, _: &mut [WidgetInternal<P, D>], _: &Dimensions<D>) {}
+    fn minimum_size(&self, _: &[WidgetInternal<P, D>]) -> Dimensions<D>;
 }
 
 pub struct EmptyLayout;
 
-impl Layout for EmptyLayout {}
+impl <P, D> Layout<P, D> for EmptyLayout where D: From<u8> {
+    fn minimum_size(&self, _: &[WidgetInternal<P, D>]) -> Dimensions<D> {
+        (D::from(0 as u8), D::from(0 as u8))
+    }
+}
 impl Boxed for EmptyLayout {}
