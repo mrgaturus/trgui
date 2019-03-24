@@ -133,15 +133,14 @@ where
         count > 0
     }
 
-    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: bool) {
-        let check_flag = if bind { UPDATE | UPDATE_BIND } else { UPDATE };
+    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: Flags) {
         let count: usize;
 
         count = self
             .widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check_any(check_flag))
+            .filter(|(w_internal, _)| w_internal.check_any(UPDATE | bind))
             .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
                 widget.update(w_internal, bind);

@@ -19,8 +19,6 @@ pub mod flags {
     pub const HOVER: Flags = 0b00100000;
     pub const GRAB: Flags = 0b01000000;
     pub const FOCUS: Flags = 0b10000000;
-
-    pub const UPDATE_BIND: Flags = 0b100000000;
 }
 
 use flags::{DRAW, FOCUS, VISIBLE};
@@ -38,7 +36,7 @@ where
     /// Draw the widget
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool;
     /// Update the status of the widget
-    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: bool);
+    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: Flags);
     /// Update the layout of the widget
     fn update_layout(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Handle a mouse state (focus, grab)
