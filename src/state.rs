@@ -1,4 +1,5 @@
 use crate::widget::Position;
+use std::ops::Sub;
 
 pub struct MouseState<P> {
     /// Is clicked?
@@ -25,7 +26,7 @@ pub struct KeyState {
 
 impl<P> MouseState<P>
 where
-    P: Sized + Copy + Clone + Default,
+    P: Sized + Copy + Clone + Default + Sub<Output = P>,
 {
     pub fn new() -> Self {
         MouseState {
@@ -50,8 +51,14 @@ where
         self.m_click
     }
 
-    pub fn coordinates(&self) -> Position<P> {
+    #[inline]
+    pub fn absolute_pos(&self) -> Position<P> {
         self.m_coords
+    }
+
+    #[inline]
+    pub fn relative_pos(&self, pos: Position<P>) -> Position<P> {
+        (self.m_coords.0 - pos.0, self.m_coords.1 - pos.1)
     }
 
     pub fn tablet_pressure(&self) -> i32 {

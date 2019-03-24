@@ -5,7 +5,7 @@ use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
 use crate::Boxed;
 
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
 pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
@@ -23,7 +23,7 @@ pub struct Container<P, D> {
 impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
 where
     D: PartialOrd + Default,
-    P: Add<Output = P> + PartialOrd + From<D> + Default,
+    P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
 {
     pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
@@ -107,7 +107,7 @@ where
 impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
 where
     D: PartialOrd + Default,
-    P: Add<Output = P> + PartialOrd + From<D> + Default,
+    P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
 {
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
@@ -196,13 +196,13 @@ where
                 .grab_id
                 .or(self
                     .hover_id
-                    .filter(|&n| self.widgets_i[n].on_area(mouse.coordinates())))
+                    .filter(|&n| self.widgets_i[n].on_area(mouse.absolute_pos())))
                 .or_else(|| {
                     self.widgets_i
                         .iter()
                         .enumerate()
                         .find_map(|(n, w_internal)| {
-                            if w_internal.on_area(mouse.coordinates()) {
+                            if w_internal.on_area(mouse.absolute_pos()) {
                                 Some(n)
                             } else {
                                 None
@@ -216,7 +216,7 @@ where
                 };
 
                 if w_internal.check(GRAB) {
-                    w_internal.set(HOVER, w_internal.on_area(mouse.coordinates()))
+                    w_internal.set(HOVER, w_internal.on_area(mouse.absolute_pos()))
                 } else {
                     if let Some(id) = self.hover_id {
                         if id != n {
