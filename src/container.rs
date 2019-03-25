@@ -63,7 +63,7 @@ where
         self.widgets.push(widget);
     }
 
-    fn step(&mut self, back: bool) -> (bool, usize) {
+    fn step(&mut self, back: bool) {
         match self.focus_id {
             Some(mut id) => {
                 let len = self.widgets.len() - 1;
@@ -71,28 +71,26 @@ where
                 if back {
                     if id == 0 {
                         self.focus_id = None;
-                        return (false, len);
+                        return;
                     }
                     id -= 1;
                 } else {
                     if id == len {
                         self.focus_id = None;
-                        return (false, 0);
+                        return;
                     }
                     id += 1;
                 }
 
                 self.focus_id = Some(id);
-                (true, id)
             }
             None => {
                 let mut val = 0;
                 if back {
                     val = self.widgets.len() - 1;
                 }
-                self.focus_id = Some(val);
 
-                (true, val)
+                self.focus_id = Some(val);
             }
         }
     }
@@ -325,27 +323,22 @@ where
                     widget.0.off(FOCUS);
                 }
             }
-            let mut step = self.step(back);
+            self.step(back);
 
-            if step.0 {
-                while let Some(widget) = self.widgets.get_mut(step.1) {
-                    let w_internal = &mut self.widgets_i[step.1];
-                    let focus =
-                        w_internal.check(ENABLED | VISIBLE) && widget.step_focus(w_internal, back);
+            while let Some(id) = self.focus_id {
+                let w_internal = &mut self.widgets_i[id];
+                let focus =
+                    w_internal.check(ENABLED | VISIBLE) && self.widgets[id].step_focus(w_internal, back);
 
-                    if w_internal.changed() {
-                        internal.on(w_internal.val(DRAW | UPDATE));
-                    }
+                if w_internal.changed() {
+                    internal.on(w_internal.val(DRAW | UPDATE));
+                }
 
-                    if focus {
-                        w_internal.on(FOCUS);
-                        return focus;
-                    } else {
-                        step = self.step(back);
-                        if !step.0 {
-                            break;
-                        }
-                    }
+                if focus {
+                    w_internal.on(FOCUS);
+                    return focus;
+                } else {
+                    self.step(back);
                 }
             }
         }
