@@ -38,18 +38,10 @@ where
         }
     }
 
-    pub fn set_layout(&mut self, layout: Box<dyn Layout<P, D>>) {
-        self.layout = layout;
-    }
-
-    pub fn set_decorator(&mut self, decorator: Box<dyn Decorator<P, D>>) {
-        self.decorator = decorator;
-    }
-
     pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, bind: BindType) {
         let mut internal = WidgetInternal::new(flags, bind);
         internal.off(FOCUS | GRAB | HOVER);
-        internal.set_min_dimensions(widget.compute_min());
+        internal.set_min_dimensions(widget.min_dimensions());
 
         self.widgets_i.push(internal);
         self.widgets.push(widget);
@@ -65,7 +57,7 @@ where
         let mut internal =
             WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, bind);
         internal.off(FOCUS | GRAB | HOVER);
-        internal.set_min_dimensions(widget.compute_min());
+        internal.set_min_dimensions(widget.min_dimensions());
 
         self.widgets_i.push(internal);
         self.widgets.push(widget);
@@ -307,7 +299,7 @@ where
     }
 
     /// Set Widget Bounds (x, y, width, height)
-    fn compute_min(&self) -> Dimensions<D> {
+    fn min_dimensions(&self) -> Dimensions<D> {
         self.layout.minimum_size(&self.widgets_i)
     }
 

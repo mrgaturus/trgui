@@ -32,8 +32,8 @@ where
     D: PartialOrd + Default,
     P: Sized + Add<Output = P> + PartialOrd + From<D> + Default,
 {
-    /// Get minimal (i32, i32) of the Widget
-    fn compute_min(&self) -> Dimensions<D>;
+    /// Get minimal Dimensions of the Widget
+    fn min_dimensions(&self) -> Dimensions<D>;
     /// Draw the widget
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool;
     /// Update the status of the widget
