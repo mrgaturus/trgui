@@ -1,4 +1,5 @@
 use crate::state::{KeyState, MouseState};
+use crate::binding::{BindID, BindType};
 use std::ops::Add;
 
 pub type Position<P> = (P, P);
@@ -7,7 +8,6 @@ pub type Boundaries<P, D> = (P, P, D, D);
 
 // BITFLAGS (Sorry for no use the crate)
 pub type Flags = u16;
-pub type BindID = u32;
 
 const CHANGED: Flags = 0b00000001;
 pub mod flags {
@@ -75,7 +75,7 @@ pub struct WidgetInternal<P, D> {
     /// Every Widget Flags
     flags: Flags,
     /// ID
-    bind_id: u32,
+    bind_id: BindType,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -138,16 +138,20 @@ impl<P, D> WidgetInternal<P, D> {
 
     // BIND ID
     #[inline]
-    pub fn bind(&self) -> BindID {
+    pub fn bind(&self) -> BindType {
         self.bind_id
     }
 
     #[inline]
     pub fn check_bind(&self, id: BindID) -> bool {
-        self.bind_id == id
+        match self.bind_id {
+            BindType::Any => true,
+            BindType::ID(self_id) => self_id == id,
+            BindType::None => false
+        }
     }
 
-    pub fn set_bind(&mut self, id: BindID) {
+    pub fn set_bind(&mut self, id: BindType) {
         self.bind_id = id;
     }
 }
@@ -159,7 +163,7 @@ where
 {
     // BOUNDARIES
 
-    pub fn new(flags: Flags, bind_id: u32) -> Self {
+    pub fn new(flags: Flags, bind_id: BindType) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
@@ -170,7 +174,7 @@ where
         }
     }
 
-    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags, bind_id: u32) -> Self {
+    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags, bind_id: BindType) -> Self {
         WidgetInternal {
             dim,
             min_dim: (Default::default(), Default::default()),

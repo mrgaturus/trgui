@@ -2,7 +2,8 @@ use crate::decorator::Decorator;
 use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
-use crate::widget::{BindID, Boundaries, Dimensions, Flags, Widget, WidgetInternal};
+use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
+use crate::binding::{BindID, BindType};
 use crate::Boxed;
 
 use std::ops::{Add, Sub};
@@ -45,8 +46,8 @@ where
         self.decorator = decorator;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, bind_id: BindID) {
-        let mut internal = WidgetInternal::new(flags, bind_id);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, bind: BindType) {
+        let mut internal = WidgetInternal::new(flags, bind);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -59,10 +60,10 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
-        bind_id: BindID,
+        bind: BindType,
     ) {
         let mut internal =
-            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, bind_id);
+            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, bind);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
