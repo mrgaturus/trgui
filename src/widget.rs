@@ -1,5 +1,5 @@
-use crate::state::{KeyState, MouseState};
 use crate::binding::{BindID, BindType};
+use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
 pub type Position<P> = (P, P);
@@ -147,7 +147,7 @@ impl<P, D> WidgetInternal<P, D> {
         match self.bind_id {
             BindType::Any => true,
             BindType::ID(self_id) => self_id == id,
-            BindType::None => false
+            BindType::None => false,
         }
     }
 
@@ -174,7 +174,12 @@ where
         }
     }
 
-    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags, bind_id: BindType) -> Self {
+    pub fn new_with(
+        rel_pos: Position<P>,
+        dim: Dimensions<D>,
+        flags: Flags,
+        bind_id: BindType,
+    ) -> Self {
         WidgetInternal {
             dim,
             min_dim: (Default::default(), Default::default()),
@@ -209,8 +214,8 @@ where
     }
 
     /// Sum absolute position
-    pub fn compute_absolute(&mut self, pos: Position<P>) {
-        self.abs_pos = (pos.0 + self.rel_pos.0, pos.1 + self.rel_pos.1);
+    pub fn calc_absolute(&mut self, rel_pos: Position<P>) {
+        self.abs_pos = (rel_pos.0 + self.rel_pos.0, rel_pos.1 + self.rel_pos.1);
     }
 
     /// Change dimensions

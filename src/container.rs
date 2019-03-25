@@ -1,9 +1,9 @@
+use crate::binding::{BindID, BindType};
 use crate::decorator::Decorator;
 use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
-use crate::binding::{BindID, BindType};
 use crate::Boxed;
 
 use std::ops::{Add, Sub};
@@ -197,7 +197,7 @@ where
             .iter_mut()
             .zip(self.widgets.iter_mut())
             .for_each(|(w_internal, widget)| {
-                w_internal.compute_absolute(internal.absolute_pos());
+                w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal);
 
                 if w_internal.changed() {

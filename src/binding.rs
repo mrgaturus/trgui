@@ -1,5 +1,5 @@
-use std::marker::PhantomData;
 use std::collections::VecDeque;
+use std::marker::PhantomData;
 
 // UNSAFE STATIC QUEUE
 
@@ -38,7 +38,7 @@ pub fn next_id() -> Option<BindID> {
 pub enum BindType {
     Any,
     ID(BindID),
-    None
+    None,
 }
 
 pub struct BindProxy<T> {
