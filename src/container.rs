@@ -2,7 +2,7 @@ use crate::decorator::Decorator;
 use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
-use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
+use crate::widget::{BindID, Boundaries, Dimensions, Flags, Widget, WidgetInternal};
 use crate::Boxed;
 
 use std::ops::{Add, Sub};
@@ -45,8 +45,8 @@ where
         self.decorator = decorator;
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags) {
-        let mut internal = WidgetInternal::new(flags);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, bind_id: BindID) {
+        let mut internal = WidgetInternal::new(flags, bind_id);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -59,9 +59,10 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
+        bind_id: BindID,
     ) {
         let mut internal =
-            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags);
+            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, bind_id);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.compute_min());
 
@@ -133,17 +134,17 @@ where
         count > 0
     }
 
-    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: Flags) {
+    fn update(&mut self, internal: &mut WidgetInternal<P, D>) {
         let count: usize;
 
         count = self
             .widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check_any(UPDATE | bind))
+            .filter(|(w_internal, _)| w_internal.check(UPDATE))
             .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
-                widget.update(w_internal, bind);
+                widget.update(w_internal);
 
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW));
@@ -164,7 +165,31 @@ where
         internal.set(UPDATE, count > 0);
     }
 
-    fn update_layout(&mut self, internal: &mut WidgetInternal<P, D>) {
+    fn bind(&mut self, internal: &mut WidgetInternal<P, D>, bind: BindID) {
+        self.widgets_i
+            .iter_mut()
+            .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| w_internal.check_bind(bind))
+            .for_each(|(w_internal, widget)| {
+                let backup = w_internal.val(FOCUS | GRAB | HOVER);
+                widget.bind(w_internal, bind);
+
+                if w_internal.changed() {
+                    internal.on(w_internal.val(DRAW));
+
+                    w_internal.on(backup);
+                    w_internal.unchange();
+                }
+            });
+
+        if let Some(id) = self.focus_id {
+            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
+                self.unfocus(internal);
+            }
+        }
+    }
+
+    fn layout(&mut self, internal: &mut WidgetInternal<P, D>) {
         self.layout
             .layout(&mut self.widgets_i, &internal.dimensions());
 
@@ -180,7 +205,7 @@ where
             .zip(self.widgets.iter_mut())
             .for_each(|(w_internal, widget)| {
                 w_internal.compute_absolute(internal.absolute_pos());
-                widget.update_layout(w_internal);
+                widget.layout(w_internal);
 
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW | UPDATE));

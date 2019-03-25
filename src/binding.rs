@@ -1,19 +1,34 @@
 use std::marker::PhantomData;
-// TODO: recreate binding
-static mut CHANGED: bool = false;
 
-#[inline(always)]
-pub fn changed() -> bool {
+static mut BIND_QUEUE: Option<Vec<u32>> = None;
+
+pub fn push_queue(id: u32) {
     unsafe {
-        let prev: bool = CHANGED;
-        CHANGED = false;
-        prev
+        if let Some(ref mut queue) = BIND_QUEUE {
+            if !queue.contains(&id) {
+                queue.push(id);
+            }
+        } else {
+            let mut vec: Vec<u32> = Vec::new();
+            vec.push(id);
+
+            BIND_QUEUE = Some(vec);
+        }
+    }
+}
+
+pub fn next_bind() -> Option<u32> {
+    unsafe {
+        if let Some(ref mut queue) = BIND_QUEUE {
+            queue.pop()
+        } else {
+            None
+        }
     }
 }
 
 pub struct BindProxy<T> {
     ptr: *const T,
-    indicator: bool,
 }
 
 impl<T> BindProxy<T> {
@@ -27,23 +42,16 @@ impl<T> BindProxy<T> {
     {
         unsafe {
             func(&mut *(self.ptr as *mut T));
-            if self.indicator {
-                CHANGED = true;
-            }
         }
     }
 
     pub unsafe fn write_ptr(&self) -> *mut T {
-        if self.indicator {
-            CHANGED = true;
-        }
-
         self.ptr as *mut T
     }
 }
 
 pub trait Binding<T> {
-    fn proxy(&self, indicator: bool) -> BindProxy<T>;
+    fn proxy(&self) -> BindProxy<T>;
 }
 
 pub struct PointerBinding<'a, T: 'a> {
@@ -61,19 +69,17 @@ impl<'a, T> PointerBinding<'a, T> {
 }
 
 impl<'a, T> Binding<T> for PointerBinding<'a, T> {
-    fn proxy(&self, indicator: bool) -> BindProxy<T> {
+    fn proxy(&self) -> BindProxy<T> {
         BindProxy {
             ptr: self.ptr as *const T,
-            indicator,
         }
     }
 }
 
 impl<T> Binding<T> for Box<T> {
-    fn proxy(&self, indicator: bool) -> BindProxy<T> {
+    fn proxy(&self) -> BindProxy<T> {
         BindProxy {
             ptr: self.as_ref() as *const T,
-            indicator,
         }
     }
 }

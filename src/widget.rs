@@ -7,6 +7,7 @@ pub type Boundaries<P, D> = (P, P, D, D);
 
 // BITFLAGS (Sorry for no use the crate)
 pub type Flags = u16;
+pub type BindID = u32;
 
 const CHANGED: Flags = 0b00000001;
 pub mod flags {
@@ -36,9 +37,11 @@ where
     /// Draw the widget
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool;
     /// Update the status of the widget
-    fn update(&mut self, internal: &mut WidgetInternal<P, D>, bind: Flags);
+    fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget
-    fn update_layout(&mut self, internal: &mut WidgetInternal<P, D>);
+    fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
+    /// Search and Update widgets by Bind ID
+    fn bind(&mut self, internal: &mut WidgetInternal<P, D>, bind: BindID);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
     /// Handle a keyboard state
@@ -71,6 +74,8 @@ pub struct WidgetInternal<P, D> {
     abs_pos: Position<P>,
     /// Every Widget Flags
     flags: Flags,
+    /// ID
+    bind_id: u32,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -130,6 +135,21 @@ impl<P, D> WidgetInternal<P, D> {
     pub fn val_all(&self) -> Flags {
         self.flags
     }
+
+    // BIND ID
+    #[inline]
+    pub fn bind(&self) -> BindID {
+        self.bind_id
+    }
+
+    #[inline]
+    pub fn check_bind(&self, id: BindID) -> bool {
+        self.bind_id == id
+    }
+
+    pub fn set_bind(&mut self, id: BindID) {
+        self.bind_id = id;
+    }
 }
 
 impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> WidgetInternal<P, D>
@@ -139,23 +159,25 @@ where
 {
     // BOUNDARIES
 
-    pub fn new(flags: Flags) -> Self {
+    pub fn new(flags: Flags, bind_id: u32) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
             rel_pos: (Default::default(), Default::default()),
             abs_pos: (Default::default(), Default::default()),
             flags,
+            bind_id,
         }
     }
 
-    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags) -> Self {
+    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags, bind_id: u32) -> Self {
         WidgetInternal {
             dim,
             min_dim: (Default::default(), Default::default()),
             rel_pos,
             abs_pos: (Default::default(), Default::default()),
             flags,
+            bind_id,
         }
     }
 
