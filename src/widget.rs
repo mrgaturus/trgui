@@ -1,4 +1,4 @@
-use crate::binding::{BindID, BindType};
+use crate::event::{EventID, EventType};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
@@ -40,8 +40,8 @@ where
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
-    /// Search and Update widgets by Bind ID
-    fn bind(&mut self, internal: &mut WidgetInternal<P, D>, bind: BindID);
+    /// Search and Update widgets by an Event ID
+    fn handle_event(&mut self, internal: &mut WidgetInternal<P, D>, event_id: EventID);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
     /// Handle a keyboard state
@@ -74,8 +74,8 @@ pub struct WidgetInternal<P, D> {
     abs_pos: Position<P>,
     /// Every Widget Flags
     flags: Flags,
-    /// ID
-    bind_id: BindType,
+    /// Event ID
+    event_id: EventType,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -132,27 +132,27 @@ impl<P, D> WidgetInternal<P, D> {
     }
 
     #[inline]
-    pub fn val_all(&self) -> Flags {
+    pub fn flags(&self) -> Flags {
         self.flags
     }
 
     // BIND ID
     #[inline]
-    pub fn bind(&self) -> BindType {
-        self.bind_id
+    pub fn event(&self) -> EventType {
+        self.event_id
     }
 
     #[inline]
-    pub fn check_bind(&self, id: BindID) -> bool {
-        match self.bind_id {
-            BindType::Any => true,
-            BindType::ID(self_id) => self_id == id,
-            BindType::None => false,
+    pub fn check_event(&self, id: EventID) -> bool {
+        match self.event_id {
+            EventType::Any => true,
+            EventType::ID(self_id) => self_id == id,
+            EventType::None => false,
         }
     }
 
-    pub fn set_bind(&mut self, id: BindType) {
-        self.bind_id = id;
+    pub fn set_event(&mut self, id: EventType) {
+        self.event_id = id;
     }
 }
 
@@ -163,14 +163,14 @@ where
 {
     // BOUNDARIES
 
-    pub fn new(flags: Flags, bind_id: BindType) -> Self {
+    pub fn new(flags: Flags, event_id: EventType) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
             rel_pos: (Default::default(), Default::default()),
             abs_pos: (Default::default(), Default::default()),
             flags,
-            bind_id,
+            event_id,
         }
     }
 
@@ -178,7 +178,7 @@ where
         rel_pos: Position<P>,
         dim: Dimensions<D>,
         flags: Flags,
-        bind_id: BindType,
+        event_id: EventType,
     ) -> Self {
         WidgetInternal {
             dim,
@@ -186,7 +186,7 @@ where
             rel_pos,
             abs_pos: (Default::default(), Default::default()),
             flags,
-            bind_id,
+            event_id,
         }
     }
 

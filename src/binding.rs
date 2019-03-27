@@ -1,45 +1,4 @@
-use std::collections::VecDeque;
 use std::marker::PhantomData;
-
-// UNSAFE STATIC QUEUE
-
-pub type BindID = u32;
-
-static mut BIND_QUEUE: Option<VecDeque<BindID>> = None;
-
-pub fn queue_id(id: BindID) {
-    unsafe {
-        if let Some(ref mut queue) = BIND_QUEUE {
-            if !queue.contains(&id) {
-                queue.push_back(id);
-            }
-        } else {
-            let mut queue: VecDeque<BindID> = VecDeque::with_capacity(4);
-            queue.push_back(id);
-
-            BIND_QUEUE = Some(queue);
-        }
-    }
-}
-
-pub fn next_id() -> Option<BindID> {
-    unsafe {
-        if let Some(ref mut queue) = BIND_QUEUE {
-            queue.pop_front()
-        } else {
-            None
-        }
-    }
-}
-
-// END UNSAFE STATIC QUEUE
-
-#[derive(Copy, Clone)]
-pub enum BindType {
-    Any,
-    ID(BindID),
-    None,
-}
 
 pub struct BindProxy<T> {
     ptr: *const T,

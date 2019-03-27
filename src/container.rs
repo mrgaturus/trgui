@@ -1,5 +1,5 @@
-use crate::binding::{BindID, BindType};
 use crate::decorator::Decorator;
+use crate::event::{EventID, EventType};
 use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
@@ -38,8 +38,13 @@ where
         }
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, bind: BindType) {
-        let mut internal = WidgetInternal::new(flags, bind);
+    pub fn add_widget(
+        &mut self,
+        widget: Box<dyn Widget<P, D>>,
+        flags: Flags,
+        handle_event: EventType,
+    ) {
+        let mut internal = WidgetInternal::new(flags, handle_event);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -52,10 +57,14 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
-        bind: BindType,
+        handle_event: EventType,
     ) {
-        let mut internal =
-            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, bind);
+        let mut internal = WidgetInternal::new_with(
+            (bounds.0, bounds.1),
+            (bounds.2, bounds.3),
+            flags,
+            handle_event,
+        );
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -156,30 +165,6 @@ where
         internal.set(UPDATE, count > 0);
     }
 
-    fn bind(&mut self, internal: &mut WidgetInternal<P, D>, bind: BindID) {
-        self.widgets_i
-            .iter_mut()
-            .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check_bind(bind))
-            .for_each(|(w_internal, widget)| {
-                let backup = w_internal.val(FOCUS | GRAB | HOVER);
-                widget.bind(w_internal, bind);
-
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW));
-
-                    w_internal.on(backup);
-                    w_internal.unchange();
-                }
-            });
-
-        if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
-                self.unfocus(internal);
-            }
-        }
-    }
-
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>) {
         self.layout
             .layout(&mut self.widgets_i, &internal.dimensions());
@@ -204,6 +189,30 @@ where
             });
 
         self.decorator.update(internal);
+    }
+
+    fn handle_event(&mut self, internal: &mut WidgetInternal<P, D>, event_id: EventID) {
+        self.widgets_i
+            .iter_mut()
+            .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| w_internal.check_event(event_id))
+            .for_each(|(w_internal, widget)| {
+                let backup = w_internal.val(FOCUS | GRAB | HOVER);
+                widget.handle_event(w_internal, event_id);
+
+                if w_internal.changed() {
+                    internal.on(w_internal.val(DRAW));
+
+                    w_internal.on(backup);
+                    w_internal.unchange();
+                }
+            });
+
+        if let Some(id) = self.focus_id {
+            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
+                self.unfocus(internal);
+            }
+        }
     }
 
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>) {
@@ -327,8 +336,8 @@ where
 
             while let Some(id) = self.focus_id {
                 let w_internal = &mut self.widgets_i[id];
-                let focus =
-                    w_internal.check(ENABLED | VISIBLE) && self.widgets[id].step_focus(w_internal, back);
+                let focus = w_internal.check(ENABLED | VISIBLE)
+                    && self.widgets[id].step_focus(w_internal, back);
 
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW | UPDATE));

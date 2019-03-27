@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+pub mod event;
 pub mod binding;
 pub mod container;
 pub mod decorator;
