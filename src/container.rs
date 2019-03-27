@@ -42,9 +42,9 @@ where
         &mut self,
         widget: Box<dyn Widget<P, D>>,
         flags: Flags,
-        handle_event: EventType,
+        event_id: EventType,
     ) {
-        let mut internal = WidgetInternal::new(flags, handle_event);
+        let mut internal = WidgetInternal::new(flags, event_id);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -57,13 +57,13 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
-        handle_event: EventType,
+        event_id: EventType,
     ) {
         let mut internal = WidgetInternal::new_with(
             (bounds.0, bounds.1),
             (bounds.2, bounds.3),
             flags,
-            handle_event,
+            event_id,
         );
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
