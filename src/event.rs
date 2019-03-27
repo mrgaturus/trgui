@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 pub type EventID = u32;
 static mut EVENT_QUEUE: Option<VecDeque<EventID>> = None;
 
-pub fn queue_event_id(id: EventID) {
+pub fn push_event(id: EventID) {
     unsafe {
         if let Some(ref mut queue) = EVENT_QUEUE {
             if !queue.contains(&id) {
