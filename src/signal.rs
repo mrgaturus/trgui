@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-pub type SignalID = u32;
+pub type SignalID = usize;
 static mut SIGNAL_QUEUE: Option<VecDeque<SignalID>> = None;
 
 pub fn emit_id(id: SignalID) {
