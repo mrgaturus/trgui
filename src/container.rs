@@ -305,22 +305,24 @@ where
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, back: bool) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
-                let widget = (&mut self.widgets_i[id], &mut self.widgets[id]);
-                let focus = widget.1.step_focus(widget.0, back);
+                let w_internal = &mut self.widgets_i[id];
+                let widget = &mut self.widgets[id];
 
-                if widget.0.changed() {
-                    internal.on(widget.0.val(DRAW | UPDATE));
+                let focus = widget.step_focus(w_internal, back);
+
+                if w_internal.changed() {
+                    internal.on(w_internal.val(DRAW | UPDATE));
                 }
 
                 if focus {
                     return true;
                 } else {
-                    widget.1.unfocus(widget.0);
-                    if widget.0.changed() {
-                        internal.on(widget.0.val(DRAW | UPDATE));
+                    widget.unfocus(w_internal);
+                    if w_internal.changed() {
+                        internal.on(w_internal.val(DRAW | UPDATE));
                     }
 
-                    widget.0.off(FOCUS);
+                    w_internal.off(FOCUS);
                 }
             }
             self.step(back);
