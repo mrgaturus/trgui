@@ -31,6 +31,7 @@ pub fn next_signal() -> Option<SignalID> {
 #[derive(Copy, Clone)]
 pub enum SignalType {
     Any,
-    ID(SignalID),
+    Single(SignalID),
+    Slice(&'static [SignalID]),
     None,
 }

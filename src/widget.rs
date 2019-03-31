@@ -146,7 +146,8 @@ impl<P, D> WidgetInternal<P, D> {
     pub fn check_signal(&self, id: SignalID) -> bool {
         match self.signal {
             SignalType::Any => true,
-            SignalType::ID(self_id) => self_id == id,
+            SignalType::Single(signal) => signal == id,
+            SignalType::Slice(signal_slice) => signal_slice.contains(&id),
             SignalType::None => false,
         }
     }
