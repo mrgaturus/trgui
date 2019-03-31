@@ -1,6 +1,6 @@
 use crate::decorator::Decorator;
-use crate::signal::{SignalID, SignalType};
 use crate::layout::Layout;
+use crate::signal::{SignalID, SignalType};
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
@@ -38,12 +38,7 @@ where
         }
     }
 
-    pub fn add_widget(
-        &mut self,
-        widget: Box<dyn Widget<P, D>>,
-        flags: Flags,
-        signal: SignalType,
-    ) {
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, signal: SignalType) {
         let mut internal = WidgetInternal::new(flags, signal);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
@@ -59,12 +54,8 @@ where
         flags: Flags,
         signal: SignalType,
     ) {
-        let mut internal = WidgetInternal::new_with(
-            (bounds.0, bounds.1),
-            (bounds.2, bounds.3),
-            flags,
-            signal,
-        );
+        let mut internal =
+            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, signal);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
 

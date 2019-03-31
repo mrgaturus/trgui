@@ -14,4 +14,5 @@ impl<P, D> Decorator<P, D> for EmptyDecorator {
     fn after(&mut self, _: &WidgetInternal<P, D>) {}
     fn update(&mut self, _: &WidgetInternal<P, D>) {}
 }
+
 impl Boxed for EmptyDecorator {}
