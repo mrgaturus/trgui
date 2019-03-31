@@ -1,4 +1,4 @@
-use crate::event::{EventID, EventType};
+use crate::signal::{SignalID, SignalType};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
@@ -41,7 +41,7 @@ where
     /// Update the layout of the widget
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Search and Update widgets by an Event ID
-    fn handle_event(&mut self, internal: &mut WidgetInternal<P, D>, event_id: EventID);
+    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID);
     /// Handle a mouse state (focus, grab)
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
     /// Handle a keyboard state
@@ -75,7 +75,7 @@ pub struct WidgetInternal<P, D> {
     /// Every Widget Flags
     flags: Flags,
     /// Event ID
-    event_id: EventType,
+    signal: SignalType,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -138,21 +138,21 @@ impl<P, D> WidgetInternal<P, D> {
 
     // BIND ID
     #[inline]
-    pub fn event(&self) -> EventType {
-        self.event_id
+    pub fn signal(&self) -> SignalType {
+        self.signal
     }
 
     #[inline]
-    pub fn check_event(&self, id: EventID) -> bool {
-        match self.event_id {
-            EventType::Any => true,
-            EventType::ID(self_id) => self_id == id,
-            EventType::None => false,
+    pub fn check_signal(&self, id: SignalID) -> bool {
+        match self.signal {
+            SignalType::Any => true,
+            SignalType::ID(self_id) => self_id == id,
+            SignalType::None => false,
         }
     }
 
-    pub fn set_event(&mut self, id: EventType) {
-        self.event_id = id;
+    pub fn set_signal(&mut self, id: SignalType) {
+        self.signal = id;
     }
 }
 
@@ -163,14 +163,14 @@ where
 {
     // BOUNDARIES
 
-    pub fn new(flags: Flags, event_id: EventType) -> Self {
+    pub fn new(flags: Flags, signal: SignalType) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
             rel_pos: (Default::default(), Default::default()),
             abs_pos: (Default::default(), Default::default()),
             flags,
-            event_id,
+            signal,
         }
     }
 
@@ -178,7 +178,7 @@ where
         rel_pos: Position<P>,
         dim: Dimensions<D>,
         flags: Flags,
-        event_id: EventType,
+        signal: SignalType,
     ) -> Self {
         WidgetInternal {
             dim,
@@ -186,7 +186,7 @@ where
             rel_pos,
             abs_pos: (Default::default(), Default::default()),
             flags,
-            event_id,
+            signal,
         }
     }
 

@@ -1,5 +1,5 @@
 use crate::decorator::Decorator;
-use crate::event::{EventID, EventType};
+use crate::signal::{SignalID, SignalType};
 use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
@@ -42,9 +42,9 @@ where
         &mut self,
         widget: Box<dyn Widget<P, D>>,
         flags: Flags,
-        event_id: EventType,
+        signal: SignalType,
     ) {
-        let mut internal = WidgetInternal::new(flags, event_id);
+        let mut internal = WidgetInternal::new(flags, signal);
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -57,13 +57,13 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
-        event_id: EventType,
+        signal: SignalType,
     ) {
         let mut internal = WidgetInternal::new_with(
             (bounds.0, bounds.1),
             (bounds.2, bounds.3),
             flags,
-            event_id,
+            signal,
         );
         internal.off(FOCUS | GRAB | HOVER);
         internal.set_min_dimensions(widget.min_dimensions());
@@ -191,14 +191,14 @@ where
         self.decorator.update(internal);
     }
 
-    fn handle_event(&mut self, internal: &mut WidgetInternal<P, D>, event_id: EventID) {
+    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID) {
         self.widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check_event(event_id))
+            .filter(|(w_internal, _)| w_internal.check_signal(signal))
             .for_each(|(w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
-                widget.handle_event(w_internal, event_id);
+                widget.handle_signal(w_internal, signal);
 
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW));
