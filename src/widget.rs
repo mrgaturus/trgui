@@ -1,4 +1,4 @@
-use crate::signal::{SignalID, SignalType};
+use crate::signal::{SignalID, Signal};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
@@ -75,7 +75,7 @@ pub struct WidgetInternal<P, D> {
     /// Every Widget Flags
     flags: Flags,
     /// Event ID
-    signal: SignalType,
+    signal: Signal,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -136,24 +136,18 @@ impl<P, D> WidgetInternal<P, D> {
         self.flags
     }
 
-    // BIND ID
     #[inline]
-    pub fn signal(&self) -> SignalType {
-        self.signal
+    pub fn signal(&self) -> &Signal {
+        &self.signal
     }
 
     #[inline]
-    pub fn check_signal(&self, id: SignalID) -> bool {
-        match self.signal {
-            SignalType::Any => true,
-            SignalType::Single(signal) => signal == id,
-            SignalType::Slice(signal_slice) => signal_slice.contains(&id),
-            SignalType::None => false,
-        }
+    pub fn signal_mut(&mut self) -> &mut Signal {
+        &mut self.signal
     }
 
-    pub fn set_signal(&mut self, id: SignalType) {
-        self.signal = id;
+    pub fn set_signal(&mut self, signal: Signal) {
+        self.signal = signal;
     }
 }
 
@@ -164,7 +158,7 @@ where
 {
     // BOUNDARIES
 
-    pub fn new(flags: Flags, signal: SignalType) -> Self {
+    pub fn new(flags: Flags, signal: Signal) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
@@ -179,7 +173,7 @@ where
         rel_pos: Position<P>,
         dim: Dimensions<D>,
         flags: Flags,
-        signal: SignalType,
+        signal: Signal,
     ) -> Self {
         WidgetInternal {
             dim,
