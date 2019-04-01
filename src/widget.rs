@@ -105,7 +105,7 @@ impl<P, D> WidgetInternal<P, D> {
     }
 
     #[inline]
-    /// Check if at least one flag is enabled
+    /// Check if at least one of the requested flags is enabled
     pub fn check_any(&self, flag: Flags) -> bool {
         flag & self.flags > 0
     }
@@ -125,32 +125,32 @@ impl<P, D> WidgetInternal<P, D> {
         ch
     }
 
-    /// Hide the changes of the widgets
+    /// Hide the changes of the flags
     #[inline]
     pub fn unchange(&mut self) {
         self.flags &= !CHANGED;
     }
 
     #[inline]
-    /// Get the requested flags
+    /// Get numeric value of the requested flags
     pub fn val(&self, flag: Flags) -> Flags {
         flag & self.flags
     }
 
     #[inline]
-    /// Get flags
+    /// Get numeric value of the flags
     pub fn flags(&self) -> Flags {
         self.flags
     }
 
     #[inline]
-    /// Get a pointer of the signal
+    /// Get a reference of the signal
     pub fn signal(&self) -> &Signal {
         &self.signal
     }
 
     #[inline]
-    /// Get a mutable pointer of the signal
+    /// Get a mutable reference of the signal
     pub fn signal_mut(&mut self) -> &mut Signal {
         &mut self.signal
     }
