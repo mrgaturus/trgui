@@ -8,7 +8,7 @@ use std::ops::Sub;
 /// Generic Mouse State
 pub struct MouseState<P> {
     /// Is clicked?
-    m_click: bool,
+    m_click_btn: u8,
     /// Mouse coordinates
     m_coords: Position<P>,
     /// Mouse wheel
@@ -34,7 +34,7 @@ where
     /// Creates a new Mouse State with default values (all on zeroes)
     pub fn new() -> Self {
         MouseState {
-            m_click: false,
+            m_click_btn: 0,
             m_coords: (Default::default(), Default::default()),
             m_wheel: 0,
             t_pressure: 0,
@@ -43,8 +43,8 @@ where
     }
 
     /// Set if the mouse is clicked
-    pub fn set_clicked(&mut self, clicked: bool) {
-        self.m_click = clicked;
+    pub fn set_clicked_buttons(&mut self, click: u8) {
+        self.m_click_btn = click;
     }
 
     /// Set cursor position
@@ -53,9 +53,14 @@ where
         self.t_pressure = pressure;
     }
 
+    /// Get clicked buttons
+    pub fn clicked_buttons(&self) -> u8 {
+        self.m_click_btn
+    }
+
     /// Check if the mouse is clicked
     pub fn clicked(&self) -> bool {
-        self.m_click
+        self.m_click_btn > 0
     }
 
     #[inline]
