@@ -1,12 +1,15 @@
+//! Single-Threaded pointers that avoids the borrow checker for use on widgets
+
 use std::marker::PhantomData;
 
-/// Shares external data to (not limited to) widgets
+/// Shares external data to (not limited to) widgets. 
+/// 
+/// A BindProxy is a Single-Threaded Pointer without borrow checker for the widgets.
 pub struct BindProxy<T> {
     ptr: *const T,
 }
 
-/// Single-Threaded Pointer without borrow checker for the widgets
-/// if you need Multi-threading use instead structs like Arc<Mutex<T>>
+
 impl<T> BindProxy<T> {
     /// Returns a non-mutable safe reference
     pub fn read(&self) -> &T {
@@ -30,6 +33,7 @@ impl<T> BindProxy<T> {
     }
 }
 
+/// Create a new BindProxy using a Trait implementation
 pub trait Binding<T> {
     /// Prepare and Create a new BindProxy
     fn proxy(&self) -> BindProxy<T>;

@@ -1,6 +1,11 @@
+//! Generic Mouse and Keyboard States
+//! 
+//! Use this on an Event Poll provided by a Window Manager
+
 use crate::widget::Position;
 use std::ops::Sub;
 
+/// Generic Mouse State
 pub struct MouseState<P> {
     /// Is clicked?
     m_click: bool,
@@ -14,6 +19,7 @@ pub struct MouseState<P> {
     k_modifiers: u8,
 }
 
+/// Generic Key State
 pub struct KeyState {
     /// Pressed keycode
     k_code: Option<i32>,
@@ -80,7 +86,7 @@ impl KeyState {
     }
 
     /// Set a keycode of the key pressed
-    pub fn set_keys(&mut self, code: Option<i32>) {
+    pub fn set_keycode(&mut self, code: Option<i32>) {
         self.k_code = code;
     }
 

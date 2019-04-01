@@ -1,6 +1,9 @@
+//! Trait for control a renderer on a Container
+
 use crate::widget::WidgetInternal;
 use crate::Boxed;
 
+/// Decorator Trait for a Container
 pub trait Decorator<P, D> {
     /// Prepares the decorator before draw the widgets
     fn before(&mut self, internal: &WidgetInternal<P, D>);

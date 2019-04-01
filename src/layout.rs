@@ -1,6 +1,9 @@
+//! Trait for layout the widget list of a Container
+
 use crate::widget::{Dimensions, WidgetInternal};
 use crate::Boxed;
 
+/// Layout Trait for a Container
 pub trait Layout<P, D> {
     /// Applies the layout to the widget list of a Container
     fn layout(&self, internal_list: &mut [WidgetInternal<P, D>], dim: &Dimensions<D>);

@@ -1,3 +1,5 @@
+//! Structs and Traits for widgets
+
 use crate::signal::{Signal, SignalID};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
@@ -24,6 +26,7 @@ pub mod flags {
 
 use flags::{DRAW, FOCUS, VISIBLE};
 
+/// Main Widget Trait
 pub trait Widget<P: Sized + Copy + Clone, D: Sized + Copy + Clone>
 where
     D: PartialOrd + Default,
@@ -37,13 +40,15 @@ where
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget.
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
-    /// Containers search for widgets that are members of the same signal and call this function.
+    /// Containers search for widgets that are members of the same signal and then 
+    /// call this function on found widgets.
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID);
-    /// Handle a mouse state, Containers check if a point is in area for call this function.
+    /// Handle a mouse state, Containers check if the mouse is on area or is grabbed and then
+    /// call this function.
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
     /// Handle a keyboard state, it only be called if the widget is focused by a Container.
     fn handle_keys(&mut self, internal: &mut WidgetInternal<P, D>, key: &KeyState);
-    /// Containers call this function for check if the next widget should be focused or not.
+    /// Containers call this function for check if the widget should be focused or not by stepping.
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, _: bool) -> bool {
         let check = !internal.check(FOCUS);
         internal.set(DRAW, check && internal.check(VISIBLE));
@@ -60,6 +65,7 @@ where
     }
 }
 
+/// General Widget Data, this is injected as arguments on widget trait functions
 pub struct WidgetInternal<P, D> {
     /// Dimensions
     dim: Dimensions<D>,

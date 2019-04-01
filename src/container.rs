@@ -1,3 +1,8 @@
+//! A list of widgets for dispatch Widget trait functions to specific widgets
+//! 
+//! A Container implements Widget trait, so Containers can be nested. The widget list
+//! of a Container cannot be modified after moved to a "parent" Container
+
 use crate::decorator::Decorator;
 use crate::layout::Layout;
 use crate::signal::{SignalID, Signal};
@@ -11,6 +16,7 @@ use std::ops::{Add, Sub};
 type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
 pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
 
+/// Widget List that handle widget trait functions
 pub struct Container<P, D> {
     widgets_i: InternalList<P, D>,
     widgets: WidgetList<P, D>,
@@ -106,6 +112,9 @@ where
     P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
 {
     /// Draw widgets from the list that have DRAW flag turned on
+    /// 
+    /// This function is lazy, if none widget is found, the DRAW flag
+    /// of the container turns off
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
 
@@ -131,6 +140,9 @@ where
     }
 
     /// Update widgets from the list that have UPDATE flag turned on
+    /// 
+    /// This function is lazy, if none widget is found, the UPDATE flag
+    /// of the container turns off
     fn update(&mut self, internal: &mut WidgetInternal<P, D>) {
         let count: usize;
 
@@ -189,7 +201,10 @@ where
         self.decorator.update(internal);
     }
 
-    /// Search widgets that are members of a signal id and call the function of the widgets
+    /// Search widgets that are members of a signal id and call the function of these widgets
+    /// 
+    /// A Nested Container should be member of the same signal id, otherwise, the function couldn't
+    /// be called on the widget of the nested Container
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID) {
         self.widgets_i
             .iter_mut()

@@ -1,3 +1,5 @@
+//! Communication between widgets
+
 use std::collections::VecDeque;
 use std::mem;
 
@@ -31,6 +33,7 @@ pub fn next_signal() -> Option<SignalID> {
     }
 }
 
+/// A Signal with options to store Signal IDs
 #[derive(Copy, Clone)]
 pub enum Signal {
     Any,
