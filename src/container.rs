@@ -26,6 +26,7 @@ where
     D: PartialOrd + Default,
     P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
 {
+    /// Creates a new Container with a Decorator and Layout
     pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
             widgets_i: InternalList::new(),
@@ -38,6 +39,7 @@ where
         }
     }
 
+    /// Adds a new widget to the list
     pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, signal: Signal) {
         let mut internal = WidgetInternal::new(flags, signal);
         internal.off(FOCUS | GRAB | HOVER);
@@ -47,6 +49,8 @@ where
         self.widgets.push(widget);
     }
 
+    /// Adds a new widget to the list with initial bounds, useful when initial boundaries
+    /// are required by the Layout
     pub fn add_widget_b(
         &mut self,
         widget: Box<dyn Widget<P, D>>,
@@ -101,6 +105,7 @@ where
     D: PartialOrd + Default,
     P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
 {
+    /// Draw widgets from the list that have DRAW flag turned on
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
         let count: usize;
 
@@ -125,6 +130,7 @@ where
         count > 0
     }
 
+    /// Update widgets from the list that have UPDATE flag turned on
     fn update(&mut self, internal: &mut WidgetInternal<P, D>) {
         let count: usize;
 
@@ -156,6 +162,7 @@ where
         internal.set(UPDATE, count > 0);
     }
 
+    /// Apply the Layout to the list, calculate the absolute position and update the Decorator
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>) {
         self.layout
             .layout(&mut self.widgets_i, &internal.dimensions());
@@ -182,6 +189,7 @@ where
         self.decorator.update(internal);
     }
 
+    /// Search widgets that are members of a signal id and call the function of the widgets
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID) {
         self.widgets_i
             .iter_mut()
@@ -206,6 +214,7 @@ where
         }
     }
 
+    /// Search the widget that the mouse is pointing and call the function of the widget
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>) {
         if self.grab_id.is_some() || !internal.check(GRAB) {
             let widget_n = self
@@ -275,6 +284,7 @@ where
         }
     }
 
+    /// Call the function of the focused widget
     fn handle_keys(&mut self, internal: &mut WidgetInternal<P, D>, key: &KeyState) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
@@ -296,12 +306,12 @@ where
         }
     }
 
-    /// Set Widget Bounds (x, y, width, height)
+    /// Get minimum dimensions provided by the Layout
     fn min_dimensions(&self) -> Dimensions<D> {
         self.layout.minimum_size(&self.widgets_i)
     }
 
-    /// Step focus on Widget array
+    /// Step the focus id to the next widget that returns true on the function
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, back: bool) -> bool {
         if !self.widgets.is_empty() {
             if let Some(id) = self.focus_id {
@@ -348,6 +358,7 @@ where
         false
     }
 
+    /// Clear the hover index and call the function of the widget
     fn unhover(&mut self, internal: &mut WidgetInternal<P, D>) {
         if let Some(id) = self.hover_id {
             let w_internal = &mut self.widgets_i[id];
@@ -362,6 +373,7 @@ where
         }
     }
 
+    /// Clear the focus index and call the function of the widget
     fn unfocus(&mut self, internal: &mut WidgetInternal<P, D>) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];

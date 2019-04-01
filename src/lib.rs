@@ -8,6 +8,7 @@ pub mod signal;
 pub mod state;
 pub mod widget;
 
+/// Prepare the widget to be boxed
 pub trait Boxed {
     #[inline]
     fn boxed(self) -> Box<Self>

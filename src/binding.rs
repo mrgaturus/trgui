@@ -1,14 +1,18 @@
 use std::marker::PhantomData;
 
+/// Shares external data to (not limited to) widgets
 pub struct BindProxy<T> {
     ptr: *const T,
 }
 
 impl<T> BindProxy<T> {
+    /// Returns a non-mutable safe reference
     pub fn read(&self) -> &T {
         unsafe { &*self.ptr }
     }
 
+    /// Write on the data using a non-capturing closure with a mutable 
+    /// reference as an argument
     pub fn write<F>(&self, func: F)
     where
         F: Fn(&mut T),
@@ -18,12 +22,14 @@ impl<T> BindProxy<T> {
         }
     }
 
+    /// Returns a raw pointer of the data
     pub unsafe fn write_ptr(&self) -> *mut T {
         self.ptr as *mut T
     }
 }
 
 pub trait Binding<T> {
+    /// Prepare and Create a new bind proxy
     fn proxy(&self) -> BindProxy<T>;
 }
 
@@ -33,6 +39,8 @@ pub struct PointerBinding<'a, T: 'a> {
 }
 
 impl<'a, T> PointerBinding<'a, T> {
+    /// Creates a new binding from any pointer. the pointed data should 
+    /// live long than the binding
     pub fn new(ptr: &'a mut T) -> Self {
         PointerBinding {
             ptr: ptr as *const T,

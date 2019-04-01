@@ -4,6 +4,7 @@ use std::mem;
 pub type SignalID = usize;
 static mut SIGNAL_QUEUE: Option<VecDeque<SignalID>> = None;
 
+/// Push a Signal ID to the Signal Queue
 pub fn emit_id(id: SignalID) {
     unsafe {
         if let Some(ref mut queue) = SIGNAL_QUEUE {
@@ -19,6 +20,7 @@ pub fn emit_id(id: SignalID) {
     }
 }
 
+/// Pop a Signal ID from the Signal Queue
 pub fn next_signal() -> Option<SignalID> {
     unsafe {
         if let Some(ref mut queue) = SIGNAL_QUEUE {
@@ -40,18 +42,7 @@ pub enum Signal {
 }
 
 impl Signal {
-    pub fn disable(&mut self) {
-        mem::replace(
-            self,
-            match *self {
-                Signal::Any => Signal::None,
-                Signal::Single(signal) => Signal::DisabledSingle(signal),
-                Signal::Slice(signal_slice) => Signal::DisabledSlice(signal_slice),
-                _ => *self,
-            },
-        );
-    }
-
+    /// Enable the Signal, enabled signals are used by the Container for call handle_signal function
     pub fn enable(&mut self) {
         mem::replace(
             self,
@@ -64,6 +55,20 @@ impl Signal {
         );
     }
 
+    /// Disable the signal, is useful when you need hide the widget from the handle_signal function
+    pub fn disable(&mut self) {
+        mem::replace(
+            self,
+            match *self {
+                Signal::Any => Signal::None,
+                Signal::Single(signal) => Signal::DisabledSingle(signal),
+                Signal::Slice(signal_slice) => Signal::DisabledSlice(signal_slice),
+                _ => *self,
+            },
+        );
+    }
+
+    /// Check if the signal is enabled
     pub fn enabled(&self) -> bool {
         match self {
             Signal::Any | Signal::Single(_) | Signal::Slice(_) => true,
@@ -71,6 +76,7 @@ impl Signal {
         }
     }
 
+    /// Check if the signal is a member of an ID
     #[inline]
     pub fn check(&self, id: SignalID) -> bool {
         match self {

@@ -1,4 +1,4 @@
-use crate::signal::{SignalID, Signal};
+use crate::signal::{Signal, SignalID};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
@@ -24,29 +24,26 @@ pub mod flags {
 
 use flags::{DRAW, FOCUS, VISIBLE};
 
-// TODO: create a check_bind
-
-/// A Widget trait is used for the general methods that can be used on every widget.
 pub trait Widget<P: Sized + Copy + Clone, D: Sized + Copy + Clone>
 where
     D: PartialOrd + Default,
     P: Sized + Add<Output = P> + PartialOrd + From<D> + Default,
 {
-    /// Get minimal Dimensions of the Widget
+    /// Get minimal Dimensions of the Widget.
     fn min_dimensions(&self) -> Dimensions<D>;
-    /// Draw the widget
+    /// Draw the widget.
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool;
-    /// Update the status of the widget
+    /// Update the status of the widget.
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
-    /// Update the layout of the widget
+    /// Update the layout of the widget.
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
-    /// Search and Update widgets by an Event ID
+    /// Containers search for widgets that are members of the same signal and call this function.
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID);
-    /// Handle a mouse state (focus, grab)
+    /// Handle a mouse state, Containers check if a point is in area for call this function.
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
-    /// Handle a keyboard state
+    /// Handle a keyboard state, it only be called if the widget is focused by a Container.
     fn handle_keys(&mut self, internal: &mut WidgetInternal<P, D>, key: &KeyState);
-    /// Step the focus
+    /// Containers call this function for check if the next widget should be focused or not.
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, _: bool) -> bool {
         let check = !internal.check(FOCUS);
         internal.set(DRAW, check && internal.check(VISIBLE));
@@ -64,7 +61,7 @@ where
 }
 
 pub struct WidgetInternal<P, D> {
-    /// (i32, i32)
+    /// Dimensions
     dim: Dimensions<D>,
     /// Minimun dimensions
     min_dim: Dimensions<D>,
@@ -80,8 +77,9 @@ pub struct WidgetInternal<P, D> {
 
 impl<P, D> WidgetInternal<P, D> {
     // FLAGS
-    pub fn set(&mut self, flag: Flags, value: bool) {
-        if value {
+    /// Set on or off to requested flags
+    pub fn set(&mut self, flag: Flags, toggle: bool) {
+        if toggle {
             self.flags |= flag | CHANGED;
         } else {
             self.flags = self.flags & !flag | CHANGED;
@@ -89,31 +87,37 @@ impl<P, D> WidgetInternal<P, D> {
     }
 
     #[inline]
+    /// Toggle requested flags
     pub fn toggle(&mut self, flag: Flags) {
         self.flags ^= flag;
     }
 
     #[inline]
+    /// Turn on requested flags
     pub fn on(&mut self, flag: Flags) {
         self.flags |= flag | CHANGED;
     }
 
     #[inline]
+    /// Turn off requested flags
     pub fn off(&mut self, flag: Flags) {
         self.flags = self.flags & !flag | CHANGED;
     }
 
     #[inline]
+    /// Check if at least one flag is enabled
     pub fn check_any(&self, flag: Flags) -> bool {
         flag & self.flags > 0
     }
 
     #[inline]
+    /// Check if the requested flags are enabled
     pub fn check(&self, flag: Flags) -> bool {
         flag & self.flags == flag
     }
 
     #[inline]
+    /// Check if the flags are changed
     pub fn changed(&mut self) -> bool {
         let ch = self.flags & CHANGED != 0;
         self.flags &= !CHANGED;
@@ -121,31 +125,37 @@ impl<P, D> WidgetInternal<P, D> {
         ch
     }
 
+    /// Hide the changes of the widgets
     #[inline]
     pub fn unchange(&mut self) {
         self.flags &= !CHANGED;
     }
 
     #[inline]
+    /// Get the requested flags
     pub fn val(&self, flag: Flags) -> Flags {
         flag & self.flags
     }
 
     #[inline]
+    /// Get flags
     pub fn flags(&self) -> Flags {
         self.flags
     }
 
     #[inline]
+    /// Get a pointer of the signal
     pub fn signal(&self) -> &Signal {
         &self.signal
     }
 
     #[inline]
+    /// Get a mutable pointer of the signal
     pub fn signal_mut(&mut self) -> &mut Signal {
         &mut self.signal
     }
 
+    /// Changes the signal
     pub fn set_signal(&mut self, signal: Signal) {
         self.signal = signal;
     }
@@ -156,8 +166,7 @@ where
     D: PartialOrd + Default,
     P: Add<Output = P> + PartialOrd + From<D> + Default,
 {
-    // BOUNDARIES
-
+    /// Create a new Internal with Flags and Signal, all boundaries are initialized with 0
     pub fn new(flags: Flags, signal: Signal) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
@@ -169,6 +178,7 @@ where
         }
     }
 
+    /// Create a new Internal with Flags, Signal, Relative Position and Dimensions
     pub fn new_with(
         rel_pos: Position<P>,
         dim: Dimensions<D>,
@@ -194,7 +204,7 @@ where
         }
     }
 
-    /// Set relative position and dimensions with 4 item tuple (x, y, width, height)
+    /// Set relative position and dimensions with boundaries tuple
     pub fn set_boundaries(&mut self, bounds: Boundaries<P, D>) {
         self.rel_pos = (bounds.0, bounds.1);
         self.dim = (bounds.2, bounds.3);
@@ -208,7 +218,7 @@ where
         self.rel_pos.1 = pos.1;
     }
 
-    /// Sum absolute position
+    /// Sum other relative with self relative
     pub fn calc_absolute(&mut self, rel_pos: Position<P>) {
         self.abs_pos = (rel_pos.0 + self.rel_pos.0, rel_pos.1 + self.rel_pos.1);
     }
@@ -227,12 +237,12 @@ where
         self.check_min();
     }
 
-    /// Change x coordinate
+    /// Change x relative coordinate
     pub fn set_x(&mut self, x: P) {
         self.rel_pos.0 = x;
     }
 
-    /// Change y coordinate
+    /// Change y relative coordinate
     pub fn set_y(&mut self, y: P) {
         self.rel_pos.1 = y;
     }
@@ -251,40 +261,43 @@ where
         self.check_min();
     }
 
-    /// Get (i32, i32, i32, i32) with relative position
+    /// Get Boundaries with relative position
     #[inline]
     pub fn boundaries_rel(&self) -> Boundaries<P, D> {
         (self.rel_pos.0, self.rel_pos.1, self.dim.0, self.dim.1)
     }
 
     #[inline]
-    /// Get (i32, i32, i32, i32) with absolute position
+    /// Get Boundaries with absolute position
     pub fn boundaries_abs(&self) -> Boundaries<P, D> {
         (self.abs_pos.0, self.abs_pos.1, self.dim.0, self.dim.1)
     }
 
     #[inline]
-    /// Get coordinates tuple
+    /// Get relative Position
     pub fn relative_pos(&self) -> Position<P> {
         self.rel_pos
     }
 
+    /// Get absolute Position
     #[inline]
     pub fn absolute_pos(&self) -> Position<P> {
         self.abs_pos
     }
 
+    /// Get minimum dimensions, useful for layouts
     #[inline]
     pub fn min_dimensions(&self) -> Dimensions<D> {
         self.min_dim
     }
 
     #[inline]
-    /// Get dimensions tuple
+    /// Get dimensions
     pub fn dimensions(&self) -> Dimensions<D> {
         self.dim
     }
 
+    /// Check if a point/cursor is on widget area. It checks using absolute position
     #[inline]
     pub fn on_area(&self, cursor: Position<P>) -> bool {
         self.check(VISIBLE)
