@@ -5,6 +5,8 @@ pub struct BindProxy<T> {
     ptr: *const T,
 }
 
+/// Single-Threaded Pointer without borrow checker for the widgets
+/// if you need Multi-threading use instead structs like Arc<Mutex<T>>
 impl<T> BindProxy<T> {
     /// Returns a non-mutable safe reference
     pub fn read(&self) -> &T {
@@ -29,10 +31,11 @@ impl<T> BindProxy<T> {
 }
 
 pub trait Binding<T> {
-    /// Prepare and Create a new bind proxy
+    /// Prepare and Create a new BindProxy
     fn proxy(&self) -> BindProxy<T>;
 }
 
+/// Quasi-safe binding to any pointer
 pub struct PointerBinding<'a, T: 'a> {
     ptr: *const T,
     phantom: PhantomData<&'a T>,
