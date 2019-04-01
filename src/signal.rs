@@ -42,7 +42,8 @@ pub enum Signal {
 }
 
 impl Signal {
-    /// Enable the Signal, enabled signals are used by the Container for call handle_signal function
+    /// Enables the Signal, enabled signals are used by Containers for search widgets and 
+    /// call the function of these widgets
     pub fn enable(&mut self) {
         mem::replace(
             self,
@@ -55,7 +56,7 @@ impl Signal {
         );
     }
 
-    /// Disable the signal, is useful when you need hide the widget from the handle_signal function
+    /// Disables the Signal, hides the signal from Containers
     pub fn disable(&mut self) {
         mem::replace(
             self,
