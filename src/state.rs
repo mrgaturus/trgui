@@ -16,7 +16,7 @@ pub struct MouseState<P> {
     /// Tablet Pressure Level
     t_pressure: i32,
     /// Keyboard Modifiers
-    k_modifiers: u8,
+    k_modifiers: u16,
 }
 
 /// Generic Key State
@@ -24,7 +24,7 @@ pub struct KeyState {
     /// Pressed keycode
     k_code: Option<i32>,
     /// Keyboard Modifiers
-    k_modifiers: u8,
+    k_modifiers: u16,
 }
 
 impl<P> MouseState<P>
@@ -42,35 +42,49 @@ where
         }
     }
 
-    /// Set if the mouse is clicked
-    pub fn set_clicked_buttons(&mut self, click: u8) {
-        self.m_click_btn = click;
+    /// Click a button using a bitflag
+    pub fn click_button(&mut self, click: u8) {
+        self.m_click_btn |= click;
+    }
+
+    /// Release a button using a bitflag
+    pub fn release_button(&mut self, click: u8) {
+        self.m_click_btn = self.m_click_btn & !click;
     }
 
     /// Set cursor position
-    pub fn set_mouse(&mut self, coords: Position<P>, pressure: i32) {
+    pub fn set_mouse(&mut self, coords: Position<P>) {
         self.m_coords = coords;
+    }
+
+    /// Set tablet pressure (optional)
+    pub fn set_pressure(&mut self, pressure: i32) {
         self.t_pressure = pressure;
     }
 
-    /// Get clicked buttons
-    pub fn clicked_buttons(&self) -> u8 {
-        self.m_click_btn
+    /// Replace all modifiers
+    pub fn set_modifiers(&mut self, mods: u16) {
+        self.k_modifiers = mods
     }
 
-    /// Check if the mouse is clicked
-    pub fn clicked(&self) -> bool {
-        self.m_click_btn > 0
+    /// Press modifiers using a bitflag
+    pub fn press_modifiers(&mut self, mods: u16) {
+        self.k_modifiers |= mods;
     }
 
-    #[inline]
+    /// Release modifiers using a bitflag
+    pub fn release_modifiers(&mut self, mods: u16) {
+        self.k_modifiers = self.k_modifiers & !mods;
+    }
+
     /// Get Absolute position of the cursor
+    #[inline]
     pub fn absolute_pos(&self) -> Position<P> {
         self.m_coords
     }
-
-    #[inline]
+    
     /// Calculate and get a relative position of the cursor with an absolute position of a widget.
+    #[inline]
     pub fn relative_pos(&self, pos: Position<P>) -> Position<P> {
         (self.m_coords.0 - pos.0, self.m_coords.1 - pos.1)
     }
@@ -78,6 +92,23 @@ where
     /// Check the tablet pressure
     pub fn tablet_pressure(&self) -> i32 {
         self.t_pressure
+    }
+
+    /// Get clicked buttons
+    pub fn clicked_buttons(&self, click: u8) -> bool {
+        click & self.m_click_btn == click
+    }
+
+    /// Check if the mouse is clicked in any button
+    #[inline]
+    pub fn clicked(&self) -> bool {
+        self.m_click_btn > 0
+    }
+
+    /// Get pressed modifiers
+    #[inline]
+    pub fn pressed_modifiers(&self, mods: u16) -> bool {
+        mods & self.k_modifiers == mods
     }
 }
 
@@ -95,23 +126,35 @@ impl KeyState {
         self.k_code = code;
     }
 
-    /// Set pressed modifiers (ex: shift, ctrl, alt)
-    pub fn set_modifiers(&mut self, modifiers: u8) {
-        self.k_modifiers = modifiers
+    /// Replace all modifiers
+    pub fn set_modifiers(&mut self, mods: u16) {
+        self.k_modifiers = mods
+    }
+
+    /// Press modifiers using a bitflag
+    pub fn press_modifiers(&mut self, mods: u16) {
+        self.k_modifiers |= mods;
+    }
+
+    /// Release modifiers using a bitflag
+    pub fn release_modifiers(&mut self, mods: u16) {
+        self.k_modifiers = self.k_modifiers & !mods;
     }
 
     /// Get pressed keycode
+    #[inline]
     pub fn keycode(&self) -> Option<i32> {
         self.k_code
-    }
-
-    /// Get pressed modifiers
-    pub fn modifiers(&self) -> u8 {
-        self.k_modifiers
     }
 
     /// Check if the keyboard is pressed
     pub fn pressed(&self) -> bool {
         self.k_code.is_some()
+    }
+
+    /// Get pressed modifiers
+    #[inline]
+    pub fn pressed_modifiers(&self, mods: u16) -> bool {
+        mods & self.k_modifiers == mods
     }
 }
