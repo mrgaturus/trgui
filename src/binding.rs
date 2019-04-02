@@ -9,7 +9,6 @@ pub struct BindProxy<T> {
     ptr: *const T,
 }
 
-
 impl<T> BindProxy<T> {
     /// Returns a non-mutable safe reference
     pub fn read(&self) -> &T {
@@ -39,27 +38,10 @@ pub trait Binding<T> {
     fn proxy(&self) -> BindProxy<T>;
 }
 
-/// Quasi-safe binding to any pointer
-pub struct PointerBinding<'a, T: 'a> {
-    ptr: *const T,
-    phantom: PhantomData<&'a T>,
-}
-
-impl<'a, T> PointerBinding<'a, T> {
-    /// Creates a new binding from any pointer. the pointed data should 
-    /// live long than the binding
-    pub fn new(ptr: &'a mut T) -> Self {
-        PointerBinding {
-            ptr: ptr as *const T,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<'a, T> Binding<T> for PointerBinding<'a, T> {
+impl<T> Binding<T> for &'_ T {
     fn proxy(&self) -> BindProxy<T> {
         BindProxy {
-            ptr: self.ptr as *const T,
+            ptr: *self as *const T,
         }
     }
 }
