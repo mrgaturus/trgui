@@ -55,8 +55,9 @@ where
         self.widgets.push(widget);
     }
 
-    /// Adds a new widget to the list with initial bounds, useful when initial boundaries
-    /// are required by the Layout
+    /// Adds a new widget to the list with initial bounds
+    /// 
+    /// Useful when initial boundaries are required by the Layout
     pub fn add_widget_b(
         &mut self,
         widget: Box<dyn Widget<P, D>>,
