@@ -1,7 +1,5 @@
 //! Single-Threaded pointers that avoids the borrow checker for use on widgets
 
-use std::marker::PhantomData;
-
 /// Shares external data to (not limited to) widgets. 
 /// 
 /// A BindProxy is a Single-Threaded Pointer without borrow checker for the widgets.

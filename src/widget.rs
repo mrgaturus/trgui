@@ -92,6 +92,11 @@ impl<P, D> WidgetInternal<P, D> {
         }
     }
 
+    /// Replace all flags by others
+    pub fn replace(&mut self, flags: Flags) {
+        self.flags = flags;
+    }
+
     #[inline]
     /// Toggle requested flags
     pub fn toggle(&mut self, flag: Flags) {
