@@ -1,5 +1,5 @@
 # TRGUI
-Approach for a GUI Toolkit on Rust. Based on Widget trait (Dynamic Dispatch) and Containers that can handle Widget trait objects. Inspired by IMGUIs and MLIB (AzPainter)
+Approach for a GUI Toolkit on Rust. Based on Widget trait (Dynamic Dispatch) and Containers that can handle Widget trait objects. Inspired by IMGUIs, MLIB (AzPainter) and Love2D
 
 ## What TRGUI has?
 * Widget trait that has draw, update functions and can handle mouse and keyboard events using States.

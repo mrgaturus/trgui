@@ -5,7 +5,7 @@
 
 use crate::decorator::Decorator;
 use crate::layout::Layout;
-use crate::signal::{SignalID, Signal};
+use crate::signal::{Signal, SignalID};
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
@@ -274,8 +274,12 @@ where
                 if w_internal.changed() {
                     internal.on(w_internal.val(DRAW | UPDATE));
 
-                    internal.set(GRAB, w_internal.check(GRAB));
-                    self.grab_id = Some(n).filter(|_| w_internal.check(GRAB));
+                    self.grab_id = Some(n).filter(|_| {
+                        let grab = w_internal.check(GRAB);
+
+                        internal.set(GRAB, grab); 
+                        grab
+                    });
 
                     if w_internal.check(FOCUS) {
                         if let Some(id) = self.focus_id {
