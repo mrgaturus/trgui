@@ -1,7 +1,6 @@
 //! Trait for control a renderer on a Container
 
 use crate::widget::WidgetInternal;
-use crate::Boxed;
 
 /// Decorator Trait for a Container
 pub trait Decorator<P, D> {
@@ -21,5 +20,3 @@ impl<P, D> Decorator<P, D> for EmptyDecorator {
     fn after(&mut self, _: &WidgetInternal<P, D>) {}
     fn update(&mut self, _: &WidgetInternal<P, D>) {}
 }
-
-impl Boxed for EmptyDecorator {}

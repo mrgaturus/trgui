@@ -1,5 +1,5 @@
 //! A list of widgets for dispatch Widget trait functions to specific widgets
-//! 
+//!
 //! A Container implements Widget trait, so Containers can be nested. The widget list
 //! of a Container cannot be modified after moved to a "parent" Container
 
@@ -17,23 +17,24 @@ type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
 pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
 
 /// Widget List that handle widget trait functions
-pub struct Container<P, D> {
+pub struct Container<P, D, DE: Decorator<P, D>> {
     widgets_i: InternalList<P, D>,
     widgets: WidgetList<P, D>,
-    decorator: Box<dyn Decorator<P, D>>,
+    decorator: DE,
     layout: Box<dyn Layout<P, D>>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
     hover_id: Option<usize>,
 }
 
-impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Container<P, D>
+impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone, DE> Container<P, D, DE>
 where
     D: PartialOrd + Default,
     P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
+    DE: Decorator<P, D>,
 {
     /// Creates a new Container with a Decorator and Layout
-    pub fn new(decorator: Box<dyn Decorator<P, D>>, layout: Box<dyn Layout<P, D>>) -> Self {
+    pub fn new(decorator: DE, layout: Box<dyn Layout<P, D>>) -> Self {
         Container {
             widgets_i: InternalList::new(),
             widgets: WidgetList::new(),
@@ -56,7 +57,7 @@ where
     }
 
     /// Adds a new widget to the list with initial bounds
-    /// 
+    ///
     /// Useful when initial boundaries are required by the Layout
     pub fn add_widget_b(
         &mut self,
@@ -107,13 +108,14 @@ where
     }
 }
 
-impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone> Widget<P, D> for Container<P, D>
+impl<P: Sized + Copy + Clone, D: Sized + Copy + Clone, DE> Widget<P, D> for Container<P, D, DE>
 where
     D: PartialOrd + Default,
     P: Add<Output = P> + Sub<Output = P> + PartialOrd + From<D> + Default,
+    DE: Decorator<P, D>,
 {
     /// Draw widgets from the list that have DRAW flag turned on
-    /// 
+    ///
     /// This function is lazy, if none widget is found, the DRAW flag
     /// of the container turns off
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
@@ -141,7 +143,7 @@ where
     }
 
     /// Update widgets from the list that have UPDATE flag turned on
-    /// 
+    ///
     /// This function is lazy, if none widget is found, the UPDATE flag
     /// of the container turns off
     fn update(&mut self, internal: &mut WidgetInternal<P, D>) {
@@ -203,7 +205,7 @@ where
     }
 
     /// Search widgets that are members of a signal id and call the function of these widgets
-    /// 
+    ///
     /// A Nested Container should be member of the same signal id, otherwise, the function couldn't
     /// be called on the widget of the nested Container
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID) {
@@ -277,7 +279,7 @@ where
                     self.grab_id = Some(n).filter(|_| {
                         let grab = w_internal.check(GRAB);
 
-                        internal.set(GRAB, grab); 
+                        internal.set(GRAB, grab);
                         grab
                     });
 
@@ -409,7 +411,7 @@ where
     }
 }
 
-impl<P, D> Boxed for Container<P, D>
+impl<P, D, DE: Decorator<P, D>> Boxed for Container<P, D, DE>
 where
     D: Sized + PartialOrd + From<u8>,
     P: Sized + Add<Output = P> + PartialOrd + From<D> + From<u8>,
