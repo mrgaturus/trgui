@@ -156,15 +156,11 @@ where
             .filter(|(w_internal, _)| w_internal.check(UPDATE))
             .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
+
                 widget.update(w_internal);
+                internal.on(w_internal.val(DRAW));
 
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW));
-
-                    w_internal.on(backup);
-                    w_internal.unchange();
-                }
-
+                w_internal.on(backup);
                 w_internal.check(UPDATE) as usize
             });
 
@@ -196,9 +192,7 @@ where
                 w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal);
 
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW | UPDATE));
-                }
+                internal.on(w_internal.val(DRAW | UPDATE));
             });
 
         self.decorator.update(internal);
@@ -217,12 +211,8 @@ where
                 let backup = w_internal.val(FOCUS | GRAB | HOVER);
                 widget.handle_signal(w_internal, signal);
 
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW));
-
-                    w_internal.on(backup);
-                    w_internal.unchange();
-                }
+                internal.on(w_internal.val(DRAW | UPDATE));
+                w_internal.on(backup);
             });
 
         if let Some(id) = self.focus_id {
@@ -269,27 +259,25 @@ where
                     self.hover_id = Some(n);
                     w_internal.on(HOVER);
                 }
-                w_internal.unchange();
 
                 self.widgets[n].handle_mouse(w_internal, mouse);
 
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(DRAW | UPDATE));
 
-                    self.grab_id = Some(n).filter(|_| {
-                        let grab = w_internal.check(GRAB);
+                self.grab_id = Some(n).filter(|_| {
+                    let grab = w_internal.check(GRAB);
 
-                        internal.set(GRAB, grab);
-                        grab
-                    });
+                    internal.set(GRAB, grab);
+                    grab
+                });
 
-                    if w_internal.check(FOCUS) {
-                        if let Some(id) = self.focus_id {
-                            if id != n {
-                                self.unfocus(internal);
-                            }
+                if w_internal.check(FOCUS) {
+                    if let Some(id) = self.focus_id {
+                        if id != n {
+                            self.unfocus(internal);
+                            self.focus_id = Some(n);
                         }
-
+                    } else {
                         self.focus_id = Some(n);
                         internal.on(FOCUS);
                     }
@@ -312,18 +300,15 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].handle_keys(w_internal, key);
+            internal.on(w_internal.val(DRAW | UPDATE));
 
-            if w_internal.changed() {
-                internal.on(w_internal.val(DRAW | UPDATE));
+            if w_internal.check(GRAB) {
+                self.grab_id = Some(id);
+                internal.on(GRAB);
+            }
 
-                if w_internal.check(GRAB) {
-                    self.grab_id = Some(id);
-                    internal.on(GRAB);
-                }
-
-                if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
-                    self.unfocus(internal);
-                }
+            if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
+                self.unfocus(internal);
             }
         }
     }
@@ -341,19 +326,14 @@ where
                 let widget = &mut self.widgets[id];
 
                 let focus = widget.step_focus(w_internal, back);
-
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW | UPDATE));
-                }
+                internal.on(w_internal.val(DRAW | UPDATE));
 
                 if focus {
                     return true;
                 } else {
                     widget.unfocus(w_internal);
-                    if w_internal.changed() {
-                        internal.on(w_internal.val(DRAW | UPDATE));
-                    }
 
+                    internal.on(w_internal.val(DRAW | UPDATE));
                     w_internal.off(FOCUS);
                 }
             }
@@ -364,9 +344,7 @@ where
                 let focus = w_internal.check(ENABLED | VISIBLE)
                     && self.widgets[id].step_focus(w_internal, back);
 
-                if w_internal.changed() {
-                    internal.on(w_internal.val(DRAW | UPDATE));
-                }
+                internal.on(w_internal.val(DRAW | UPDATE));
 
                 if focus {
                     w_internal.on(FOCUS);
@@ -386,9 +364,7 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].unhover(w_internal);
-            if w_internal.changed() {
-                internal.on(w_internal.val(DRAW | UPDATE));
-            }
+            internal.on(w_internal.val(DRAW | UPDATE));
 
             w_internal.off(HOVER);
             self.hover_id = Option::None;
@@ -401,9 +377,7 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].unfocus(w_internal);
-            if w_internal.changed() {
-                internal.on(w_internal.val(DRAW | UPDATE));
-            }
+            internal.on(w_internal.val(DRAW | UPDATE));
 
             w_internal.off(FOCUS);
             self.focus_id = Option::None;

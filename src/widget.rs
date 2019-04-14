@@ -11,7 +11,6 @@ pub type Boundaries<P, D> = (P, P, D, D);
 // BITFLAGS (Sorry for no use the crate)
 pub type Flags = u16;
 
-const CHANGED: Flags = 0b00000001;
 pub mod flags {
     use crate::widget::Flags;
 
@@ -86,9 +85,9 @@ impl<P, D> WidgetInternal<P, D> {
     /// Set on or off to requested flags
     pub fn set(&mut self, flag: Flags, toggle: bool) {
         if toggle {
-            self.flags |= flag | CHANGED;
+            self.flags |= flag;
         } else {
-            self.flags = self.flags & !flag | CHANGED;
+            self.flags = self.flags & !flag;
         }
     }
 
@@ -106,13 +105,13 @@ impl<P, D> WidgetInternal<P, D> {
     #[inline]
     /// Turn on requested flags
     pub fn on(&mut self, flag: Flags) {
-        self.flags |= flag | CHANGED;
+        self.flags |= flag;
     }
 
     #[inline]
     /// Turn off requested flags
     pub fn off(&mut self, flag: Flags) {
-        self.flags = self.flags & !flag | CHANGED;
+        self.flags = self.flags & !flag;
     }
 
     #[inline]
@@ -125,21 +124,6 @@ impl<P, D> WidgetInternal<P, D> {
     /// Check if the requested flags are enabled
     pub fn check(&self, flag: Flags) -> bool {
         flag & self.flags == flag
-    }
-
-    #[inline]
-    /// Check if the flags are changed
-    pub fn changed(&mut self) -> bool {
-        let ch = self.flags & CHANGED != 0;
-        self.flags &= !CHANGED;
-
-        ch
-    }
-
-    /// Hide the changes of the flags
-    #[inline]
-    pub fn unchange(&mut self) {
-        self.flags &= !CHANGED;
     }
 
     #[inline]
