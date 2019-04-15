@@ -119,27 +119,29 @@ where
     /// This function is lazy, if none widget is found, the DRAW flag
     /// of the container turns off
     fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool {
-        let count: usize;
+        if internal.check(VISIBLE) {
+            self.decorator.before(internal);
 
-        self.decorator.before(internal);
+            let count = self
+                .widgets_i
+                .iter_mut()
+                .zip(self.widgets.iter_mut())
+                .filter(|(w_internal, _)| w_internal.check(DRAW))
+                .fold(0, |_, (w_internal, widget)| {
+                    let draw = widget.draw(w_internal);
+                    if !draw {
+                        w_internal.off(DRAW);
+                    }
 
-        count = self
-            .widgets_i
-            .iter_mut()
-            .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.check(DRAW))
-            .fold(0, |_, (w_internal, widget)| {
-                let draw = widget.draw(w_internal);
-                if !draw {
-                    w_internal.off(DRAW);
-                }
+                    draw as usize
+                });
 
-                draw as usize
-            });
+            self.decorator.after(internal);
 
-        self.decorator.after(internal);
-
-        count > 0
+            count > 0
+        } else {
+            false
+        }
     }
 
     /// Update widgets from the list that have UPDATE flag turned on
@@ -192,6 +194,7 @@ where
                 w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal);
 
+                w_internal.set(DRAW, w_internal.check(VISIBLE));
                 internal.on(w_internal.val(DRAW | UPDATE));
             });
 

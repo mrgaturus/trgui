@@ -38,7 +38,7 @@ where
     /// Update the status of the widget.
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget.
-    fn layout(&mut self, internal: &mut WidgetInternal<P, D>);
+    fn layout(&mut self, _: &mut WidgetInternal<P, D>) {}
     /// Containers search for widgets that are members of the same signal and then 
     /// call this function on found widgets.
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID);
@@ -111,7 +111,7 @@ impl<P, D> WidgetInternal<P, D> {
     #[inline]
     /// Turn off requested flags
     pub fn off(&mut self, flag: Flags) {
-        self.flags = self.flags & !flag;
+        self.flags &= !flag;
     }
 
     #[inline]
