@@ -87,13 +87,20 @@ impl<P, D> WidgetInternal<P, D> {
         if toggle {
             self.flags |= flag;
         } else {
-            self.flags = self.flags & !flag;
+            self.flags &= !flag;
         }
     }
 
+    #[inline]
     /// Replace all flags by others
-    pub fn replace(&mut self, flags: Flags) {
+    pub fn replace_all(&mut self, flags: Flags) {
         self.flags = flags;
+    }
+
+    #[inline]
+    /// Replace flags by turn off a pattern and turn on other flags
+    pub fn replace(&mut self, pattern: Flags, flags: Flags) {
+        self.flags &= !pattern | flags
     }
 
     #[inline]

@@ -13,6 +13,8 @@ use crate::Boxed;
 
 use std::ops::{Add, Sub};
 
+const HANDLERS: Flags = FOCUS | GRAB | HOVER;
+
 type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
 pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
 
@@ -49,7 +51,7 @@ where
     /// Adds a new widget to the list
     pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, signal: Signal) {
         let mut internal = WidgetInternal::new(flags, signal);
-        internal.off(FOCUS | GRAB | HOVER);
+        internal.off(HANDLERS);
         internal.set_min_dimensions(widget.min_dimensions());
 
         self.widgets_i.push(internal);
@@ -68,7 +70,7 @@ where
     ) {
         let mut internal =
             WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, signal);
-        internal.off(FOCUS | GRAB | HOVER);
+        internal.off(HANDLERS);
         internal.set_min_dimensions(widget.min_dimensions());
 
         self.widgets_i.push(internal);
@@ -157,12 +159,12 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.check(UPDATE))
             .fold(0, |_, (w_internal, widget)| {
-                let backup = w_internal.val(FOCUS | GRAB | HOVER);
+                let backup = w_internal.val(HANDLERS);
 
                 widget.update(w_internal);
                 internal.on(w_internal.val(DRAW));
 
-                w_internal.on(backup);
+                w_internal.replace(HANDLERS, backup);
                 w_internal.check(UPDATE) as usize
             });
 
@@ -211,11 +213,11 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.signal().check(signal))
             .for_each(|(w_internal, widget)| {
-                let backup = w_internal.val(FOCUS | GRAB | HOVER);
+                let backup = w_internal.val(HANDLERS);
                 widget.handle_signal(w_internal, signal);
 
                 internal.on(w_internal.val(DRAW | UPDATE));
-                w_internal.on(backup);
+                w_internal.replace(HANDLERS, backup);
             });
 
         if let Some(id) = self.focus_id {
