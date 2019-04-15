@@ -187,6 +187,8 @@ where
             }
         }
 
+        self.decorator.update(internal);
+
         self.widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
@@ -197,8 +199,6 @@ where
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
                 internal.on(w_internal.val(DRAW | UPDATE));
             });
-
-        self.decorator.update(internal);
     }
 
     /// Search widgets that are members of a signal id and call the function of these widgets
@@ -274,7 +274,9 @@ where
                     grab
                 });
 
-                if w_internal.check(FOCUS) {
+                if !internal.check(ENABLED) {
+                    w_internal.off(FOCUS);
+                } else if w_internal.check(FOCUS) {
                     if let Some(id) = self.focus_id {
                         if id != n {
                             self.unfocus(internal);
