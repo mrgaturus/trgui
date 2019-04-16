@@ -99,8 +99,8 @@ impl<P, D> WidgetInternal<P, D> {
 
     #[inline]
     /// Replace flags by turn off a pattern and turn on other flags
-    pub fn replace(&mut self, pattern: Flags, flags: Flags) {
-        self.flags &= !pattern | flags
+    pub fn replace(&mut self, pattern: Flags, val: Flags) {
+        self.flags &= !pattern | pattern & val
     }
 
     #[inline]

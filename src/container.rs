@@ -159,7 +159,7 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.check(UPDATE))
             .fold(0, |_, (w_internal, widget)| {
-                let backup = w_internal.val(HANDLERS);
+                let backup = w_internal.flags();
 
                 widget.update(w_internal);
                 internal.on(w_internal.val(DRAW));
@@ -213,7 +213,7 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.signal().check(signal))
             .for_each(|(w_internal, widget)| {
-                let backup = w_internal.val(HANDLERS);
+                let backup = w_internal.flags();
                 widget.handle_signal(w_internal, signal);
 
                 internal.on(w_internal.val(DRAW | UPDATE));
