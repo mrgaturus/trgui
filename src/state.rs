@@ -67,6 +67,7 @@ where
         self.m_wheel = wheel;
     }
 
+    #[inline]
     /// Check if requested buttons are clicked
     pub fn clicked_buttons(&self, click: u8) -> bool {
         click & self.m_click_btn == click
@@ -90,11 +91,13 @@ where
         (self.m_position.0 - pos.0, self.m_position.1 - pos.1)
     }
 
+    #[inline]
     /// Get the tablet pressure value
     pub fn tablet_pressure(&self) -> f32 {
         self.t_pressure
     }
 
+    #[inline]
     /// Get mouse delta
     pub fn wheel(&self) -> f32 {
         self.m_wheel
@@ -137,6 +140,7 @@ impl KeyState {
         self.k_code = code;
     }
 
+    #[inline]
     /// Check if the keyboard is pressed
     pub fn pressed(&self) -> bool {
         self.k_code.is_some()

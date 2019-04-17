@@ -183,8 +183,7 @@ where
             .layout(&mut self.widgets_i, &internal.dimensions());
 
         if let Some(id) = self.focus_id {
-            let widget_id = &mut self.widgets_i[id];
-            if !widget_id.check(VISIBLE | ENABLED) {
+            if !self.widgets_i[id].check(VISIBLE | ENABLED) {
                 self.unfocus(internal);
             }
         }
