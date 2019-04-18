@@ -1,12 +1,14 @@
 #![allow(dead_code)]
 
 pub mod binding;
-pub mod container;
+mod container;
 pub mod decorator;
 pub mod layout;
 pub mod signal;
 pub mod state;
 pub mod widget;
+
+pub use crate::container::Container;
 
 /// Prepare the widget to be boxed
 pub trait Boxed {

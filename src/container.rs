@@ -16,7 +16,7 @@ use std::ops::{Add, Sub};
 const HANDLERS: Flags = FOCUS | GRAB | HOVER;
 
 type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
-pub type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
+type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
 
 /// Widget List that handle widget trait functions
 pub struct Container<P, D, DE: Decorator<P, D>> {
