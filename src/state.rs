@@ -22,7 +22,7 @@ pub struct MouseState<P> {
 /// Generic Key State
 pub struct KeyState {
     /// Pressed keycode
-    k_code: Option<i32>,
+    k_code: Option<u32>,
     /// Keyboard Modifiers
     k_modifiers: u16,
 }
@@ -136,7 +136,7 @@ impl KeyState {
     }
 
     /// Set a keycode of the key pressed
-    pub fn set_keycode(&mut self, code: Option<i32>) {
+    pub fn set_keycode(&mut self, code: Option<u32>) {
         self.k_code = code;
     }
 
@@ -148,7 +148,7 @@ impl KeyState {
 
     /// Get pressed keycode
     #[inline]
-    pub fn keycode(&self) -> Option<i32> {
+    pub fn keycode(&self) -> Option<u32> {
         self.k_code
     }
 
