@@ -4,7 +4,7 @@ pub mod binding;
 mod container;
 pub mod decorator;
 pub mod layout;
-pub mod signal;
+pub mod group;
 pub mod state;
 pub mod widget;
 

@@ -1,6 +1,6 @@
 //! Structs and Traits for widgets
 
-use crate::signal::{Signal, SignalID};
+use crate::group::{Group, GroupID};
 use crate::state::{KeyState, MouseState};
 use std::ops::Add;
 
@@ -14,6 +14,7 @@ pub type Flags = u16;
 pub mod flags {
     use crate::widget::Flags;
 
+    pub const SIGNAL: Flags = 0b00000001;
     pub const DRAW: Flags = 0b00000010;
     pub const UPDATE: Flags = 0b00000100;
     pub const VISIBLE: Flags = 0b00001000;
@@ -38,10 +39,10 @@ where
     /// Update the status of the widget.
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget.
-    fn layout(&mut self, _: &mut WidgetInternal<P, D>) {}
-    /// Containers search for widgets that are members of the same signal and then 
+    fn layout(&mut self, _: &mut WidgetInternal<P, D>, _: Option<GroupID>) {}
+    /// Containers search for widgets that are members of the same Group and then 
     /// call this function on found widgets.
-    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID);
+    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, group: GroupID);
     /// Handle a mouse state, Containers check if the mouse is on area or is grabbed and then
     /// call this function.
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
@@ -77,7 +78,7 @@ pub struct WidgetInternal<P, D> {
     /// Every Widget Flags
     flags: Flags,
     /// Event ID
-    signal: Signal,
+    group: Group,
 }
 
 impl<P, D> WidgetInternal<P, D> {
@@ -146,20 +147,14 @@ impl<P, D> WidgetInternal<P, D> {
     }
 
     #[inline]
-    /// Get a reference of the signal
-    pub fn signal(&self) -> &Signal {
-        &self.signal
+    /// Get a reference of the Group
+    pub fn group(&self) -> &Group {
+        &self.group
     }
 
-    #[inline]
-    /// Get a mutable reference of the signal
-    pub fn signal_mut(&mut self) -> &mut Signal {
-        &mut self.signal
-    }
-
-    /// Changes the signal
-    pub fn set_signal(&mut self, signal: Signal) {
-        self.signal = signal;
+    /// Changes the Group
+    pub fn set_group(&mut self, group: Group) {
+        self.group = group;
     }
 }
 
@@ -168,24 +163,24 @@ where
     D: PartialOrd + Default,
     P: Add<Output = P> + PartialOrd + From<D> + Default,
 {
-    /// Create a new Internal with Flags and Signal, all boundaries are initialized with 0
-    pub fn new(flags: Flags, signal: Signal) -> Self {
+    /// Create a new Internal with Flags and Group, all boundaries are initialized with 0
+    pub fn new(flags: Flags, group: Group) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
             rel_pos: (Default::default(), Default::default()),
             abs_pos: (Default::default(), Default::default()),
             flags,
-            signal,
+            group,
         }
     }
 
-    /// Create a new Internal with Flags, Signal, Relative Position and Dimensions
+    /// Create a new Internal with Flags, Group, Relative Position and Dimensions
     pub fn new_with(
         rel_pos: Position<P>,
         dim: Dimensions<D>,
         flags: Flags,
-        signal: Signal,
+        group: Group,
     ) -> Self {
         WidgetInternal {
             dim,
@@ -193,7 +188,7 @@ where
             rel_pos,
             abs_pos: (Default::default(), Default::default()),
             flags,
-            signal,
+            group,
         }
     }
 

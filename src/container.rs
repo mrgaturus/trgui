@@ -4,8 +4,8 @@
 //! of a Container cannot be modified after moved to a "parent" Container
 
 use crate::decorator::Decorator;
+use crate::group::{Group, GroupID};
 use crate::layout::Layout;
-use crate::signal::{Signal, SignalID};
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
@@ -49,8 +49,8 @@ where
     }
 
     /// Adds a new widget to the list
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, signal: Signal) {
-        let mut internal = WidgetInternal::new(flags, signal);
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<P, D>>, flags: Flags, group: Group) {
+        let mut internal = WidgetInternal::new(flags, group);
         internal.off(HANDLERS);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -66,10 +66,10 @@ where
         widget: Box<dyn Widget<P, D>>,
         bounds: Boundaries<P, D>,
         flags: Flags,
-        signal: Signal,
+        group: Group,
     ) {
         let mut internal =
-            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, signal);
+            WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, group);
         internal.off(HANDLERS);
         internal.set_min_dimensions(widget.min_dimensions());
 
@@ -178,42 +178,50 @@ where
     }
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
-    fn layout(&mut self, internal: &mut WidgetInternal<P, D>) {
-        self.layout
-            .layout(&mut self.widgets_i, &internal.dimensions());
+    fn layout(&mut self, internal: &mut WidgetInternal<P, D>, group: Option<GroupID>) {
+        if group.is_none()
+            || group
+                .filter(|&id| internal.group().layout_check(id))
+                .is_some()
+        {
+            self.layout
+                .layout(&mut self.widgets_i, &internal.dimensions());
 
-        if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(VISIBLE | ENABLED) {
-                self.unfocus(internal);
+            if let Some(id) = self.focus_id {
+                if !self.widgets_i[id].check(VISIBLE | ENABLED) {
+                    self.unfocus(internal);
+                }
             }
+
+            self.decorator.update(internal);
+
+            self.widgets_i
+                .iter_mut()
+                .zip(self.widgets.iter_mut())
+                .for_each(|(w_internal, widget)| {
+                    w_internal.calc_absolute(internal.absolute_pos());
+                    widget.layout(w_internal, group);
+
+                    w_internal.set(DRAW, w_internal.check(VISIBLE));
+                    internal.on(w_internal.val(DRAW | UPDATE));
+                });
         }
-
-        self.decorator.update(internal);
-
-        self.widgets_i
-            .iter_mut()
-            .zip(self.widgets.iter_mut())
-            .for_each(|(w_internal, widget)| {
-                w_internal.calc_absolute(internal.absolute_pos());
-                widget.layout(w_internal);
-
-                w_internal.set(DRAW, w_internal.check(VISIBLE));
-                internal.on(w_internal.val(DRAW | UPDATE));
-            });
     }
 
-    /// Search widgets that are members of a signal id and call the function of these widgets
+    /// Search widgets that are members of a Group id and call the function of these widgets
     ///
-    /// A Nested Container should be member of the same signal id, otherwise, the function couldn't
+    /// A Nested Container should be member of the same Group id, otherwise, the function couldn't
     /// be called on the widget of the nested Container
-    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, signal: SignalID) {
+    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, group: GroupID) {
         self.widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| w_internal.signal().check(signal))
+            .filter(|(w_internal, _)| {
+                w_internal.check(SIGNAL) && w_internal.group().signal_check(group)
+            })
             .for_each(|(w_internal, widget)| {
                 let backup = w_internal.flags();
-                widget.handle_signal(w_internal, signal);
+                widget.handle_signal(w_internal, group);
 
                 internal.on(w_internal.val(DRAW | UPDATE));
                 w_internal.replace(HANDLERS, backup);
