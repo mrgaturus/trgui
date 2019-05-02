@@ -40,7 +40,7 @@ where
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget.
     fn layout(&mut self, _: &mut WidgetInternal<P, D>, _: Option<GroupID>) {}
-    /// Containers search for widgets that are members of the same Group and then 
+    /// Containers search for widgets that are members of the same Group and then
     /// call this function on found widgets.
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, group: GroupID);
     /// Handle a mouse state, Containers check if the mouse is on area or is grabbed and then
@@ -100,8 +100,8 @@ impl<P, D> WidgetInternal<P, D> {
 
     #[inline]
     /// Replace flags by turn off a pattern and turn on other flags
-    pub fn replace(&mut self, pattern: Flags, val: Flags) {
-        self.flags &= !pattern | pattern & val
+    pub fn replace(&mut self, mask: Flags, values: Flags) {
+        self.flags &= !mask | mask & values
     }
 
     #[inline]
@@ -176,12 +176,7 @@ where
     }
 
     /// Create a new Internal with Flags, Group, Relative Position and Dimensions
-    pub fn new_with(
-        rel_pos: Position<P>,
-        dim: Dimensions<D>,
-        flags: Flags,
-        group: Group,
-    ) -> Self {
+    pub fn new_with(rel_pos: Position<P>, dim: Dimensions<D>, flags: Flags, group: Group) -> Self {
         WidgetInternal {
             dim,
             min_dim: (Default::default(), Default::default()),

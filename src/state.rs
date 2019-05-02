@@ -1,5 +1,5 @@
 //! Generic Mouse and Keyboard States
-//! 
+//!
 //! Use this to consume an Event Poll provided by a Window Manager
 
 use crate::widget::Position;
@@ -84,7 +84,7 @@ where
     pub fn absolute_pos(&self) -> Position<P> {
         self.m_position
     }
-    
+
     /// Calculate and get a relative position of the cursor with an absolute position of a widget.
     #[inline]
     pub fn relative_pos(&self, pos: Position<P>) -> Position<P> {
