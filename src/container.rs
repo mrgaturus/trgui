@@ -64,9 +64,9 @@ where
     pub fn add_widget_b(
         &mut self,
         widget: Box<dyn Widget<P, D>>,
-        bounds: Boundaries<P, D>,
         flags: Flags,
         group: Group,
+        bounds: Boundaries<P, D>,
     ) {
         let mut internal =
             WidgetInternal::new_with((bounds.0, bounds.1), (bounds.2, bounds.3), flags, group);
