@@ -179,7 +179,7 @@ where
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>, group: Option<GroupID>) {
-        if group.is_none() || !internal.group().is_any() {
+        if group.is_none() || !internal.group().is_root() {
             self.layout
                 .layout(&mut self.widgets_i, &internal.dimensions());
 

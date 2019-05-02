@@ -41,7 +41,8 @@ pub fn next_event() -> Option<GroupEvent> {
 
 /// A Group with options to store ID/s
 pub enum Group {
-    Any,
+    Root,
+    AnySignal,
     // Signal types works only for signal handling
     SignalSingle(GroupID),
     SignalSlice(&'static [GroupID]),
@@ -53,31 +54,41 @@ pub enum Group {
     DualSlice(&'static [GroupID]),
 }
 
+use crate::group::Group::*;
+
 impl Group {
     /// Check if the group is member of the requested id
     #[inline]
     pub fn signal_check(&self, id: GroupID) -> bool {
         match *self {
-            Group::Any | Group::LayoutSingle(_) | Group::LayoutSlice(_) => true,
-            Group::SignalSingle(group) | Group::DualSingle(group) => group == id,
-            Group::SignalSlice(groups) | Group::DualSlice(groups) => groups.contains(&id),
+            SignalSingle(group) | DualSingle(group) => group == id,
+            SignalSlice(groups) | DualSlice(groups) => groups.contains(&id),
+            Root | AnySignal | LayoutSingle(_) | LayoutSlice(_) => true,
         }
     }
 
     #[inline]
     pub fn layout_check(&self, id: GroupID) -> bool {
         match *self {
-            Group::Any => true,
-            Group::LayoutSingle(group) | Group::DualSingle(group) => group == id,
-            Group::LayoutSlice(groups) | Group::DualSlice(groups) => groups.contains(&id),
+            Root => true,
+            LayoutSingle(group) | DualSingle(group) => group == id,
+            LayoutSlice(groups) | DualSlice(groups) => groups.contains(&id),
             _ => false,
         }
     }
 
     #[inline]
-    pub fn is_any(&self) -> bool {
+    pub fn is_root(&self) -> bool {
         match *self {
-            Group::Any => true,
+            Root => true,
+            _ => false,
+        }
+    }
+
+    #[inline]
+    pub fn is_signal_any(&self) -> bool {
+        match *self {
+            Root | AnySignal | LayoutSingle(_) | LayoutSlice(_) => true,
             _ => false,
         }
     }
