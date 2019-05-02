@@ -57,19 +57,27 @@ impl Group {
     /// Check if the group is member of the requested id
     #[inline]
     pub fn signal_check(&self, id: GroupID) -> bool {
-        match self {
+        match *self {
             Group::Any | Group::LayoutSingle(_) | Group::LayoutSlice(_) => true,
-            Group::SignalSingle(group) | Group::DualSingle(group) => *group == id,
+            Group::SignalSingle(group) | Group::DualSingle(group) => group == id,
             Group::SignalSlice(groups) | Group::DualSlice(groups) => groups.contains(&id),
         }
     }
 
     #[inline]
     pub fn layout_check(&self, id: GroupID) -> bool {
-        match self {
+        match *self {
             Group::Any => true,
-            Group::LayoutSingle(group) | Group::DualSingle(group) => *group == id,
+            Group::LayoutSingle(group) | Group::DualSingle(group) => group == id,
             Group::LayoutSlice(groups) | Group::DualSlice(groups) => groups.contains(&id),
+            _ => false,
+        }
+    }
+
+    #[inline]
+    pub fn is_any(&self) -> bool {
+        match *self {
+            Group::Any => true,
             _ => false,
         }
     }

@@ -179,11 +179,7 @@ where
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>, group: Option<GroupID>) {
-        if group.is_none()
-            || group
-                .filter(|&id| internal.group().layout_check(id))
-                .is_some()
-        {
+        if group.is_none() || !internal.group().is_any() {
             self.layout
                 .layout(&mut self.widgets_i, &internal.dimensions());
 
@@ -194,18 +190,25 @@ where
             }
 
             self.decorator.update(internal);
-
-            self.widgets_i
-                .iter_mut()
-                .zip(self.widgets.iter_mut())
-                .for_each(|(w_internal, widget)| {
-                    w_internal.calc_absolute(internal.absolute_pos());
-                    widget.layout(w_internal, group);
-
-                    w_internal.set(DRAW, w_internal.check(VISIBLE));
-                    internal.on(w_internal.val(DRAW | UPDATE));
-                });
         }
+
+        self.widgets_i
+            .iter_mut()
+            .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| {
+                if let Some(id) = group {
+                    w_internal.group().layout_check(id)
+                } else {
+                    true
+                }
+            })
+            .for_each(|(w_internal, widget)| {
+                w_internal.calc_absolute(internal.absolute_pos());
+                widget.layout(w_internal, group);
+
+                w_internal.set(DRAW, w_internal.check(VISIBLE));
+                internal.on(w_internal.val(DRAW | UPDATE));
+            });
     }
 
     /// Search widgets that are members of a Group id and call the function of these widgets
