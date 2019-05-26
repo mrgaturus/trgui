@@ -6,10 +6,12 @@ Approach for a GUI Toolkit on Rust. Based on Widget trait (Dynamic Dispatch) and
 * Containers for trait objects that implement Widget trait.
 * Layouts and Decorators for Containers
 * Bindings for share external data to widgets.
-* Signals for communication between widgets based on IDs.
+* Groups for communication between widgets based on IDs.
 
 ## What TRGUI doesn't have?
 * Renderer
 * Window Handling
 * Main Loop
 * Default Widgets
+
+You need implement those by yourself or from other crates.
