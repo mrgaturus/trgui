@@ -14,6 +14,10 @@ use crate::Boxed;
 use std::ops::{Add, Sub};
 
 const HANDLERS: Flags = FOCUS | GRAB | HOVER;
+const REACTIVE: Flags = DRAW | UPDATE | LAYOUT;
+const RELAYOUT: Flags = 0b1000000000;
+
+static mut CONTAINER_RELAYOUT: bool = false;
 
 type WidgetList<P, D> = Vec<Box<dyn Widget<P, D>>>;
 type InternalList<P, D> = Vec<WidgetInternal<P, D>>;
@@ -162,7 +166,7 @@ where
                 let backup = w_internal.flags();
 
                 widget.update(w_internal);
-                internal.on(w_internal.val(DRAW));
+                internal.on(w_internal.val(DRAW | LAYOUT));
 
                 w_internal.replace(HANDLERS, backup);
                 w_internal.check(UPDATE) as usize
@@ -174,12 +178,15 @@ where
             }
         }
 
+        internal.set(LAYOUT | RELAYOUT, relayout());
         internal.set(UPDATE, count > 0);
     }
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
-    fn layout(&mut self, internal: &mut WidgetInternal<P, D>, group: Option<GroupID>) {
-        if group.is_none() || !internal.group().is_root() {
+    fn layout(&mut self, internal: &mut WidgetInternal<P, D>, all: bool) {
+        let do_layout = all || internal.check(RELAYOUT);
+
+        if do_layout {
             self.layout
                 .layout(&mut self.widgets_i, &internal.dimensions());
 
@@ -188,29 +195,25 @@ where
                     self.unfocus(internal);
                 }
             }
-
-            self.decorator.update(internal);
         }
+
+        self.decorator.update(internal);
 
         self.widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| {
+                do_layout || w_internal.check(LAYOUT)
+            })
             .for_each(|(w_internal, widget)| {
                 w_internal.calc_absolute(internal.absolute_pos());
-
-                let check = if let Some(id) = group {
-                    w_internal.group().check_id(id)
-                } else {
-                    true
-                };
-
-                if check {
-                    widget.layout(w_internal, group);
-                }
+                widget.layout(w_internal, all);
 
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(REACTIVE));
             });
+
+        internal.off(LAYOUT | RELAYOUT);
     }
 
     /// Search widgets that are members of a Group id and call the function of these widgets
@@ -228,7 +231,7 @@ where
                 let backup = w_internal.flags();
                 widget.handle_signal(w_internal, group);
 
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(REACTIVE));
                 w_internal.replace(HANDLERS, backup);
             });
 
@@ -237,6 +240,8 @@ where
                 self.unfocus(internal);
             }
         }
+
+        internal.set(LAYOUT | RELAYOUT, relayout());
     }
 
     /// Search the widget that the mouse is pointing and call the function of the widget
@@ -279,7 +284,7 @@ where
 
                 self.widgets[n].handle_mouse(w_internal, mouse);
 
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(REACTIVE));
 
                 self.grab_id = Some(n).filter(|_| {
                     let grab = w_internal.check(GRAB);
@@ -311,6 +316,8 @@ where
         } else {
             internal.set(GRAB, mouse.clicked());
         }
+
+        internal.set(LAYOUT | RELAYOUT, relayout());
     }
 
     /// Call the function of the focused widget
@@ -319,7 +326,7 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].handle_keys(w_internal, key);
-            internal.on(w_internal.val(DRAW | UPDATE));
+            internal.on(w_internal.val(REACTIVE));
 
             if w_internal.check(GRAB) {
                 self.grab_id = Some(id);
@@ -329,6 +336,8 @@ where
             if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
                 self.unfocus(internal);
             }
+
+            internal.set(LAYOUT | RELAYOUT, relayout());
         }
     }
 
@@ -345,14 +354,14 @@ where
                 let widget = &mut self.widgets[id];
 
                 let focus = widget.step_focus(w_internal, back);
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(REACTIVE));
 
                 if focus {
                     return true;
                 } else {
                     widget.unfocus(w_internal);
 
-                    internal.on(w_internal.val(DRAW | UPDATE));
+                    internal.on(w_internal.val(REACTIVE));
                     w_internal.off(FOCUS);
                 }
             }
@@ -363,7 +372,7 @@ where
                 let focus = w_internal.check(ENABLED | VISIBLE)
                     && self.widgets[id].step_focus(w_internal, back);
 
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.val(REACTIVE));
 
                 if focus {
                     w_internal.on(FOCUS);
@@ -374,6 +383,7 @@ where
             }
         }
 
+        internal.set(LAYOUT | RELAYOUT, relayout());
         false
     }
 
@@ -383,10 +393,12 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].unhover(w_internal);
-            internal.on(w_internal.val(DRAW | UPDATE));
+            internal.on(w_internal.val(REACTIVE));
 
             w_internal.off(HOVER);
             self.hover_id = Option::None;
+
+            internal.set(LAYOUT | RELAYOUT, relayout());
         }
     }
 
@@ -396,10 +408,12 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].unfocus(w_internal);
-            internal.on(w_internal.val(DRAW | UPDATE));
+            internal.on(w_internal.val(REACTIVE));
 
             w_internal.off(FOCUS);
             self.focus_id = Option::None;
+
+            internal.set(LAYOUT | RELAYOUT, relayout());
         }
     }
 }
@@ -418,5 +432,22 @@ where
         self.widgets_i.shrink_to_fit();
 
         Box::new(self)
+    }
+}
+
+// Bad way for set relayout for parent but it's ok
+#[inline]
+pub fn relayout_parent() {
+    unsafe {
+        CONTAINER_RELAYOUT = true;
+    }
+}
+
+fn relayout() -> bool {
+    unsafe {
+        let relayout = CONTAINER_RELAYOUT;
+        CONTAINER_RELAYOUT = false;
+
+        relayout
     }
 }

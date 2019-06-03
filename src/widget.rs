@@ -14,14 +14,15 @@ pub type Flags = u16;
 pub mod flags {
     use crate::widget::Flags;
 
-    pub const SIGNAL: Flags = 0b00000001;
-    pub const DRAW: Flags = 0b00000010;
-    pub const UPDATE: Flags = 0b00000100;
-    pub const VISIBLE: Flags = 0b00001000;
-    pub const ENABLED: Flags = 0b00010000;
-    pub const HOVER: Flags = 0b00100000;
-    pub const GRAB: Flags = 0b01000000;
-    pub const FOCUS: Flags = 0b10000000;
+    pub const SIGNAL: Flags =   0b00000001;
+    pub const DRAW: Flags =     0b00000010;
+    pub const UPDATE: Flags =   0b00000100;
+    pub const VISIBLE: Flags =  0b00001000;
+    pub const ENABLED: Flags =  0b00010000;
+    pub const HOVER: Flags =    0b00100000;
+    pub const GRAB: Flags =     0b01000000;
+    pub const FOCUS: Flags =    0b10000000;
+    pub const LAYOUT: Flags =   0b100000000;
 }
 
 use flags::{DRAW, FOCUS, VISIBLE};
@@ -39,7 +40,7 @@ where
     /// Update the status of the widget.
     fn update(&mut self, internal: &mut WidgetInternal<P, D>);
     /// Update the layout of the widget.
-    fn layout(&mut self, _: &mut WidgetInternal<P, D>, _: Option<GroupID>) {}
+    fn layout(&mut self, _: &mut WidgetInternal<P, D>, _: bool) {}
     /// Containers search for widgets that are members of the same Group and then
     /// call this function on found widgets.
     fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, group: GroupID);
