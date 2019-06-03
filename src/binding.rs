@@ -1,4 +1,5 @@
 //! Single-Threaded pointers that avoids the borrow checker for use on widgets
+use crate::group::{GroupEvent::Signal, GroupID, push_event};
 
 /// Shares external data to (not limited to) widgets. 
 /// 
@@ -9,8 +10,15 @@ pub struct BindProxy<T> {
 
 impl<T> BindProxy<T> {
     /// Returns a non-mutable safe reference
+    #[inline]
     pub fn read(&self) -> &T {
         unsafe { &*self.ptr }
+    }
+
+    #[inline]
+    /// Returns a raw pointer of the data
+    pub unsafe fn write_ptr(&self) -> *mut T {
+        self.ptr as *mut T
     }
 
     /// Write on the data using a non-capturing closure with a mutable 
@@ -24,9 +32,17 @@ impl<T> BindProxy<T> {
         }
     }
 
-    /// Returns a raw pointer of the data
-    pub unsafe fn write_ptr(&self) -> *mut T {
-        self.ptr as *mut T
+    /// Write on the data using a non-capturing closure with a mutable 
+    /// reference as an argument and push a signal to the event queue
+    pub fn write_push<F>(&self, func: F, id: GroupID)
+    where
+        F: Fn(&mut T),
+    {
+        unsafe {
+            func(&mut *(self.ptr as *mut T));
+        }
+
+        push_event(Signal(id));
     }
 }
 
@@ -36,6 +52,7 @@ pub trait Binding<T> {
     fn proxy(&self) -> BindProxy<T>;
 }
 
+/// Implementation of BindProxy for References
 impl<T> Binding<T> for &'_ T {
     fn proxy(&self) -> BindProxy<T> {
         BindProxy {
@@ -44,6 +61,7 @@ impl<T> Binding<T> for &'_ T {
     }
 }
 
+/// Implementation of BindProxy for Box<T>
 impl<T> Binding<T> for Box<T> {
     fn proxy(&self) -> BindProxy<T> {
         BindProxy {

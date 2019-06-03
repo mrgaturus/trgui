@@ -1,18 +1,19 @@
-//! Communication between widgets
+//! Communication between widgets, it's based on Groups by IDs (an usize) that
+//! WidgetInternal will store and dispatched by a Container 
 use std::collections::VecDeque;
 
 pub type GroupID = usize;
 
 #[derive(PartialEq)]
 pub enum GroupEvent {
-    Signal(GroupID),
-    Layout(GroupID),
     LayoutAll,
+    Layout(GroupID),
+    Signal(GroupID),
 }
 
 static mut EVENT_QUEUE: Option<VecDeque<GroupEvent>> = None;
 
-/// Push a Group ID to the Group Queue
+/// Push a GroupEvent to the Event Queue
 pub fn push_event(event: GroupEvent) {
     unsafe {
         if let Some(ref mut queue) = EVENT_QUEUE {
@@ -28,7 +29,7 @@ pub fn push_event(event: GroupEvent) {
     }
 }
 
-/// Pop a Signal from the Signal queue
+/// Pop a GroupEvent from the Event Queue
 pub fn next_event() -> Option<GroupEvent> {
     unsafe {
         if let Some(ref mut queue) = EVENT_QUEUE {
@@ -42,54 +43,23 @@ pub fn next_event() -> Option<GroupEvent> {
 /// A Group with options to store ID/s
 pub enum Group {
     Root,
-    AnySignal,
-    // Signal types works only for signal handling
-    SignalSingle(GroupID),
-    SignalSlice(&'static [GroupID]),
-    // Layout types work as Any for signal handling
-    LayoutSingle(GroupID),
-    LayoutSlice(&'static [GroupID]),
-    // Dual types work for both (signals and layouts)
-    DualSingle(GroupID),
-    DualSlice(&'static [GroupID]),
+    Single(GroupID),
+    Slice(&'static [GroupID]),
 }
 
-use crate::group::Group::*;
-
 impl Group {
-    /// Check if the group is member of the requested id
-    #[inline]
-    pub fn signal_check(&self, id: GroupID) -> bool {
-        match *self {
-            SignalSingle(group) | DualSingle(group) => group == id,
-            SignalSlice(groups) | DualSlice(groups) => groups.contains(&id),
-            Root | AnySignal | LayoutSingle(_) | LayoutSlice(_) => true,
-        }
-    }
-
-    #[inline]
-    pub fn layout_check(&self, id: GroupID) -> bool {
-        match *self {
-            Root => true,
-            LayoutSingle(group) | DualSingle(group) => group == id,
-            LayoutSlice(groups) | DualSlice(groups) => groups.contains(&id),
-            _ => false,
-        }
-    }
-
-    #[inline]
     pub fn is_root(&self) -> bool {
         match *self {
-            Root => true,
+            Group::Root => true,
             _ => false,
         }
     }
 
-    #[inline]
-    pub fn is_signal_any(&self) -> bool {
+    pub fn check_id(&self, id: GroupID) -> bool {
         match *self {
-            Root | AnySignal | LayoutSingle(_) | LayoutSlice(_) => true,
-            _ => false,
+            Group::Single(single_id) => single_id == id,
+            Group::Slice(slice_id) => slice_id.contains(&id),
+            Group::Root => true,
         }
     }
 }

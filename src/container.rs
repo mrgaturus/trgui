@@ -197,7 +197,7 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| {
                 if let Some(id) = group {
-                    w_internal.group().layout_check(id)
+                    w_internal.group().check_id(id)
                 } else {
                     true
                 }
@@ -220,7 +220,7 @@ where
             .iter_mut()
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| {
-                w_internal.check(SIGNAL) && w_internal.group().signal_check(group)
+                w_internal.check(SIGNAL) && w_internal.group().check_id(group)
             })
             .for_each(|(w_internal, widget)| {
                 let backup = w_internal.flags();

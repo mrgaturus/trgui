@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
+pub mod group;
 pub mod binding;
+
 mod container;
 pub mod decorator;
 pub mod layout;
-pub mod group;
 pub mod state;
 pub mod widget;
 
