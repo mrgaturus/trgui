@@ -199,19 +199,29 @@ where
 
         self.decorator.update(internal);
 
-        self.widgets_i
+        let w_iter = self.widgets_i
             .iter_mut()
-            .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| {
-                do_layout || w_internal.check(LAYOUT)
-            })
-            .for_each(|(w_internal, widget)| {
+            .zip(self.widgets.iter_mut());
+
+        if do_layout {
+            w_iter.for_each(|(w_internal, widget)| {
                 w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal, all);
 
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
                 internal.on(w_internal.val(REACTIVE));
             });
+        } else {
+            w_iter.filter(|(w_internal, _)| {
+                w_internal.check(LAYOUT)
+            })
+            .for_each(|(w_internal, widget)| {
+                widget.layout(w_internal, all);
+
+                w_internal.set(DRAW, w_internal.check(VISIBLE));
+                internal.on(w_internal.val(REACTIVE));
+            });
+        }
 
         internal.off(LAYOUT | RELAYOUT);
     }
