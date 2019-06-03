@@ -198,20 +198,18 @@ where
             .for_each(|(w_internal, widget)| {
                 w_internal.calc_absolute(internal.absolute_pos());
 
-                let check = {
-                    if let Some(id) = group {
-                        w_internal.group().check_id(id)
-                    } else {
-                        true
-                    }
+                let check = if let Some(id) = group {
+                    w_internal.group().check_id(id)
+                } else {
+                    true
                 };
 
                 if check {
                     widget.layout(w_internal, group);
-
-                    w_internal.set(DRAW, w_internal.check(VISIBLE));
-                    internal.on(w_internal.val(DRAW | UPDATE));
                 }
+
+                w_internal.set(DRAW, w_internal.check(VISIBLE));
+                internal.on(w_internal.val(DRAW | UPDATE));
             });
     }
 
