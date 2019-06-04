@@ -293,20 +293,24 @@ where
                     grab
                 });
 
-                if !internal.check(ENABLED) {
-                    w_internal.off(FOCUS);
-                } else if w_internal.check(FOCUS) {
-                    if let Some(id) = self.focus_id {
-                        if id != n {
+                let focus_check = w_internal.check(FOCUS | ENABLED | VISIBLE);
+
+                if let Some(id) = self.focus_id {
+                    if id != n {
+                        if focus_check {
                             self.unfocus(internal);
                             self.focus_id = Some(n);
-                        } else if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
-                            self.unfocus(internal);
+                        } else {
+                            w_internal.off(FOCUS);
                         }
-                    } else {
-                        self.focus_id = Some(n);
-                        internal.on(FOCUS);
+                    } else if !focus_check {
+                        self.unfocus(internal);
                     }
+                } else if focus_check {
+                    self.focus_id = Some(n);
+                    internal.on(FOCUS);
+                } else {
+                    w_internal.off(FOCUS);
                 }
             } else {
                 self.unhover(internal);
