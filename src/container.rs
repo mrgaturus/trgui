@@ -300,6 +300,8 @@ where
                         if id != n {
                             self.unfocus(internal);
                             self.focus_id = Some(n);
+                        } else if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
+                            self.unfocus(internal);
                         }
                     } else {
                         self.focus_id = Some(n);
