@@ -15,7 +15,7 @@ use std::ops::{Add, Sub};
 
 const HANDLERS: Flags = FOCUS | GRAB | HOVER;
 const REACTIVE: Flags = DRAW | UPDATE | LAYOUT;
-const RELAYOUT: Flags = 0b1000000000;
+const PARTIAL: Flags = 0b1000000000;
 
 static mut CONTAINER_RELAYOUT: bool = false;
 
@@ -178,52 +178,42 @@ where
             }
         }
 
-        internal.set(LAYOUT | RELAYOUT, relayout());
+        internal.on(relayout_check());
         internal.set(UPDATE, count > 0);
     }
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
     fn layout(&mut self, internal: &mut WidgetInternal<P, D>, all: bool) {
-        let do_layout = all || internal.check(RELAYOUT);
+        let do_layout = all || internal.check(PARTIAL);
 
         if do_layout {
             self.layout
                 .layout(&mut self.widgets_i, &internal.dimensions());
-
-            if let Some(id) = self.focus_id {
-                if !self.widgets_i[id].check(VISIBLE | ENABLED) {
-                    self.unfocus(internal);
-                }
-            }
         }
 
         self.decorator.update(internal);
 
-        let w_iter = self.widgets_i
+        self.widgets_i
             .iter_mut()
-            .zip(self.widgets.iter_mut());
-
-        if do_layout {
-            w_iter.for_each(|(w_internal, widget)| {
+            .zip(self.widgets.iter_mut())
+            .filter(|(w_internal, _)| do_layout || w_internal.check(LAYOUT))
+            .for_each(|(w_internal, widget)| {
                 w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal, all);
 
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
-                internal.on(w_internal.val(REACTIVE));
-            });
-        } else {
-            w_iter.filter(|(w_internal, _)| {
-                w_internal.check(LAYOUT)
-            })
-            .for_each(|(w_internal, widget)| {
-                widget.layout(w_internal, all);
+                w_internal.off(LAYOUT);
 
-                w_internal.set(DRAW, w_internal.check(VISIBLE));
-                internal.on(w_internal.val(REACTIVE));
+                internal.on(w_internal.val(DRAW | UPDATE));
             });
+
+        if let Some(id) = self.focus_id {
+            if !self.widgets_i[id].check(VISIBLE | ENABLED) {
+                self.unfocus(internal);
+            }
         }
 
-        internal.off(LAYOUT | RELAYOUT);
+        internal.off(LAYOUT | PARTIAL);
     }
 
     /// Search widgets that are members of a Group id and call the function of these widgets
@@ -251,7 +241,7 @@ where
             }
         }
 
-        internal.set(LAYOUT | RELAYOUT, relayout());
+        internal.on(relayout_check());
     }
 
     /// Search the widget that the mouse is pointing and call the function of the widget
@@ -327,7 +317,7 @@ where
             internal.set(GRAB, mouse.clicked());
         }
 
-        internal.set(LAYOUT | RELAYOUT, relayout());
+        internal.on(relayout_check());
     }
 
     /// Call the function of the focused widget
@@ -347,7 +337,7 @@ where
                 self.unfocus(internal);
             }
 
-            internal.set(LAYOUT | RELAYOUT, relayout());
+            internal.on(relayout_check());
         }
     }
 
@@ -391,9 +381,10 @@ where
                     self.step(back);
                 }
             }
+
+            internal.on(relayout_check());
         }
 
-        internal.set(LAYOUT | RELAYOUT, relayout());
         false
     }
 
@@ -408,7 +399,7 @@ where
             w_internal.off(HOVER);
             self.hover_id = Option::None;
 
-            internal.set(LAYOUT | RELAYOUT, relayout());
+            internal.on(relayout_check());
         }
     }
 
@@ -423,7 +414,7 @@ where
             w_internal.off(FOCUS);
             self.focus_id = Option::None;
 
-            internal.set(LAYOUT | RELAYOUT, relayout());
+            internal.on(relayout_check());
         }
     }
 }
@@ -447,15 +438,20 @@ where
 
 // Bad way for set relayout for parent but it's ok
 #[inline]
-pub fn relayout_parent() {
+pub fn relayout_container() {
     unsafe {
         CONTAINER_RELAYOUT = true;
     }
 }
 
-fn relayout() -> bool {
+fn relayout_check() -> Flags {
     unsafe {
-        let relayout = CONTAINER_RELAYOUT;
+        let relayout = if CONTAINER_RELAYOUT {
+            LAYOUT | PARTIAL
+        } else {
+            0
+        };
+
         CONTAINER_RELAYOUT = false;
 
         relayout
