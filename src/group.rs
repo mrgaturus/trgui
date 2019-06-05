@@ -42,7 +42,7 @@ pub fn next_event() -> Option<GroupEvent> {
 
 /// A Group with options to store ID/s
 pub enum Group {
-    Root,
+    Any,
     Single(GroupID),
     Slice(&'static [GroupID]),
 }
@@ -50,7 +50,7 @@ pub enum Group {
 impl Group {
     pub fn is_root(&self) -> bool {
         match *self {
-            Group::Root => true,
+            Group::Any => true,
             _ => false,
         }
     }
@@ -59,7 +59,7 @@ impl Group {
         match *self {
             Group::Single(single_id) => single_id == id,
             Group::Slice(slice_id) => slice_id.contains(&id),
-            Group::Root => true,
+            Group::Any => true,
         }
     }
 }
