@@ -6,8 +6,8 @@ pub type GroupID = usize;
 
 #[derive(PartialEq)]
 pub enum GroupEvent {
-    LayoutAll,
-    Layout(GroupID),
+    Layout,
+    PartialLayout,
     Signal(GroupID),
 }
 
