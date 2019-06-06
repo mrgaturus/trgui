@@ -15,6 +15,8 @@ use std::ops::{Add, Sub};
 
 const HANDLERS: Flags = FOCUS | GRAB | HOVER;
 const REACTIVE: Flags = DRAW | UPDATE | LAYOUT;
+const FOCUSABLE: Flags = FOCUS | ENABLED | VISIBLE;
+
 const PARTIAL: Flags = 0b1000000000;
 
 static mut CONTAINER_RELAYOUT: bool = false;
@@ -173,7 +175,7 @@ where
             });
 
         if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
+            if !self.widgets_i[id].check(FOCUSABLE) {
                 self.unfocus(internal);
             }
         }
@@ -208,7 +210,7 @@ where
             });
 
         if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(VISIBLE | ENABLED) {
+            if !self.widgets_i[id].check(FOCUSABLE) {
                 self.unfocus(internal);
             }
         }
@@ -236,7 +238,7 @@ where
             });
 
         if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(ENABLED | VISIBLE) {
+            if !self.widgets_i[id].check(FOCUSABLE) {
                 self.unfocus(internal);
             }
         }
@@ -293,7 +295,7 @@ where
                     grab
                 });
 
-                let focus_check = w_internal.check(FOCUS | ENABLED | VISIBLE);
+                let focus_check = w_internal.check(FOCUSABLE);
 
                 if let Some(id) = self.focus_id {
                     if id != n {
@@ -339,7 +341,7 @@ where
                 internal.on(GRAB);
             }
 
-            if !w_internal.check(FOCUS | ENABLED | VISIBLE) {
+            if !w_internal.check(FOCUSABLE) {
                 self.unfocus(internal);
             }
 
