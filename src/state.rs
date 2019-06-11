@@ -6,11 +6,11 @@ use crate::widget::Position;
 use std::ops::Sub;
 
 /// Generic Mouse State
-pub struct MouseState<P> {
+pub struct MouseState<T> {
     /// Buttons clicked as bitflags
     m_click_btn: u8,
     /// Mouse coordinates
-    m_position: Position<P>,
+    m_position: Position<T>,
     /// Mouse wheel
     m_wheel: f32,
     /// Tablet Pressure Level
@@ -27,9 +27,9 @@ pub struct KeyState {
     k_modifiers: u16,
 }
 
-impl<P> MouseState<P>
+impl<T> MouseState<T>
 where
-    P: Sized + Copy + Clone + Default + Sub<Output = P>,
+    T: Sized + Copy + Clone + Default + Sub<Output = T>,
 {
     /// Creates a new Mouse State with default values (all on zeroes)
     pub fn new() -> Self {
@@ -53,7 +53,7 @@ where
     }
 
     /// Set cursor position
-    pub fn set_mouse(&mut self, position: Position<P>) {
+    pub fn set_mouse(&mut self, position: Position<T>) {
         self.m_position = position;
     }
 
@@ -81,13 +81,13 @@ where
 
     /// Get Absolute position of the cursor
     #[inline]
-    pub fn absolute_pos(&self) -> Position<P> {
+    pub fn absolute_pos(&self) -> Position<T> {
         self.m_position
     }
 
     /// Calculate and get a relative position of the cursor with an absolute position of a widget.
     #[inline]
-    pub fn relative_pos(&self, pos: Position<P>) -> Position<P> {
+    pub fn relative_pos(&self, pos: Position<T>) -> Position<T> {
         (self.m_position.0 - pos.0, self.m_position.1 - pos.1)
     }
 
