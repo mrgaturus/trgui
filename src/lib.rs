@@ -8,8 +8,7 @@ pub mod widget;
 mod container;
 pub use crate::container::Container;
 
-use crate::widget::{Dimensions, Widget, WidgetInternal};
-use std::ops::Add;
+use crate::widget::{Dimensions, WidgetInternal};
 
 /// Decorator Trait for a Container
 pub trait Decorator<P, D> {
@@ -57,23 +56,3 @@ pub mod empty {
         fn update(&mut self, _: &WidgetInternal<P, D>) {}
     }
 }
-
-/// Prepare the widget to be boxed
-pub trait Boxed<T: ?Sized> {
-    #[inline]
-    fn boxed(self) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        Box::new(self)
-    }
-}
-
-impl<P, D, W: Widget<P, D>> Boxed<Widget<P, D>> for W
-where
-    D: Sized + Copy + Clone + PartialOrd + Default,
-    P: Sized + Copy + Clone + Add<Output = P> + PartialOrd + From<D> + Default,
-{
-}
-
-impl<P, D, L: Layout<P, D>> Boxed<Layout<P, D>> for L {}
