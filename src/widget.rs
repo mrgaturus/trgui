@@ -31,28 +31,28 @@ use flags::{DRAW, FOCUS, VISIBLE};
 pub trait Widget<P: Sized + Copy + Clone, D: Sized + Copy + Clone>
 where
     D: PartialOrd + Default,
-    P: Sized + Add<Output = P> + PartialOrd + From<D> + Default,
+    P: Add<Output = P> + PartialOrd + From<D> + Default,
 {
     /// Get minimal Dimensions of the Widget.
-    fn min_dimensions(&self) -> Dimensions<D>;
+    fn min_dimensions(&self) -> Dimensions<D> { (Default::default(), Default::default()) }
     /// Draw the widget.
-    fn draw(&mut self, internal: &WidgetInternal<P, D>) -> bool;
+    fn draw(&mut self, _: &WidgetInternal<P, D>) -> bool { false }
     /// Update the status of the widget.
-    fn update(&mut self, internal: &mut WidgetInternal<P, D>);
+    fn update(&mut self, _: &mut WidgetInternal<P, D>) {}
     /// Update the layout of the widget.
     fn layout(&mut self, _: &mut WidgetInternal<P, D>, _: bool) {}
     /// Containers search for widgets that are members of the same Group and then
     /// call this function on found widgets.
-    fn handle_signal(&mut self, internal: &mut WidgetInternal<P, D>, group: GroupID);
+    fn handle_signal(&mut self, _: &mut WidgetInternal<P, D>, _: GroupID) {}
     /// Handle a mouse state, Containers check if the mouse is on area or is grabbed and then
     /// call this function.
-    fn handle_mouse(&mut self, internal: &mut WidgetInternal<P, D>, mouse: &MouseState<P>);
+    fn handle_mouse(&mut self, _: &mut WidgetInternal<P, D>, _: &MouseState<P>) {}
     /// Handle a keyboard state, it only be called if the widget is focused by a Container.
-    fn handle_keys(&mut self, internal: &mut WidgetInternal<P, D>, key: &KeyState);
+    fn handle_keys(&mut self, _: &mut WidgetInternal<P, D>, _: &KeyState) {}
     /// Containers call this function for check if the widget should be focused or not by stepping.
     fn step_focus(&mut self, internal: &mut WidgetInternal<P, D>, _: bool) -> bool {
         let check = !internal.check(FOCUS);
-        internal.set(DRAW, check && internal.check(VISIBLE));
+        internal.on(DRAW);
 
         check
     }

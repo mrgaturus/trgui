@@ -3,13 +3,11 @@
 //! A Container implements Widget trait, so Containers can be nested. The widget list
 //! of a Container cannot be modified after moved to a "parent" Container
 
-use crate::decorator::Decorator;
 use crate::group::{Group, GroupID};
-use crate::layout::Layout;
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
-use crate::Boxed;
+use crate::{Decorator, Layout};
 
 use std::ops::{Add, Sub};
 
@@ -52,6 +50,14 @@ where
             decorator,
             layout,
         }
+    }
+
+    /// Applies shrink_to_fit to widget list
+    pub fn pack(mut self) -> Self {
+        self.widgets_i.shrink_to_fit();
+        self.widgets.shrink_to_fit();
+
+        self
     }
 
     /// Adds a new widget to the list
@@ -424,23 +430,6 @@ where
 
             internal.on(relayout_check());
         }
-    }
-}
-
-impl<P, D, DE: Decorator<P, D>> Boxed for Container<P, D, DE>
-where
-    D: Sized + PartialOrd + From<u8>,
-    P: Sized + Add<Output = P> + PartialOrd + From<D> + From<u8>,
-{
-    #[inline]
-    fn boxed(mut self) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        self.widgets.shrink_to_fit();
-        self.widgets_i.shrink_to_fit();
-
-        Box::new(self)
     }
 }
 
