@@ -210,7 +210,7 @@ where
                 widget.layout(w_internal, all);
 
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
-                w_internal.off(LAYOUT);
+                w_internal.off(LAYOUT | PREV_LAYOUT);
 
                 internal.on(w_internal.val(DRAW | UPDATE));
             });
