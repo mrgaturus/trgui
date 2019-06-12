@@ -61,11 +61,11 @@ where
         check
     }
     /// When you unhover the widget
-    fn unhover(&mut self, internal: &mut WidgetInternal<T>) {
+    fn hover_out(&mut self, internal: &mut WidgetInternal<T>) {
         internal.on(DRAW);
     }
     /// When you unfocus the widget
-    fn unfocus(&mut self, internal: &mut WidgetInternal<T>) {
+    fn focus_out(&mut self, internal: &mut WidgetInternal<T>) {
         internal.on(DRAW);
     }
 }

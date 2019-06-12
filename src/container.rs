@@ -179,7 +179,7 @@ where
 
         if let Some(id) = self.focus_id {
             if !self.widgets_i[id].check(FOCUSABLE) {
-                self.unfocus(internal);
+                self.focus_out(internal);
             }
         }
 
@@ -218,7 +218,7 @@ where
 
         if let Some(id) = self.focus_id {
             if !self.widgets_i[id].check(FOCUSABLE) {
-                self.unfocus(internal);
+                self.focus_out(internal);
             }
         }
 
@@ -248,7 +248,7 @@ where
 
         if let Some(id) = self.focus_id {
             if !self.widgets_i[id].check(FOCUSABLE) {
-                self.unfocus(internal);
+                self.focus_out(internal);
             }
         }
 
@@ -289,7 +289,7 @@ where
                 } else {
                     if let Some(id) = self.hover_id {
                         if id != n {
-                            self.unhover(internal);
+                            self.hover_out(internal);
                         }
                     }
                     self.hover_id = Some(n);
@@ -313,13 +313,13 @@ where
                 if let Some(id) = self.focus_id {
                     if id != n {
                         if focus_check {
-                            self.unfocus(internal);
+                            self.focus_out(internal);
                             self.focus_id = Some(n);
                         } else {
                             w_internal.off(FOCUS);
                         }
                     } else if !focus_check {
-                        self.unfocus(internal);
+                        self.focus_out(internal);
                     }
                 } else if focus_check {
                     self.focus_id = Some(n);
@@ -328,7 +328,7 @@ where
                     w_internal.off(FOCUS);
                 }
             } else {
-                self.unhover(internal);
+                self.hover_out(internal);
 
                 if self.grab_id.is_none() {
                     internal.set(GRAB, mouse.clicked());
@@ -359,7 +359,7 @@ where
             }
 
             if !w_internal.check(FOCUSABLE) {
-                self.unfocus(internal);
+                self.focus_out(internal);
             }
 
             if internal.check(PREV_LAYOUT) {
@@ -389,7 +389,7 @@ where
                     if focus {
                         return true;
                     } else {
-                        widget.unfocus(w_internal);
+                        widget.focus_out(w_internal);
 
                         internal.on(w_internal.val(REACTIVE));
                         w_internal.off(FOCUS | PREV_LAYOUT);
@@ -426,11 +426,11 @@ where
     }
 
     /// Clear the hover index and call the function of the widget
-    fn unhover(&mut self, internal: &mut WidgetInternal<T>) {
+    fn hover_out(&mut self, internal: &mut WidgetInternal<T>) {
         if let Some(id) = self.hover_id {
             let w_internal = &mut self.widgets_i[id];
 
-            self.widgets[id].unhover(w_internal);
+            self.widgets[id].hover_out(w_internal);
             internal.on(w_internal.val(REACTIVE));
 
             w_internal.off(HOVER | PREV_LAYOUT);
@@ -444,11 +444,11 @@ where
     }
 
     /// Clear the focus index and call the function of the widget
-    fn unfocus(&mut self, internal: &mut WidgetInternal<T>) {
+    fn focus_out(&mut self, internal: &mut WidgetInternal<T>) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
 
-            self.widgets[id].unfocus(w_internal);
+            self.widgets[id].focus_out(w_internal);
             internal.on(w_internal.val(REACTIVE));
 
             w_internal.off(FOCUS | PREV_LAYOUT);
