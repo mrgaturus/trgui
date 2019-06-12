@@ -89,11 +89,11 @@ pub struct WidgetInternal<T> {
 impl<T> WidgetInternal<T> {
     // FLAGS
     /// Set on or off to requested flags
-    pub fn set(&mut self, flag: Flags, toggle: bool) {
+    pub fn set(&mut self, mask: Flags, toggle: bool) {
         if toggle {
-            self.flags |= flag;
+            self.flags |= mask;
         } else {
-            self.flags &= !flag;
+            self.flags &= !mask;
         }
     }
 
@@ -105,26 +105,26 @@ impl<T> WidgetInternal<T> {
 
     #[inline]
     /// Replace flags by turn off a pattern and turn on other flags
-    pub fn replace(&mut self, mask: Flags, values: Flags) {
-        self.flags &= !mask | mask & values;
+    pub fn replace(&mut self, mask: Flags, flags: Flags) {
+        self.flags &= !mask | mask & flags;
     }
 
     #[inline]
     /// Toggle requested flags
-    pub fn toggle(&mut self, flag: Flags) {
-        self.flags ^= flag;
+    pub fn toggle(&mut self, mask: Flags) {
+        self.flags ^= mask;
     }
 
     #[inline]
     /// Turn on requested flags
-    pub fn on(&mut self, flag: Flags) {
-        self.flags |= flag;
+    pub fn on(&mut self, mask: Flags) {
+        self.flags |= mask;
     }
 
     #[inline]
     /// Turn off requested flags
-    pub fn off(&mut self, flag: Flags) {
-        self.flags &= !flag;
+    pub fn off(&mut self, mask: Flags) {
+        self.flags &= !mask;
     }
 
     #[inline]
@@ -144,20 +144,20 @@ impl<T> WidgetInternal<T> {
 
     #[inline]
     /// Check if at least one of the requested flags is enabled
-    pub fn check_any(&self, flag: Flags) -> bool {
-        flag & self.flags > 0
+    pub fn check_any(&self, mask: Flags) -> bool {
+        mask & self.flags > 0
     }
 
     #[inline]
     /// Check if the requested flags are enabled
-    pub fn check(&self, flag: Flags) -> bool {
-        flag & self.flags == flag
+    pub fn check(&self, mask: Flags) -> bool {
+        mask & self.flags == mask
     }
 
     #[inline]
     /// Get numeric value of the requested flags
-    pub fn val(&self, flag: Flags) -> Flags {
-        flag & self.flags
+    pub fn val(&self, mask: Flags) -> Flags {
+        mask & self.flags
     }
 
     #[inline]
