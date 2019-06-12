@@ -12,12 +12,10 @@ use crate::{Decorator, Layout};
 use std::ops::{Add, Sub};
 
 const HANDLERS: Flags = FOCUS | GRAB | HOVER;
-const REACTIVE: Flags = DRAW | UPDATE | LAYOUT;
+const REACTIVE: Flags = DRAW | UPDATE | LAYOUT | PREV_LAYOUT;
 const FOCUSABLE: Flags = FOCUS | ENABLED | VISIBLE;
 
-const PARTIAL: Flags = 0b1000000000;
-
-static mut CONTAINER_RELAYOUT: bool = false;
+const PARTIAL: Flags = 0b000001_0000000000;
 
 type WidgetList<T> = Vec<Box<dyn Widget<T>>>;
 type InternalList<T> = Vec<WidgetInternal<T>>;
@@ -172,7 +170,8 @@ where
                 let backup = w_internal.flags();
 
                 widget.update(w_internal);
-                internal.on(w_internal.val(DRAW | LAYOUT));
+                internal.on(w_internal.val(DRAW | LAYOUT | PREV_LAYOUT));
+                w_internal.off(PREV_LAYOUT);
 
                 w_internal.replace(HANDLERS, backup);
                 w_internal.check(UPDATE) as usize
@@ -184,7 +183,11 @@ where
             }
         }
 
-        internal.on(relayout_check());
+        if internal.check(PREV_LAYOUT) {
+            internal.on(PARTIAL);
+            internal.off(PREV_LAYOUT);
+        }
+
         internal.set(UPDATE, count > 0);
     }
 
@@ -238,6 +241,8 @@ where
                 widget.handle_signal(w_internal, group);
 
                 internal.on(w_internal.val(REACTIVE));
+                w_internal.off(PREV_LAYOUT);
+
                 w_internal.replace(HANDLERS, backup);
             });
 
@@ -247,7 +252,10 @@ where
             }
         }
 
-        internal.on(relayout_check());
+        if internal.check(PREV_LAYOUT) {
+            internal.on(PARTIAL);
+            internal.off(PREV_LAYOUT);
+        }
     }
 
     /// Search the widget that the mouse is pointing and call the function of the widget
@@ -291,6 +299,7 @@ where
                 self.widgets[n].handle_mouse(w_internal, mouse);
 
                 internal.on(w_internal.val(REACTIVE));
+                w_internal.off(PREV_LAYOUT);
 
                 self.grab_id = Some(n).filter(|_| {
                     let grab = w_internal.check(GRAB);
@@ -329,7 +338,10 @@ where
             internal.set(GRAB, mouse.clicked());
         }
 
-        internal.on(relayout_check());
+        if internal.check(PREV_LAYOUT) {
+            internal.on(PARTIAL);
+            internal.off(PREV_LAYOUT);
+        }
     }
 
     /// Call the function of the focused widget
@@ -339,6 +351,7 @@ where
 
             self.widgets[id].handle_keys(w_internal, key);
             internal.on(w_internal.val(REACTIVE));
+            w_internal.off(PREV_LAYOUT);
 
             if w_internal.check(GRAB) {
                 self.grab_id = Some(id);
@@ -349,7 +362,10 @@ where
                 self.unfocus(internal);
             }
 
-            internal.on(relayout_check());
+            if internal.check(PREV_LAYOUT) {
+                internal.on(PARTIAL);
+                internal.off(PREV_LAYOUT);
+            }
         }
     }
 
@@ -360,44 +376,53 @@ where
 
     /// Step the focus id to the next widget that returns true on the function
     fn step_focus(&mut self, internal: &mut WidgetInternal<T>, back: bool) -> bool {
-        if !self.widgets.is_empty() {
-            if let Some(id) = self.focus_id {
-                let w_internal = &mut self.widgets_i[id];
-                let widget = &mut self.widgets[id];
+        let step_check = {
+            if !self.widgets.is_empty() {
+                if let Some(id) = self.focus_id {
+                    let w_internal = &mut self.widgets_i[id];
+                    let widget = &mut self.widgets[id];
 
-                let focus = widget.step_focus(w_internal, back);
-                internal.on(w_internal.val(REACTIVE));
+                    let focus = widget.step_focus(w_internal, back);
+                    internal.on(w_internal.val(REACTIVE));
+                    w_internal.off(PREV_LAYOUT);
 
-                if focus {
-                    return true;
-                } else {
-                    widget.unfocus(w_internal);
+                    if focus {
+                        return true;
+                    } else {
+                        widget.unfocus(w_internal);
+
+                        internal.on(w_internal.val(REACTIVE));
+                        w_internal.off(FOCUS | PREV_LAYOUT);
+                    }
+                }
+                self.step(back);
+
+                while let Some(id) = self.focus_id {
+                    let w_internal = &mut self.widgets_i[id];
+                    let focus = w_internal.check(ENABLED | VISIBLE)
+                        && self.widgets[id].step_focus(w_internal, back);
 
                     internal.on(w_internal.val(REACTIVE));
-                    w_internal.off(FOCUS);
-                }
-            }
-            self.step(back);
+                    w_internal.off(PREV_LAYOUT);
 
-            while let Some(id) = self.focus_id {
-                let w_internal = &mut self.widgets_i[id];
-                let focus = w_internal.check(ENABLED | VISIBLE)
-                    && self.widgets[id].step_focus(w_internal, back);
-
-                internal.on(w_internal.val(REACTIVE));
-
-                if focus {
-                    w_internal.on(FOCUS);
-                    return focus;
-                } else {
-                    self.step(back);
+                    if focus {
+                        w_internal.on(FOCUS);
+                        return focus;
+                    } else {
+                        self.step(back);
+                    }
                 }
             }
 
-            internal.on(relayout_check());
+            false
+        };
+
+        if internal.check(PREV_LAYOUT) {
+            internal.on(PARTIAL);
+            internal.off(PREV_LAYOUT);
         }
 
-        false
+        step_check
     }
 
     /// Clear the hover index and call the function of the widget
@@ -408,10 +433,13 @@ where
             self.widgets[id].unhover(w_internal);
             internal.on(w_internal.val(REACTIVE));
 
-            w_internal.off(HOVER);
+            w_internal.off(HOVER | PREV_LAYOUT);
             self.hover_id = Option::None;
 
-            internal.on(relayout_check());
+            if internal.check(PREV_LAYOUT) {
+                internal.on(PARTIAL);
+                internal.off(PREV_LAYOUT);
+            }
         }
     }
 
@@ -423,32 +451,13 @@ where
             self.widgets[id].unfocus(w_internal);
             internal.on(w_internal.val(REACTIVE));
 
-            w_internal.off(FOCUS);
+            w_internal.off(FOCUS | PREV_LAYOUT);
             self.focus_id = Option::None;
 
-            internal.on(relayout_check());
+            if internal.check(PREV_LAYOUT) {
+                internal.on(PARTIAL);
+                internal.off(PREV_LAYOUT);
+            }
         }
-    }
-}
-
-// Bad way for set relayout for parent but it's ok
-#[inline]
-pub fn relayout_container() {
-    unsafe {
-        CONTAINER_RELAYOUT = true;
-    }
-}
-
-fn relayout_check() -> Flags {
-    unsafe {
-        let relayout = if CONTAINER_RELAYOUT {
-            LAYOUT | PARTIAL
-        } else {
-            0
-        };
-
-        CONTAINER_RELAYOUT = false;
-
-        relayout
     }
 }

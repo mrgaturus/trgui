@@ -22,7 +22,8 @@ pub mod flags {
     pub const HOVER: Flags = 0b00100000;
     pub const GRAB: Flags = 0b01000000;
     pub const FOCUS: Flags = 0b10000000;
-    pub const LAYOUT: Flags = 0b100000000;
+    pub const LAYOUT: Flags = 0b00000001_00000000;
+    pub const PREV_LAYOUT: Flags = 0b00000010_00000000;
 }
 
 use flags::{DRAW, FOCUS, VISIBLE};
