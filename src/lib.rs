@@ -36,10 +36,7 @@ pub mod empty {
     /// Layout with empty implementation
     pub struct EmptyLayout;
 
-    impl<T> Layout<T> for EmptyLayout
-    where
-        T: Default,
-    {
+    impl<T: Default> Layout<T> for EmptyLayout {
         fn layout(&self, _: &mut [WidgetInternal<T>], _: &Dimensions<T>) {}
 
         fn minimum_size(&self, _: &[WidgetInternal<T>]) -> Dimensions<T> {
