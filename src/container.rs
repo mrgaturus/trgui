@@ -170,8 +170,7 @@ where
                 let backup = w_internal.flags();
 
                 widget.update(w_internal);
-                internal.on(w_internal.val(DRAW | LAYOUT | PREV_LAYOUT));
-                w_internal.off(PREV_LAYOUT);
+                internal.on(w_internal.drain(DRAW | LAYOUT | PREV_LAYOUT, PREV_LAYOUT));
 
                 w_internal.replace(HANDLERS, backup);
                 w_internal.check(UPDATE) as usize
@@ -210,9 +209,7 @@ where
                 widget.layout(w_internal, all);
 
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
-                w_internal.off(LAYOUT | PREV_LAYOUT);
-
-                internal.on(w_internal.val(DRAW | UPDATE));
+                internal.on(w_internal.drain(DRAW | UPDATE, LAYOUT | PREV_LAYOUT));
             });
 
         if let Some(id) = self.focus_id {
@@ -237,10 +234,9 @@ where
             })
             .for_each(|(w_internal, widget)| {
                 let backup = w_internal.flags();
-                widget.handle_signal(w_internal, group);
 
-                internal.on(w_internal.val(REACTIVE));
-                w_internal.off(PREV_LAYOUT);
+                widget.handle_signal(w_internal, group);
+                internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
                 w_internal.replace(HANDLERS, backup);
             });
@@ -295,9 +291,7 @@ where
                 }
 
                 self.widgets[n].handle_mouse(w_internal, mouse);
-
-                internal.on(w_internal.val(REACTIVE));
-                w_internal.off(PREV_LAYOUT);
+                internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
                 self.grab_id = Some(n).filter(|_| {
                     let grab = w_internal.check(GRAB);
@@ -347,8 +341,7 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].handle_keys(w_internal, key);
-            internal.on(w_internal.val(REACTIVE));
-            w_internal.off(PREV_LAYOUT);
+            internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
             if w_internal.check(GRAB) {
                 self.grab_id = Some(id);
@@ -379,8 +372,7 @@ where
                     let widget = &mut self.widgets[id];
 
                     let focus = widget.step_focus(w_internal, back);
-                    internal.on(w_internal.val(REACTIVE));
-                    w_internal.off(PREV_LAYOUT);
+                    internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
                     if focus {
                         return true;
@@ -398,8 +390,7 @@ where
                     let focus = w_internal.check(ENABLED | VISIBLE)
                         && self.widgets[id].step_focus(w_internal, back);
 
-                    internal.on(w_internal.val(REACTIVE));
-                    w_internal.off(PREV_LAYOUT);
+                    internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
                     if focus {
                         w_internal.on(FOCUS);
@@ -426,9 +417,8 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].hover_out(w_internal);
-            internal.on(w_internal.val(REACTIVE));
+            internal.on(w_internal.drain(REACTIVE, HOVER | PREV_LAYOUT));
 
-            w_internal.off(HOVER | PREV_LAYOUT);
             self.hover_id = Option::None;
 
             if internal.check(PREV_LAYOUT) {
@@ -443,9 +433,8 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].focus_out(w_internal);
-            internal.on(w_internal.val(REACTIVE));
+            internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
 
-            w_internal.off(FOCUS | PREV_LAYOUT);
             self.focus_id = Option::None;
 
             if internal.check(PREV_LAYOUT) {

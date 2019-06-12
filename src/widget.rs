@@ -133,6 +133,15 @@ impl<T> WidgetInternal<T> {
         self.flags = self.flags & !off_mask | on_mask;
     }
 
+    /// Get numeric value of the requested flags and then off with other mask
+    #[inline]
+    pub fn drain(&mut self, mut get_mask: Flags, off_mask: Flags) -> Flags {
+        get_mask = get_mask & self.flags;
+        self.flags &= !off_mask;
+
+        get_mask
+    }
+
     #[inline]
     /// Check if at least one of the requested flags is enabled
     pub fn check_any(&self, flag: Flags) -> bool {
