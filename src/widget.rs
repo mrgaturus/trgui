@@ -106,7 +106,7 @@ impl<T> WidgetInternal<T> {
     #[inline]
     /// Replace flags by turn off a pattern and turn on other flags
     pub fn replace(&mut self, mask: Flags, values: Flags) {
-        self.flags &= !mask | mask & values
+        self.flags &= !mask | mask & values;
     }
 
     #[inline]
@@ -125,6 +125,12 @@ impl<T> WidgetInternal<T> {
     /// Turn off requested flags
     pub fn off(&mut self, flag: Flags) {
         self.flags &= !flag;
+    }
+
+    #[inline]
+    /// Turn off flags and then turn on other flags
+    pub fn off_on(&mut self, off_mask: Flags, on_mask: Flags) {
+        self.flags = self.flags & !off_mask | on_mask;
     }
 
     #[inline]
