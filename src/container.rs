@@ -183,7 +183,7 @@ where
         }
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, PARTIAL);
+            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
         }
 
         internal.set(UPDATE, count > 0);
@@ -248,7 +248,7 @@ where
         }
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, PARTIAL);
+            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
         }
     }
 
@@ -331,7 +331,7 @@ where
         }
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, PARTIAL);
+            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
         }
     }
 
@@ -353,7 +353,7 @@ where
             }
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, PARTIAL);
+                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
             }
         }
     }
@@ -405,7 +405,7 @@ where
         };
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, PARTIAL);
+            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
         }
 
         step_check
@@ -422,7 +422,7 @@ where
             self.hover_id = Option::None;
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, PARTIAL);
+                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
             }
         }
     }
@@ -438,7 +438,7 @@ where
             self.focus_id = Option::None;
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, PARTIAL);
+                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
             }
         }
     }
