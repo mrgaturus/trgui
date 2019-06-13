@@ -320,11 +320,11 @@ where
                     w_internal.off(FOCUS);
                 }
             } else {
-                self.hover_out(internal);
-
-                if self.grab_id.is_none() {
-                    internal.set(GRAB, mouse.clicked());
+                if self.hover_id.is_some() {
+                    self.hover_out(internal);
                 }
+
+                internal.set(GRAB, mouse.clicked());
             }
         } else {
             internal.set(GRAB, mouse.clicked());
