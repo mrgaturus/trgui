@@ -11,11 +11,14 @@ use crate::{Decorator, Layout};
 
 use std::ops::{Add, Sub};
 
-const HANDLERS: Flags = FOCUS | GRAB | HOVER;
-const REACTIVE: Flags = DRAW | UPDATE | LAYOUT | PREV_LAYOUT;
-const FOCUSABLE: Flags = FOCUS | ENABLED | VISIBLE;
+const HANDLERS: Flags = 0b11100000; // FOCUS | GRAB | HOVER
+const REACTIVE: Flags = 0b11_00000110; // DRAW | UPDATE | LAYOUT | PREV_LAYOUT
+const FOCUSABLE: Flags = 0b10011000; // FOCUS | ENABLED | VISIBLE
 
-const PARTIAL: Flags = 0b000001_0000000000;
+const DRAIN_FOCUS: Flags = 0b10_10000000; // FOCUS | PREV_LAYOUT
+const PARTIAL_TURN: Flags = 0b101_00000000;// PARTIAL_TURN
+
+const PARTIAL: Flags = 0b1_0000000000;
 
 type WidgetList<T> = Vec<Box<dyn Widget<T>>>;
 type InternalList<T> = Vec<WidgetInternal<T>>;
@@ -124,7 +127,7 @@ where
 
             if !w_internal.check(FOCUSABLE) {
                 self.widgets[id].focus_out(w_internal);
-                internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+                internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
 
                 self.focus_id = None;
             }
@@ -182,8 +185,9 @@ where
             .fold(0, |_, (w_internal, widget)| {
                 let backup = w_internal.flags();
 
+                // DRAW | LAYOUT | PREV_LAYOUT
                 widget.update(w_internal);
-                internal.on(w_internal.drain(DRAW | LAYOUT | PREV_LAYOUT, PREV_LAYOUT));
+                internal.on(w_internal.drain(0b11_00000010, PREV_LAYOUT));
 
                 w_internal.replace(HANDLERS, backup);
                 w_internal.check(UPDATE) as usize
@@ -192,7 +196,7 @@ where
         self.focus_check(internal);
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+            internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
         }
 
         internal.set(UPDATE, count > 0);
@@ -217,13 +221,14 @@ where
                 w_internal.calc_absolute(internal.absolute_pos());
                 widget.layout(w_internal, all);
 
+                // DRAW | UPDATE & LAYOUT | PREV_LAYOUT
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
-                internal.on(w_internal.drain(DRAW | UPDATE, LAYOUT | PREV_LAYOUT));
+                internal.on(w_internal.drain(0b00000110, 0b11_00000000));
             });
 
         self.focus_check(internal);
 
-        internal.off(LAYOUT | PARTIAL);
+        internal.off(PARTIAL_TURN);
     }
 
     /// Search widgets that are members of a Group id and call the function of these widgets
@@ -249,7 +254,7 @@ where
         self.focus_check(internal);
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+            internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
         }
     }
 
@@ -305,7 +310,7 @@ where
 
                 if focus_check & FOCUS == FOCUS && focus_check > FOCUS {
                     self.widgets[n].focus_out(w_internal);
-                    internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+                    internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
                 }
 
                 if let Some(id) = self.focus_id {
@@ -314,7 +319,7 @@ where
                             let w_internal = &mut self.widgets_i[id];
 
                             self.widgets[id].focus_out(w_internal);
-                            internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+                            internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
 
                             self.focus_id = Some(n);
                         }
@@ -334,7 +339,7 @@ where
         }
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+            internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
         }
     }
 
@@ -356,7 +361,7 @@ where
             }
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+                internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
             }
         }
     }
@@ -382,15 +387,14 @@ where
                     } else {
                         widget.focus_out(w_internal);
 
-                        internal.on(w_internal.val(REACTIVE));
-                        w_internal.off(FOCUS | PREV_LAYOUT);
+                        internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
                     }
                 }
                 self.step(back);
 
                 while let Some(id) = self.focus_id {
                     let w_internal = &mut self.widgets_i[id];
-                    let focus = w_internal.check(ENABLED | VISIBLE)
+                    let focus = w_internal.check(0b00011000) // ENABLED | VISIBLE
                         && self.widgets[id].step_focus(w_internal, back);
 
                     internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
@@ -408,7 +412,7 @@ where
         };
 
         if internal.check(PREV_LAYOUT) {
-            internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+            internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
         }
 
         step_check
@@ -420,12 +424,12 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].hover_out(w_internal);
-            internal.on(w_internal.drain(REACTIVE, HOVER | PREV_LAYOUT));
+            internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
 
             self.hover_id = Option::None;
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+                internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
             }
         }
     }
@@ -436,12 +440,12 @@ where
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].focus_out(w_internal);
-            internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+            internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
 
             self.focus_id = None;
 
             if internal.check(PREV_LAYOUT) {
-                internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
+                internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
             }
         }
     }
