@@ -117,6 +117,19 @@ where
             }
         }
     }
+
+    fn focus_check(&mut self, internal: &mut WidgetInternal<T>) {
+        if let Some(id) = self.focus_id {
+            let w_internal = &mut self.widgets_i[id];
+
+            if !w_internal.check(FOCUSABLE) {
+                self.widgets[id].focus_out(w_internal);
+                internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+
+                self.focus_id = None;
+            }
+        }
+    }
 }
 
 impl<T: Sized + Copy + Clone, DE> Widget<T> for Container<T, DE>
@@ -176,11 +189,7 @@ where
                 w_internal.check(UPDATE) as usize
             });
 
-        if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(FOCUSABLE) {
-                self.focus_out(internal);
-            }
-        }
+        self.focus_check(internal);
 
         if internal.check(PREV_LAYOUT) {
             internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
@@ -212,11 +221,7 @@ where
                 internal.on(w_internal.drain(DRAW | UPDATE, LAYOUT | PREV_LAYOUT));
             });
 
-        if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(FOCUSABLE) {
-                self.focus_out(internal);
-            }
-        }
+        self.focus_check(internal);
 
         internal.off(LAYOUT | PARTIAL);
     }
@@ -241,11 +246,7 @@ where
                 w_internal.replace(HANDLERS, backup);
             });
 
-        if let Some(id) = self.focus_id {
-            if !self.widgets_i[id].check(FOCUSABLE) {
-                self.focus_out(internal);
-            }
-        }
+        self.focus_check(internal);
 
         if internal.check(PREV_LAYOUT) {
             internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
@@ -300,30 +301,32 @@ where
                     grab
                 });
 
-                let focus_check = w_internal.check(FOCUSABLE);
+                let focus_check = w_internal.flags() & FOCUSABLE ^ 0b00011000;
+
+                if focus_check & FOCUS == FOCUS && focus_check > FOCUS {
+                    self.widgets[n].handle_mouse(w_internal, mouse);
+                    internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+                }
 
                 if let Some(id) = self.focus_id {
                     if id != n {
-                        if focus_check {
-                            self.focus_out(internal);
+                        if focus_check == FOCUS {
+                            let w_internal = &mut self.widgets_i[id];
+
+                            self.widgets[id].focus_out(w_internal);
+                            internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
+
                             self.focus_id = Some(n);
-                        } else {
-                            w_internal.off(FOCUS);
                         }
-                    } else if !focus_check {
-                        self.focus_out(internal);
+                    } else if focus_check != FOCUS {
+                        self.focus_id = None
                     }
-                } else if focus_check {
+                } else if focus_check == FOCUS {
                     self.focus_id = Some(n);
                     internal.on(FOCUS);
-                } else {
-                    w_internal.off(FOCUS);
                 }
             } else {
-                if self.hover_id.is_some() {
-                    self.hover_out(internal);
-                }
-
+                self.hover_out(internal);
                 internal.set(GRAB, mouse.clicked());
             }
         } else {
@@ -435,7 +438,7 @@ where
             self.widgets[id].focus_out(w_internal);
             internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
 
-            self.focus_id = Option::None;
+            self.focus_id = None;
 
             if internal.check(PREV_LAYOUT) {
                 internal.off_on(PREV_LAYOUT, LAYOUT | PARTIAL);
