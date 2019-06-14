@@ -304,7 +304,7 @@ where
                 let focus_check = w_internal.flags() & FOCUSABLE ^ 0b00011000;
 
                 if focus_check & FOCUS == FOCUS && focus_check > FOCUS {
-                    self.widgets[n].handle_mouse(w_internal, mouse);
+                    self.widgets[n].focus_out(w_internal);
                     internal.on(w_internal.drain(REACTIVE, FOCUS | PREV_LAYOUT));
                 }
 
