@@ -16,7 +16,7 @@ const REACTIVE: Flags = 0b11_00000110; // DRAW | UPDATE | LAYOUT | PREV_LAYOUT
 const FOCUSABLE: Flags = 0b10011000; // FOCUS | ENABLED | VISIBLE
 
 const DRAIN_FOCUS: Flags = 0b10_10000000; // FOCUS | PREV_LAYOUT
-const PARTIAL_TURN: Flags = 0b101_00000000;// PARTIAL_TURN
+const PARTIAL_TURN: Flags = 0b101_00000000; // PARTIAL_TURN
 
 const PARTIAL: Flags = 0b1_0000000000;
 
@@ -306,8 +306,10 @@ where
                     grab
                 });
 
+                // ENABLED | VISIBLE
                 let focus_check = w_internal.flags() & FOCUSABLE ^ 0b00011000;
 
+                // Check if FOCUS is turned on and if ENABLED or VISIBLE is turned off
                 if focus_check & FOCUS == FOCUS && focus_check > FOCUS {
                     self.widgets[n].focus_out(w_internal);
                     internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
@@ -316,10 +318,10 @@ where
                 if let Some(id) = self.focus_id {
                     if id != n {
                         if focus_check == FOCUS {
-                            let w_internal = &mut self.widgets_i[id];
+                            let o_internal = &mut self.widgets_i[id];
 
-                            self.widgets[id].focus_out(w_internal);
-                            internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
+                            self.widgets[id].focus_out(o_internal);
+                            internal.on(o_internal.drain(REACTIVE, DRAIN_FOCUS));
 
                             self.focus_id = Some(n);
                         }
@@ -347,8 +349,9 @@ where
     fn handle_keys(&mut self, internal: &mut WidgetInternal<T>, key: &KeyState) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
+            let widget = &mut self.widgets[id];
 
-            self.widgets[id].handle_keys(w_internal, key);
+            widget.handle_keys(w_internal, key);
             internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
             if w_internal.check(GRAB) {
@@ -357,7 +360,10 @@ where
             }
 
             if !w_internal.check(FOCUSABLE) {
-                self.focus_out(internal);
+                widget.focus_out(w_internal);
+                internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
+
+                self.focus_id = None;
             }
 
             if internal.check(PREV_LAYOUT) {
@@ -386,7 +392,6 @@ where
                         return true;
                     } else {
                         widget.focus_out(w_internal);
-
                         internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
                     }
                 }
