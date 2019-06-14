@@ -209,9 +209,9 @@ where
         if do_layout {
             self.layout
                 .layout(&mut self.widgets_i, &internal.dimensions());
-        }
 
-        self.decorator.update(internal);
+            self.decorator.update(internal);
+        }
 
         self.widgets_i
             .iter_mut()
