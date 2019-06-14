@@ -289,7 +289,11 @@ where
                 } else {
                     if let Some(id) = self.hover_id {
                         if id != n {
-                            self.hover_out(internal);
+                            let o_internal = &mut self.widgets_i[id];
+
+                            // HOVER | PREV_LAYOUT
+                            self.widgets[id].hover_out(o_internal);
+                            internal.on(o_internal.drain(REACTIVE, 0b10_00100000));
                         }
                     }
                     self.hover_id = Some(n);
@@ -361,7 +365,7 @@ where
 
             if !w_internal.check(FOCUSABLE) {
                 widget.focus_out(w_internal);
-                internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
+                internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
 
                 self.focus_id = None;
             }
@@ -370,11 +374,6 @@ where
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
             }
         }
-    }
-
-    /// Get minimum dimensions provided by the Layout
-    fn min_dimensions(&self) -> Dimensions<T> {
-        self.layout.minimum_size(&self.widgets_i)
     }
 
     /// Step the focus id to the next widget that returns true on the function
@@ -453,5 +452,10 @@ where
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
             }
         }
+    }
+
+    /// Get minimum dimensions provided by the Layout
+    fn min_dimensions(&self) -> Dimensions<T> {
+        self.layout.minimum_size(&self.widgets_i)
     }
 }
