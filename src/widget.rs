@@ -33,10 +33,6 @@ pub trait Widget<T: Sized + Copy + Clone>
 where
     T: Add<Output = T> + PartialOrd + Default,
 {
-    /// Get minimal Dimensions of the Widget.
-    fn min_dimensions(&self) -> Dimensions<T> {
-        (Default::default(), Default::default())
-    }
     /// Draw the widget.
     fn draw(&mut self, _: &WidgetInternal<T>) -> bool {
         false
@@ -67,6 +63,10 @@ where
     /// When you unfocus the widget
     fn focus_out(&mut self, internal: &mut WidgetInternal<T>) {
         internal.on(DRAW);
+    }
+    /// Get minimal Dimensions of the Widget.
+    fn min_dimensions(&self) -> Dimensions<T> {
+        (Default::default(), Default::default())
     }
 }
 
@@ -311,7 +311,7 @@ where
     /// Check if a point/cursor is on widget area. It checks using absolute position
     #[inline]
     pub fn on_area(&self, cursor: Position<T>) -> bool {
-        self.check(VISIBLE)
+        self.flags & VISIBLE == VISIBLE
             && cursor.0 >= self.abs_pos.0
             && cursor.0 <= self.abs_pos.0 + self.dim.0
             && cursor.1 >= self.abs_pos.1
