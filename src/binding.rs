@@ -1,8 +1,8 @@
 //! Single-Threaded pointers that avoids the borrow checker for use on widgets
-use crate::group::{GroupEvent::Signal, GroupID, push_event};
+use crate::group::{push_event, GroupEvent::Signal, GroupID};
 
-/// Shares external data to (not limited to) widgets. 
-/// 
+/// Shares external data to (not limited to) widgets.
+///
 /// A BindProxy is a Single-Threaded Pointer without borrow checker for the widgets.
 pub struct BindProxy<T> {
     ptr: *const T,
@@ -21,7 +21,7 @@ impl<T> BindProxy<T> {
         self.ptr as *mut T
     }
 
-    /// Write on the data using a non-capturing closure with a mutable 
+    /// Write on the data using a non-capturing closure with a mutable
     /// reference as an argument
     pub fn write<F>(&self, func: F)
     where
@@ -32,7 +32,7 @@ impl<T> BindProxy<T> {
         }
     }
 
-    /// Write on the data using a non-capturing closure with a mutable 
+    /// Write on the data using a non-capturing closure with a mutable
     /// reference as an argument and push a signal to the event queue
     pub fn write_push<F>(&self, func: F, id: GroupID)
     where

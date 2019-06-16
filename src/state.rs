@@ -131,7 +131,7 @@ impl KeyState {
     pub fn check_modifiers(&self, mods: u16) -> bool {
         match *self {
             KeyState::Pressed(_, s_mods) | KeyState::Released(_, s_mods) => mods & s_mods == mods,
-            KeyState::None => false
+            KeyState::None => false,
         }
     }
 }
