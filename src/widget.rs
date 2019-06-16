@@ -2,7 +2,7 @@
 
 use crate::group::{Group, GroupID};
 use crate::state::{KeyState, MouseState};
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 pub type Position<T> = (T, T);
 pub type Dimensions<T> = (T, T);
@@ -31,7 +31,7 @@ use flags::{DRAW, FOCUS, VISIBLE};
 /// Main Widget Trait
 pub trait Widget<T: Sized + Copy + Clone>
 where
-    T: Add<Output = T> + PartialOrd + Default,
+    T: Add<Output = T> + Sub<Output = T> + PartialOrd + Default,
 {
     /// Draw the widget.
     fn draw(&mut self, _: &WidgetInternal<T>) -> bool {
@@ -76,10 +76,10 @@ pub struct WidgetInternal<T> {
     dim: Dimensions<T>,
     /// Minimun dimensions
     min_dim: Dimensions<T>,
-    /// Relative position
-    rel_pos: Position<T>,
+    /// Pivot position
+    p_pos: Position<T>,
     /// Absolute position
-    abs_pos: Position<T>,
+    pos: Position<T>,
     /// Every Widget Flags
     flags: Flags,
     /// Event ID
@@ -180,27 +180,27 @@ impl<T> WidgetInternal<T> {
 
 impl<T: Sized + Copy + Clone> WidgetInternal<T>
 where
-    T: Add<Output = T> + PartialOrd + Default,
+    T: Add<Output = T> + Sub<Output = T> + PartialOrd + Default,
 {
     /// Create a new Internal with Flags and Group, all boundaries are initialized with 0
     pub fn new(flags: Flags, group: Group) -> Self {
         WidgetInternal {
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
-            rel_pos: (Default::default(), Default::default()),
-            abs_pos: (Default::default(), Default::default()),
+            pos: (Default::default(), Default::default()),
+            p_pos: (Default::default(), Default::default()),
             flags,
             group,
         }
     }
 
     /// Create a new Internal with Flags, Group, Relative Position and Dimensions
-    pub fn new_with(rel_pos: Position<T>, dim: Dimensions<T>, flags: Flags, group: Group) -> Self {
+    pub fn new_with(pos: Position<T>, dim: Dimensions<T>, flags: Flags, group: Group) -> Self {
         WidgetInternal {
             dim,
             min_dim: (Default::default(), Default::default()),
-            rel_pos,
-            abs_pos: (Default::default(), Default::default()),
+            pos,
+            p_pos: (Default::default(), Default::default()),
             flags,
             group,
         }
@@ -217,7 +217,7 @@ where
 
     /// Set relative position and dimensions with boundaries tuple
     pub fn set_boundaries(&mut self, bounds: Boundaries<T>) {
-        self.rel_pos = (bounds.0, bounds.1);
+        self.pos = (self.p_pos.0 + bounds.0, self.p_pos.1 + bounds.1);
         self.dim = (bounds.2, bounds.3);
 
         self.check_min();
@@ -225,13 +225,16 @@ where
 
     /// Change position
     pub fn set_position(&mut self, pos: Position<T>) {
-        self.rel_pos.0 = pos.0;
-        self.rel_pos.1 = pos.1;
+        self.pos = (self.p_pos.0 + pos.0, self.p_pos.1 + pos.1);
     }
 
-    /// Sum other relative with self relative
-    pub fn calc_absolute(&mut self, rel_pos: Position<T>) {
-        self.abs_pos = (rel_pos.0 + self.rel_pos.0, rel_pos.1 + self.rel_pos.1);
+    /// Change pivot
+    pub fn set_pivot(&mut self, pivot: Position<T>) {
+        self.pos = (
+            pivot.0 + self.pos.0 - self.p_pos.0,
+            pivot.1 + self.pos.1 - self.p_pos.1,
+        );
+        self.p_pos = pivot;
     }
 
     /// Change dimensions
@@ -250,12 +253,12 @@ where
 
     /// Change x relative coordinate
     pub fn set_x(&mut self, x: T) {
-        self.rel_pos.0 = x;
+        self.pos.0 = self.p_pos.0 + x;
     }
 
     /// Change y relative coordinate
     pub fn set_y(&mut self, y: T) {
-        self.rel_pos.1 = y;
+        self.pos.1 = self.p_pos.1 + y;
     }
 
     /// Change width
@@ -275,25 +278,30 @@ where
     /// Get Boundaries with relative position
     #[inline]
     pub fn boundaries_rel(&self) -> Boundaries<T> {
-        (self.rel_pos.0, self.rel_pos.1, self.dim.0, self.dim.1)
+        (
+            self.pos.0 - self.p_pos.0,
+            self.pos.1 - self.p_pos.1,
+            self.dim.0,
+            self.dim.1,
+        )
     }
 
     #[inline]
     /// Get Boundaries with absolute position
     pub fn boundaries_abs(&self) -> Boundaries<T> {
-        (self.abs_pos.0, self.abs_pos.1, self.dim.0, self.dim.1)
+        (self.pos.0, self.pos.1, self.dim.0, self.dim.1)
     }
 
     #[inline]
     /// Get relative Position
     pub fn relative_pos(&self) -> Position<T> {
-        self.rel_pos
+        (self.pos.0 - self.p_pos.0, self.pos.1 - self.p_pos.1)
     }
 
     /// Get absolute Position
     #[inline]
     pub fn absolute_pos(&self) -> Position<T> {
-        self.abs_pos
+        self.pos
     }
 
     /// Get minimum dimensions, useful for layouts
@@ -312,9 +320,9 @@ where
     #[inline]
     pub fn on_area(&self, cursor: Position<T>) -> bool {
         self.flags & VISIBLE == VISIBLE
-            && cursor.0 >= self.abs_pos.0
-            && cursor.0 <= self.abs_pos.0 + self.dim.0
-            && cursor.1 >= self.abs_pos.1
-            && cursor.1 <= self.abs_pos.1 + self.dim.1
+            && cursor.0 >= self.pos.0
+            && cursor.0 <= self.pos.0 + self.dim.0
+            && cursor.1 >= self.pos.1
+            && cursor.1 <= self.pos.1 + self.dim.1
     }
 }
