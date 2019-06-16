@@ -20,11 +20,10 @@ pub struct MouseState<T> {
 }
 
 /// Generic Key State
-pub struct KeyState {
-    /// Pressed keycode
-    k_code: Option<u32>,
-    /// Keyboard Modifiers
-    k_modifiers: u16,
+pub enum KeyState {
+    None,
+    Pressed(u32, u16),
+    Released(u32, u16),
 }
 
 impl<T> MouseState<T>
@@ -127,50 +126,13 @@ where
 }
 
 impl KeyState {
-    /// Creates a new state with default values
-    pub fn new() -> Self {
-        KeyState {
-            k_code: None,
-            k_modifiers: 0,
+    /// Check if there is pressed modifiers using a bitflags mask
+    #[inline]
+    pub fn check_modifiers(&self, mods: u16) -> bool {
+        //mods & self.k_modifiers == mods
+        match *self {
+            KeyState::Pressed(_, s_mods) | KeyState::Released(_, s_mods) => mods & s_mods == mods,
+            KeyState::None => false
         }
-    }
-
-    /// Set a keycode of the key pressed
-    pub fn set_keycode(&mut self, code: Option<u32>) {
-        self.k_code = code;
-    }
-
-    #[inline]
-    /// Check if the keyboard is pressed
-    pub fn pressed(&self) -> bool {
-        self.k_code.is_some()
-    }
-
-    /// Get pressed keycode
-    #[inline]
-    pub fn keycode(&self) -> Option<u32> {
-        self.k_code
-    }
-
-    // Modifiers
-    /// Replace all modifiers
-    pub fn set_modifiers(&mut self, mods: u16) {
-        self.k_modifiers = mods
-    }
-
-    /// Press modifiers using a bitflag
-    pub fn press_modifiers(&mut self, mods: u16) {
-        self.k_modifiers |= mods;
-    }
-
-    /// Release modifiers using a bitflag
-    pub fn release_modifiers(&mut self, mods: u16) {
-        self.k_modifiers = self.k_modifiers & !mods;
-    }
-
-    /// Get pressed modifiers
-    #[inline]
-    pub fn pressed_modifiers(&self, mods: u16) -> bool {
-        mods & self.k_modifiers == mods
     }
 }
