@@ -203,8 +203,8 @@ where
     }
 
     /// Apply the Layout to the list, calculate the absolute position and update the Decorator
-    fn layout(&mut self, internal: &mut WidgetInternal<T>, all: bool) {
-        let do_layout = all || internal.check(PARTIAL);
+    fn layout(&mut self, internal: &mut WidgetInternal<T>, complete: bool) {
+        let do_layout = complete || internal.check(PARTIAL);
 
         if do_layout {
             self.layout
@@ -219,7 +219,7 @@ where
             .filter(|(w_internal, _)| do_layout || w_internal.check(LAYOUT))
             .for_each(|(w_internal, widget)| {
                 w_internal.set_pivot(internal.absolute_pos());
-                widget.layout(w_internal, all);
+                widget.layout(w_internal, complete);
 
                 // DRAW | UPDATE & LAYOUT | PREV_LAYOUT
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
