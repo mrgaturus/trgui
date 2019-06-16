@@ -68,7 +68,7 @@ where
 
     #[inline]
     /// Check if requested buttons are clicked
-    pub fn clicked_buttons(&self, click: u8) -> bool {
+    pub fn check_buttons(&self, click: u8) -> bool {
         click & self.m_click_btn == click
     }
 
@@ -118,9 +118,9 @@ where
         self.k_modifiers = self.k_modifiers & !mods;
     }
 
-    /// Get pressed modifiers
+    /// Check if there is pressed modifiers using a bitflags mask
     #[inline]
-    pub fn pressed_modifiers(&self, mods: u16) -> bool {
+    pub fn check_modifiers(&self, mods: u16) -> bool {
         mods & self.k_modifiers == mods
     }
 }
@@ -129,7 +129,6 @@ impl KeyState {
     /// Check if there is pressed modifiers using a bitflags mask
     #[inline]
     pub fn check_modifiers(&self, mods: u16) -> bool {
-        //mods & self.k_modifiers == mods
         match *self {
             KeyState::Pressed(_, s_mods) | KeyState::Released(_, s_mods) => mods & s_mods == mods,
             KeyState::None => false
