@@ -456,6 +456,6 @@ where
 
     /// Get minimum dimensions provided by the Layout
     fn min_dimensions(&self) -> Dimensions<T> {
-        self.layout.minimum_size(&self.widgets_i)
+        self.layout.min_dimensions(&self.widgets_i)
     }
 }
