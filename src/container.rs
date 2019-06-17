@@ -4,7 +4,7 @@
 //! of a Container cannot be modified after moved to a "parent" Container
 
 use crate::group::{Group, GroupID};
-use crate::state::{KeyState, MouseState, MouseType};
+use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
 use crate::{Decorator, Layout};
@@ -339,16 +339,14 @@ where
             } else {
                 self.hover_out(internal);
                 
-                if mouse.m_type.pressed() {
+                if mouse.m_count > 0 {
                     internal.on(GRAB);
                 }
             }
         } else {
-            match mouse.m_type {
-                MouseType::Pressed(_) => internal.on(GRAB),
-                MouseType::Released(_) => internal.off(GRAB),
-                _ => {}
-            };
+            if mouse.m_count == 0 {
+                internal.off(GRAB)
+            }
         }
 
         if internal.check(PREV_LAYOUT) {

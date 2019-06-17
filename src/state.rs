@@ -16,8 +16,10 @@ pub enum MouseType {
 
 /// Generic Mouse State
 pub struct MouseState<T> {
-    /// Buttons clicked as bitflags
+    /// Mouse event type
     pub m_type: MouseType,
+    /// Click counter 
+    pub m_count: u8,
     /// Mouse coordinates
     m_position: Position<T>,
     /// Tablet Pressure Level
@@ -33,17 +35,6 @@ pub enum KeyState {
     Released(u32, u16),
 }
 
-impl MouseType {
-    /// Check if the mouse state type is Pressed
-    #[inline]
-    pub fn pressed(&self) -> bool {
-        match *self {
-            MouseType::Pressed(_) => true,
-            _ => false,
-        }
-    }
-}
-
 impl<T> MouseState<T>
 where
     T: Sized + Copy + Clone + Default + Sub<Output = T>,
@@ -55,6 +46,7 @@ where
             m_position: (Default::default(), Default::default()),
             t_pressure: 0.0,
             k_modifiers: 0,
+            m_count: 0,
         }
     }
 
@@ -65,6 +57,17 @@ where
 
     /// Set mouse state type
     pub fn set_type(&mut self, m_type: MouseType) {
+        match m_type {
+            MouseType::Pressed(_) => self.m_count += 1,
+            MouseType::Released(_) => {
+                // Avoid a CVE by overflow
+                if self.m_count > 0 {
+                    self.m_count -= 1
+                }
+            },
+            _ => {}
+        };
+
         self.m_type = m_type;
     }
 
