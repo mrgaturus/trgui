@@ -292,7 +292,7 @@ where
                 if w_internal.check(GRAB) {
                     w_internal.set(HOVER, w_internal.on_area(mouse.absolute_pos()))
                 } else {
-                    if let Some(id) = self.hover_id {
+                    if let Some(id) = self.hover_id.replace(n) {
                         if id != n {
                             let o_internal = &mut self.widgets_i[id];
 
@@ -301,7 +301,6 @@ where
                             internal.on(o_internal.drain(REACTIVE, 0b10_00100000));
                         }
                     }
-                    self.hover_id = Some(n);
                     w_internal.on(HOVER);
                 }
 
