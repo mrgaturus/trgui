@@ -219,11 +219,15 @@ where
             .filter(|(w_internal, _)| do_layout || w_internal.check(LAYOUT))
             .for_each(|(w_internal, widget)| {
                 w_internal.set_pivot(internal.absolute_pos());
+
+                let backup = w_internal.flags();
                 widget.layout(w_internal, complete);
 
                 // DRAW | UPDATE & LAYOUT | PREV_LAYOUT
                 w_internal.set(DRAW, w_internal.check(VISIBLE));
                 internal.on(w_internal.drain(0b00000110, 0b11_00000000));
+
+                w_internal.replace(HANDLERS, backup);
             });
 
         self.focus_check(internal);
