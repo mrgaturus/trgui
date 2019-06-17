@@ -152,7 +152,8 @@ where
                 .widgets_i
                 .iter_mut()
                 .zip(self.widgets.iter_mut())
-                .filter(|(w_internal, _)| w_internal.check(DRAW | VISIBLE))
+                // DRAW | VISIBLE
+                .filter(|(w_internal, _)| w_internal.check(0b00001010))
                 .fold(0, |_, (w_internal, widget)| {
                     let draw = widget.draw(w_internal);
                     if !draw {
