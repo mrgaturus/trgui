@@ -4,7 +4,7 @@
 //! of a Container cannot be modified after moved to a "parent" Container
 
 use crate::group::{Group, GroupID};
-use crate::state::{KeyState, MouseState};
+use crate::state::{KeyState, MouseState, MouseType};
 use crate::widget::flags::*;
 use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
 use crate::{Decorator, Layout};
@@ -152,7 +152,7 @@ where
                 .widgets_i
                 .iter_mut()
                 .zip(self.widgets.iter_mut())
-                .filter(|(w_internal, _)| w_internal.check(DRAW))
+                .filter(|(w_internal, _)| w_internal.check(DRAW | VISIBLE))
                 .fold(0, |_, (w_internal, widget)| {
                     let draw = widget.draw(w_internal);
                     if !draw {
@@ -338,10 +338,17 @@ where
                 }
             } else {
                 self.hover_out(internal);
-                internal.set(GRAB, mouse.clicked());
+                
+                if mouse.m_type.pressed() {
+                    internal.on(GRAB);
+                }
             }
         } else {
-            internal.set(GRAB, mouse.clicked());
+            match mouse.m_type {
+                MouseType::Pressed(_) => internal.on(GRAB),
+                MouseType::Released(_) => internal.off(GRAB),
+                _ => {}
+            };
         }
 
         if internal.check(PREV_LAYOUT) {
