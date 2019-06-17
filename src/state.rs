@@ -8,10 +8,11 @@ use std::ops::Sub;
 /// Generic Mouse Buttons State
 pub enum MouseType {
     None,
-    Wheel(f32),
+    CursorMoved,
     Pressed(u8),
     Released(u8),
-    CursorMoved,
+    Wheel(f32),
+    Invisible(u8),
 }
 
 /// Generic Mouse State
