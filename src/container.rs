@@ -270,13 +270,13 @@ where
                 .grab_id
                 .or(self
                     .hover_id
-                    .filter(|&n| self.widgets_i[n].on_area(mouse.absolute_pos())))
+                    .filter(|&n| self.widgets_i[n].p_intersect(mouse.absolute_pos())))
                 .or_else(|| {
                     self.widgets_i
                         .iter()
                         .enumerate()
                         .find_map(|(n, w_internal)| {
-                            if w_internal.on_area(mouse.absolute_pos()) {
+                            if w_internal.p_intersect(mouse.absolute_pos()) {
                                 Some(n)
                             } else {
                                 None
@@ -290,7 +290,7 @@ where
                 };
 
                 if w_internal.check(GRAB) {
-                    w_internal.set(HOVER, w_internal.on_area(mouse.absolute_pos()))
+                    w_internal.set(HOVER, w_internal.p_intersect(mouse.absolute_pos()))
                 } else {
                     if let Some(id) = self.hover_id.replace(n) {
                         if id != n {

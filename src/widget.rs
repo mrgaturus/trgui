@@ -318,11 +318,11 @@ where
 
     /// Check if a point/cursor is on widget area. It checks using absolute position
     #[inline]
-    pub fn on_area(&self, cursor: Position<T>) -> bool {
+    pub fn p_intersect(&self, p: Position<T>) -> bool {
         self.flags & VISIBLE == VISIBLE
-            && cursor.0 >= self.pos.0
-            && cursor.0 <= self.pos.0 + self.dim.0
-            && cursor.1 >= self.pos.1
-            && cursor.1 <= self.pos.1 + self.dim.1
+            && p.0 >= self.pos.0
+            && p.0 <= self.pos.0 + self.dim.0
+            && p.1 >= self.pos.1
+            && p.1 <= self.pos.1 + self.dim.1
     }
 }
