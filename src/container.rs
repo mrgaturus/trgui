@@ -145,30 +145,26 @@ where
     /// This function is lazy, if none widget is found, the DRAW flag
     /// of the container turns off
     fn draw(&mut self, internal: &WidgetInternal<T>) -> bool {
-        if internal.check(VISIBLE) {
-            self.decorator.before(internal);
+        self.decorator.before(internal);
 
-            let count = self
-                .widgets_i
-                .iter_mut()
-                .zip(self.widgets.iter_mut())
-                // DRAW | VISIBLE
-                .filter(|(w_internal, _)| w_internal.check(0b00001010))
-                .fold(0, |_, (w_internal, widget)| {
-                    let draw = widget.draw(w_internal);
-                    if !draw {
-                        w_internal.off(DRAW);
-                    }
+        let count = self
+            .widgets_i
+            .iter_mut()
+            .zip(self.widgets.iter_mut())
+            // DRAW | VISIBLE
+            .filter(|(w_internal, _)| w_internal.check(0b00001010))
+            .fold(0, |_, (w_internal, widget)| {
+                let draw = widget.draw(w_internal);
+                if !draw {
+                    w_internal.off(DRAW);
+                }
 
-                    draw as usize
-                });
+                draw as usize
+            });
 
-            self.decorator.after(internal);
+        self.decorator.after(internal);
 
-            count > 0
-        } else {
-            false
-        }
+        count > 0
     }
 
     /// Update widgets from the list that have UPDATE flag turned on
@@ -176,9 +172,7 @@ where
     /// This function is lazy, if none widget is found, the UPDATE flag
     /// of the container turns off
     fn update(&mut self, internal: &mut WidgetInternal<T>) {
-        let count: usize;
-
-        count = self
+        let count = self
             .widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
