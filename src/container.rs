@@ -357,14 +357,13 @@ where
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
             let widget = &mut self.widgets[id];
+            let backup = w_internal.flags();
 
             widget.handle_keys(w_internal, key);
             internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
-            if w_internal.check(GRAB) {
-                self.grab_id = Some(id);
-                internal.on(GRAB);
-            }
+            // HOVER | GRAB
+            w_internal.replace(0b01100000, backup);
 
             if !w_internal.check(FOCUSABLE) {
                 widget.focus_out(w_internal);
