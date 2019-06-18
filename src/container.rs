@@ -44,9 +44,9 @@ where
         Container {
             widgets_i: InternalList::new(),
             widgets: WidgetList::new(),
-            focus_id: Option::None,
-            grab_id: Option::None,
-            hover_id: Option::None,
+            focus_id: None,
+            grab_id: None,
+            hover_id: None,
             decorator,
             layout,
         }
@@ -60,7 +60,7 @@ where
         self
     }
 
-    /// Adds a new widget to the list
+    /// Adds a new widget to the list, initial bounds are (0, 0, 0, 0)
     pub fn add_widget(&mut self, widget: Box<dyn Widget<T>>, flags: Flags, group: Group) {
         let mut internal = WidgetInternal::new(flags, group);
         internal.off(HANDLERS);
@@ -453,7 +453,7 @@ where
             self.widgets[id].hover_out(w_internal);
             internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
 
-            self.hover_id = Option::None;
+            self.hover_id = None;
 
             if internal.check(PREV_LAYOUT) {
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
