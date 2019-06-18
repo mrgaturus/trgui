@@ -342,7 +342,7 @@ where
                 }
             } else {
                 self.hover_out(internal);
-                
+
                 if mouse.m_count > 0 {
                     internal.on(GRAB);
                 }

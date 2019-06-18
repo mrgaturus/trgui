@@ -1,5 +1,5 @@
 //! Communication between widgets, it's based on Groups by IDs (an usize) that
-//! WidgetInternal will store and dispatched by a Container 
+//! WidgetInternal will store and dispatched by a Container
 use std::collections::VecDeque;
 
 pub type GroupID = usize;

@@ -19,7 +19,7 @@ pub enum MouseType {
 pub struct MouseState<T> {
     /// Mouse event type
     pub m_type: MouseType,
-    /// Click counter 
+    /// Click counter
     pub m_count: u8,
     /// Mouse coordinates
     m_position: Position<T>,
@@ -65,7 +65,7 @@ where
                 if self.m_count > 0 {
                     self.m_count -= 1
                 }
-            },
+            }
             _ => {}
         };
 
