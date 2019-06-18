@@ -235,22 +235,43 @@ where
     /// A Nested Container should be member of the same Group id, otherwise, the function couldn't
     /// be called on the widget of the nested Container
     fn handle_signal(&mut self, internal: &mut WidgetInternal<T>, group: GroupID) {
+        let mut n_focus: Option<usize> = None;
+
         self.widgets_i
             .iter_mut()
             .zip(self.widgets.iter_mut())
-            .filter(|(w_internal, _)| {
+            .enumerate()
+            .filter(|(_, (w_internal, _))| {
                 w_internal.check(SIGNAL) && w_internal.group().check_id(group)
             })
-            .for_each(|(w_internal, widget)| {
+            .for_each(|(n, (w_internal, widget))| {
                 let backup = w_internal.flags();
 
                 widget.handle_signal(w_internal, group);
                 internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
+                // Check if focus flag is changed and check if the widget is focusable
+                if (w_internal.flags() ^ backup) & FOCUS == FOCUS && w_internal.check(FOCUSABLE) {
+                    n_focus = Some(n);
+                }
+
                 w_internal.replace(HANDLERS, backup);
             });
 
-        self.focus_check(internal);
+        if let Some(n_id) = n_focus {
+            if let Some(id) = self.focus_id.replace(n_id) {
+                let o_internal = &mut self.widgets_i[id];
+
+                self.widgets[id].focus_out(o_internal);
+                internal.on(o_internal.drain(REACTIVE, DRAIN_FOCUS));
+            }
+
+            unsafe {
+                self.widgets_i.get_unchecked_mut(n_id).on(FOCUS);
+            }
+        } else {
+            self.focus_check(internal);
+        }
 
         if internal.check(PREV_LAYOUT) {
             internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
