@@ -7,12 +7,12 @@ use std::ops::Sub;
 
 /// Generic Mouse Buttons State
 pub enum MouseType {
-    None,
     CursorMoved,
     Pressed(u8),
     Released(u8),
     Wheel(f32),
     Invisible(u8),
+    Nothing,
 }
 
 /// Generic Mouse State
@@ -31,7 +31,6 @@ pub struct MouseState<T> {
 
 /// Generic Key State
 pub enum KeyState {
-    None,
     Pressed(u32, u16),
     Released(u32, u16),
 }
@@ -43,7 +42,7 @@ where
     /// Creates a new Mouse State with default values (all on zeroes)
     pub fn new() -> Self {
         MouseState {
-            m_type: MouseType::None,
+            m_type: MouseType::Nothing,
             m_position: (Default::default(), Default::default()),
             t_pressure: 0.0,
             k_modifiers: 0,
@@ -114,7 +113,6 @@ impl KeyState {
     pub fn check_modifiers(&self, mods: u16) -> bool {
         match *self {
             KeyState::Pressed(_, s_mods) | KeyState::Released(_, s_mods) => mods & s_mods == mods,
-            KeyState::None => false,
         }
     }
 }

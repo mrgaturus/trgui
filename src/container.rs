@@ -27,11 +27,11 @@ type InternalList<T> = Vec<WidgetInternal<T>>;
 pub struct Container<T, DE: Decorator<T>> {
     widgets_i: InternalList<T>,
     widgets: WidgetList<T>,
-    decorator: DE,
     layout: Box<dyn Layout<T>>,
     focus_id: Option<usize>,
     grab_id: Option<usize>,
     hover_id: Option<usize>,
+    decorator: DE,
 }
 
 impl<T: Sized + Copy + Clone, DE> Container<T, DE>
@@ -44,11 +44,11 @@ where
         Container {
             widgets_i: InternalList::new(),
             widgets: WidgetList::new(),
+            layout,
             focus_id: None,
             grab_id: None,
             hover_id: None,
             decorator,
-            layout,
         }
     }
 

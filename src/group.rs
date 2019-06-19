@@ -6,8 +6,8 @@ pub type GroupID = usize;
 
 #[derive(PartialEq)]
 pub enum GroupEvent {
-    Layout,
     Signal(GroupID),
+    Layout,
 }
 
 static mut EVENT_QUEUE: Option<VecDeque<GroupEvent>> = None;
@@ -47,7 +47,7 @@ pub enum Group {
 }
 
 impl Group {
-    pub fn is_root(&self) -> bool {
+    pub fn is_any(&self) -> bool {
         match *self {
             Group::Any => true,
             _ => false,
