@@ -94,7 +94,7 @@ pub struct WidgetInternal<T> {
 impl<T> WidgetInternal<T> {
     // FLAGS
     /// Set on or off to requested flags
-    pub fn set(&mut self, mask: Flags, toggle: bool) {
+    pub fn turn(&mut self, mask: Flags, toggle: bool) {
         if toggle {
             self.flags |= mask;
         } else {
@@ -104,7 +104,7 @@ impl<T> WidgetInternal<T> {
 
     #[inline]
     /// Replace all flags by others
-    pub fn replace_all(&mut self, flags: Flags) {
+    pub fn set_flags(&mut self, flags: Flags) {
         self.flags = flags;
     }
 
