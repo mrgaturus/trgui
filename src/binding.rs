@@ -34,7 +34,7 @@ impl<T> BindProxy<T> {
     }
 }
 
-pub type Opaque = usize;
+pub type Opaque = *mut u8;
 
 /// Create a new BindProxy using a Trait implementation
 pub trait Binding<T> {
