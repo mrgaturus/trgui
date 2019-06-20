@@ -203,7 +203,7 @@ where
 
         if do_layout {
             self.layout
-                .layout(&mut self.widgets_i, &internal.dimensions());
+                .layout(&mut self.widgets_i, internal);
 
             self.decorator.update(internal);
         }

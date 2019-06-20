@@ -23,7 +23,7 @@ pub trait Decorator<T> {
 /// Layout Trait for a Container
 pub trait Layout<T> {
     /// Applies the layout to the widget list of a Container
-    fn layout(&self, internal_list: &mut [WidgetInternal<T>], dim: &Dimensions<T>);
+    fn layout(&self, internal_list: &mut [WidgetInternal<T>], c_internal: &WidgetInternal<T>);
     /// Calculates the minimum dimensions using the widget list of a Container
     fn min_dimensions(&self, internal_list: &[WidgetInternal<T>]) -> Dimensions<T>;
 }
@@ -37,7 +37,7 @@ pub mod empty {
     pub struct EmptyLayout;
 
     impl<T: Default> Layout<T> for EmptyLayout {
-        fn layout(&self, _: &mut [WidgetInternal<T>], _: &Dimensions<T>) {}
+        fn layout(&self, _: &mut [WidgetInternal<T>], _: &WidgetInternal<T>) {}
 
         fn min_dimensions(&self, _: &[WidgetInternal<T>]) -> Dimensions<T> {
             (Default::default(), Default::default())
