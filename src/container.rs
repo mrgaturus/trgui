@@ -29,8 +29,7 @@ pub struct Container<T, DE: Decorator<T>> {
     widgets: WidgetList<T>,
     layout: Box<dyn Layout<T>>,
     focus_id: Option<usize>,
-    grab_id: Option<usize>,
-    hover_id: Option<usize>,
+    mouse_id: Option<usize>,
     decorator: DE,
 }
 
@@ -46,8 +45,7 @@ where
             widgets: WidgetList::new(),
             layout,
             focus_id: None,
-            grab_id: None,
-            hover_id: None,
+            mouse_id: None,
             decorator,
         }
     }
@@ -202,8 +200,7 @@ where
         let do_layout = complete || internal.check(PARTIAL);
 
         if do_layout {
-            self.layout
-                .layout(&mut self.widgets_i, internal);
+            self.layout.layout(&mut self.widgets_i, internal);
 
             self.decorator.update(internal);
         }
@@ -280,12 +277,12 @@ where
 
     /// Search the widget that the mouse is pointing and call the function of the widget
     fn handle_mouse(&mut self, internal: &mut WidgetInternal<T>, mouse: &MouseState<T>) {
-        if self.grab_id.is_some() || !internal.check(GRAB) {
+        if self.mouse_id.is_some() || !internal.check(GRAB) {
             let widget_n = self
-                .grab_id
-                .or(self
-                    .hover_id
-                    .filter(|&n| self.widgets_i[n].p_intersect(mouse.absolute_pos())))
+                .mouse_id
+                .filter(|&n| {
+                    internal.check(GRAB) || self.widgets_i[n].p_intersect(mouse.absolute_pos())
+                })
                 .or_else(|| {
                     self.widgets_i
                         .iter()
@@ -299,6 +296,15 @@ where
                         })
                 });
 
+            if self.mouse_id != widget_n {
+                if let Some(id) = std::mem::replace(&mut self.mouse_id, widget_n) {
+                    let w_internal = &mut self.widgets_i[id];
+
+                    self.widgets[id].hover_out(w_internal);
+                    internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
+                }
+            }
+
             if let Some(n) = widget_n {
                 let w_internal = unsafe {
                     &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal<T>)
@@ -307,27 +313,13 @@ where
                 if w_internal.check(GRAB) {
                     w_internal.turn(HOVER, w_internal.p_intersect(mouse.absolute_pos()))
                 } else {
-                    if let Some(id) = self.hover_id.replace(n) {
-                        if id != n {
-                            let o_internal = &mut self.widgets_i[id];
-
-                            // HOVER | PREV_LAYOUT
-                            self.widgets[id].hover_out(o_internal);
-                            internal.on(o_internal.drain(REACTIVE, 0b10_00100000));
-                        }
-                    }
                     w_internal.on(HOVER);
                 }
 
                 self.widgets[n].handle_mouse(w_internal, mouse);
                 internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
-                self.grab_id = Some(n).filter(|_| {
-                    let grab = w_internal.check(GRAB);
-
-                    internal.turn(GRAB, grab);
-                    grab
-                });
+                internal.turn(GRAB, w_internal.check(GRAB));
 
                 // ENABLED | VISIBLE
                 let focus_check = w_internal.flags() & FOCUSABLE ^ 0b00011000;
@@ -356,8 +348,6 @@ where
                     internal.on(FOCUS);
                 }
             } else {
-                self.hover_out(internal);
-
                 if mouse.m_count > 0 {
                     internal.on(GRAB);
                 }
@@ -447,13 +437,13 @@ where
 
     /// Clear the hover index and call the function of the widget
     fn hover_out(&mut self, internal: &mut WidgetInternal<T>) {
-        if let Some(id) = self.hover_id {
+        if let Some(id) = self.mouse_id {
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].hover_out(w_internal);
             internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
 
-            self.hover_id = None;
+            self.mouse_id = None;
 
             if internal.check(PREV_LAYOUT) {
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
