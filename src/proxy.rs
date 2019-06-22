@@ -5,18 +5,18 @@ use crate::group::{push_event, GroupEvent::Signal, GroupID};
 
 /// Shares external data to (not limited to) widgets.
 ///
-/// A BindProxy is a Single-Threaded Pointer without borrow checker for the widgets.
+/// A RefProxy is a Single-Threaded Pointer without borrow checker for the widgets.
 /// it only can store types without lifetime parameters, if you type has lifetime
 /// parameters, use unsafe opaque pointer instead.
-pub struct BindProxy<T> {
+pub struct RefProxy<T> {
     ptr: *const T,
 }
 
-impl<T> BindProxy<T> {
+impl<T> RefProxy<T> {
     /// Returns a non-mutable reference
     #[inline]
-    pub unsafe fn read(&self) -> &T {
-        &*self.ptr
+    pub fn read(&self) -> &T {
+        unsafe { &*self.ptr }
     }
 
     #[inline]
@@ -36,10 +36,10 @@ impl<T> BindProxy<T> {
 
 pub type Opaque = *mut u8;
 
-/// Create a new BindProxy using a Trait implementation
-pub trait Binding<T> {
-    /// Prepare and Create a new BindProxy
-    fn proxy(&self) -> BindProxy<T>;
+/// Create a new RefProxy using a Trait implementation
+pub trait Proxy<T> {
+    /// Prepare and Create a new RefProxy
+    fn proxy(&self) -> RefProxy<T>;
     /// Converts a reference into a raw pointer with no type
     fn opaque(&self) -> Opaque;
 }
@@ -50,10 +50,10 @@ pub unsafe fn cast_opaque<'a, T>(opaque: Opaque) -> &'a mut T {
     &mut *(opaque as *mut T)
 }
 
-/// Implementation of BindProxy for References
-impl<T> Binding<T> for &'_ T {
-    fn proxy(&self) -> BindProxy<T> {
-        BindProxy {
+/// Implementation of Proxy for References
+impl<T> Proxy<T> for &'_ T {
+    fn proxy(&self) -> RefProxy<T> {
+        RefProxy {
             ptr: *self as *const T,
         }
     }
@@ -64,10 +64,10 @@ impl<T> Binding<T> for &'_ T {
     }
 }
 
-/// Implementation of BindProxy for Box<T>
-impl<T> Binding<T> for Box<T> {
-    fn proxy(&self) -> BindProxy<T> {
-        BindProxy {
+/// Implementation of Proxy for Box<T>
+impl<T> Proxy<T> for Box<T> {
+    fn proxy(&self) -> RefProxy<T> {
+        RefProxy {
             ptr: self.as_ref() as *const T,
         }
     }

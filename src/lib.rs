@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-pub mod binding;
 pub mod group;
+pub mod proxy;
 pub mod state;
 pub mod widget;
 
