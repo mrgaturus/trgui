@@ -15,22 +15,22 @@ pub struct BindProxy<T> {
 impl<T> BindProxy<T> {
     /// Returns a non-mutable reference
     #[inline]
-    pub fn read(&self) -> &T {
-        unsafe { &*self.ptr }
+    pub unsafe fn read(&self) -> &T {
+        &*self.ptr
     }
 
     #[inline]
     /// Returns a mutable reference
-    pub fn read_write(&self) -> &mut T {
-        unsafe { &mut *(self.ptr as *mut T) }
+    pub unsafe fn read_write(&self) -> &mut T {
+        &mut *(self.ptr as *mut T)
     }
 
     #[inline]
     /// Returns a mutable reference and push a signal id into queue
-    pub fn rw_push(&self, id: GroupID) -> &mut T {
+    pub unsafe fn rw_push(&self, id: GroupID) -> &mut T {
         push_event(Signal(id));
 
-        unsafe { &mut *(self.ptr as *mut T) }
+        &mut *(self.ptr as *mut T)
     }
 }
 
