@@ -296,7 +296,7 @@ where
                         })
                 });
 
-            if self.mouse_id != widget_n {
+            if widget_n != self.mouse_id {
                 if let Some(id) = std::mem::replace(&mut self.mouse_id, widget_n) {
                     let w_internal = &mut self.widgets_i[id];
 
@@ -308,7 +308,7 @@ where
 
             if let Some(n) = widget_n {
                 let w_internal = unsafe {
-                    &mut *(self.widgets_i.get_unchecked_mut(n) as *mut WidgetInternal<T>)
+                    self.widgets_i.get_unchecked_mut(n)
                 };
 
                 if w_internal.check(GRAB) {
