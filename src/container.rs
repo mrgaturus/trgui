@@ -300,8 +300,9 @@ where
                 if let Some(id) = std::mem::replace(&mut self.mouse_id, widget_n) {
                     let w_internal = &mut self.widgets_i[id];
 
+                    // HOVER | GRAB | PREV_LAYOUT
                     self.widgets[id].hover_out(w_internal);
-                    internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
+                    internal.on(w_internal.drain(REACTIVE, 0b10_01100000));
                 }
             }
 
@@ -440,8 +441,9 @@ where
         if let Some(id) = self.mouse_id {
             let w_internal = &mut self.widgets_i[id];
 
+            // HOVER | GRAB | PREV_LAYOUT
             self.widgets[id].hover_out(w_internal);
-            internal.on(w_internal.drain(REACTIVE, 0b10_00100000)); // HOVER | PREV_LAYOUT
+            internal.on(w_internal.drain(REACTIVE, 0b10_01100000)); 
 
             self.mouse_id = None;
 
