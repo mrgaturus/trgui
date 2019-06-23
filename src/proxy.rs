@@ -40,7 +40,7 @@ pub type Opaque = *mut u8;
 /// Create a new RefProxy using a Trait implementation
 pub trait Proxy<T> {
     /// Prepare and Create a new RefProxy
-    fn proxy(&mut self) -> RefProxy<T>;
+    fn proxy(&self) -> RefProxy<T>;
     /// Converts a reference into a raw pointer with no type
     fn opaque(&self) -> Opaque;
 }
@@ -53,9 +53,9 @@ pub unsafe fn cast_opaque<'a, T>(opaque: Opaque) -> &'a mut T {
 
 /// Implementation of Proxy for References
 impl<T> Proxy<T> for &'_ mut T {
-    fn proxy(&mut self) -> RefProxy<T> {
+    fn proxy(&self) -> RefProxy<T> {
         RefProxy {
-            ptr: *self as *mut T,
+            ptr: *self as *const T as *mut T,
         }
     }
 
@@ -67,9 +67,9 @@ impl<T> Proxy<T> for &'_ mut T {
 
 /// Implementation of Proxy for Box<T>
 impl<T> Proxy<T> for Box<T> {
-    fn proxy(&mut self) -> RefProxy<T> {
+    fn proxy(&self) -> RefProxy<T> {
         RefProxy {
-            ptr: self.as_mut() as *mut T,
+            ptr: self.as_ref() as *const T as *mut T,
         }
     }
 
