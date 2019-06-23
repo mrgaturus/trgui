@@ -436,14 +436,12 @@ where
 
     /// Clear the hover index and call the function of the widget
     fn hover_out(&mut self, internal: &mut WidgetInternal<T>) {
-        if let Some(id) = self.mouse_id {
+        if let Some(id) = self.mouse_id.take() {
             let w_internal = &mut self.widgets_i[id];
 
             // HOVER | GRAB | PREV_LAYOUT
             self.widgets[id].hover_out(w_internal);
             internal.on(w_internal.drain(REACTIVE, 0b10_01100000));
-
-            self.mouse_id = None;
 
             if internal.check(PREV_LAYOUT) {
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
@@ -453,13 +451,11 @@ where
 
     /// Clear the focus index and call the function of the widget
     fn focus_out(&mut self, internal: &mut WidgetInternal<T>) {
-        if let Some(id) = self.focus_id {
+        if let Some(id) = self.focus_id.take() {
             let w_internal = &mut self.widgets_i[id];
 
             self.widgets[id].focus_out(w_internal);
             internal.on(w_internal.drain(REACTIVE, DRAIN_FOCUS));
-
-            self.focus_id = None;
 
             if internal.check(PREV_LAYOUT) {
                 internal.off_on(PREV_LAYOUT, PARTIAL_TURN);
