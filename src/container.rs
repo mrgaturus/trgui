@@ -312,7 +312,7 @@ where
                 };
 
                 if w_internal.check(GRAB) {
-                    w_internal.turn(HOVER, w_internal.p_intersect(mouse.absolute_pos()))
+                    w_internal.turn(HOVER, w_internal.p_intersect(mouse.absolute_pos()));
                 } else {
                     w_internal.on(HOVER);
                 }
@@ -342,7 +342,7 @@ where
                             self.focus_id = Some(n);
                         }
                     } else if focus_check != FOCUS {
-                        self.focus_id = None
+                        self.focus_id = None;
                     }
                 } else if focus_check == FOCUS {
                     self.focus_id = Some(n);
@@ -355,7 +355,7 @@ where
             }
         } else {
             if mouse.m_count == 0 {
-                internal.off(GRAB)
+                internal.off(GRAB);
             }
         }
 
