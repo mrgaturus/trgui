@@ -307,9 +307,7 @@ where
             }
 
             if let Some(n) = widget_n {
-                let w_internal = unsafe {
-                    self.widgets_i.get_unchecked_mut(n)
-                };
+                let w_internal = unsafe { self.widgets_i.get_unchecked_mut(n) };
 
                 if w_internal.check(GRAB) {
                     w_internal.turn(HOVER, w_internal.p_intersect(mouse.absolute_pos()));
@@ -443,7 +441,7 @@ where
 
             // HOVER | GRAB | PREV_LAYOUT
             self.widgets[id].hover_out(w_internal);
-            internal.on(w_internal.drain(REACTIVE, 0b10_01100000)); 
+            internal.on(w_internal.drain(REACTIVE, 0b10_01100000));
 
             self.mouse_id = None;
 

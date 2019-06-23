@@ -15,7 +15,7 @@ pub mod flags {
     use crate::widget::Flags;
     /// Default flags for be added on containers ( ENABLED | VISIBLE )
     pub const WIDGET: Flags = 0b00011000;
-    /// Default flags for be added on containers, with signal handling enabled 
+    /// Default flags for be added on containers, with signal handling enabled
     /// ( ENABLED | VISIBLE | SIGNAL )
     pub const WIDGET_S: Flags = 0b00011001;
 
