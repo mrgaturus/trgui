@@ -338,13 +338,13 @@ where
                             self.widgets[id].focus_out(o_internal);
                             internal.on(o_internal.drain(REACTIVE, DRAIN_FOCUS));
 
-                            self.focus_id = Some(n);
+                            self.focus_id = widget_n;
                         }
                     } else if focus_check != FOCUS {
                         self.focus_id = None;
                     }
                 } else if focus_check == FOCUS {
-                    self.focus_id = Some(n);
+                    self.focus_id = widget_n;
                     internal.on(FOCUS);
                 }
             } else {
