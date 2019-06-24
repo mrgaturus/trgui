@@ -20,23 +20,23 @@ const PARTIAL_TURN: Flags = 0b101_00000000; // PARTIAL_TURN
 
 const PARTIAL: Flags = 0b1_0000000000;
 
-type WidgetList<T> = Vec<Box<dyn Widget<T>>>;
+type WidgetList<T, CTX> = Vec<Box<dyn Widget<T, CTX>>>;
 type InternalList<T> = Vec<WidgetInternal<T>>;
 
 /// Widget List that handle widget trait functions
-pub struct Container<T, DE: Decorator<T>> {
+pub struct Container<T, CTX: Sized, DE: Decorator<T, CTX>> {
     widgets_i: InternalList<T>,
-    widgets: WidgetList<T>,
+    widgets: WidgetList<T, CTX>,
     layout: Box<dyn Layout<T>>,
     focus_id: Option<usize>,
     mouse_id: Option<usize>,
     decorator: DE,
 }
 
-impl<T: Sized + Copy + Clone, DE> Container<T, DE>
+impl<T: Sized + Copy + Clone, CTX: Sized, DE> Container<T, CTX, DE>
 where
     T: Add<Output = T> + Sub<Output = T> + PartialOrd + Default,
-    DE: Decorator<T>,
+    DE: Decorator<T, CTX>,
 {
     /// Creates a new Container with a Decorator and Layout
     pub fn new(decorator: DE, layout: Box<dyn Layout<T>>) -> Self {
@@ -59,7 +59,7 @@ where
     }
 
     /// Adds a new widget to the list, initial bounds are (0, 0, 0, 0)
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<T>>, flags: Flags, group: Group) {
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<T, CTX>>, flags: Flags, group: Group) {
         let mut internal = WidgetInternal::new(flags, group);
         internal.off(HANDLERS);
         internal.set_min_dimensions(widget.min_dimensions());
@@ -73,7 +73,7 @@ where
     /// Useful when initial boundaries are required by the Layout
     pub fn add_widget_b(
         &mut self,
-        widget: Box<dyn Widget<T>>,
+        widget: Box<dyn Widget<T, CTX>>,
         flags: Flags,
         group: Group,
         bounds: Boundaries<T>,
@@ -133,17 +133,18 @@ where
     }
 }
 
-impl<T: Sized + Copy + Clone, DE> Widget<T> for Container<T, DE>
+impl<T: Sized + Copy + Clone, CTX, DE> Widget<T, CTX> for Container<T, CTX, DE>
 where
     T: Add<Output = T> + Sub<Output = T> + PartialOrd + Default,
-    DE: Decorator<T>,
+    CTX: Sized,
+    DE: Decorator<T, CTX>,
 {
     /// Draw widgets from the list that have DRAW flag turned on
     ///
     /// This function is lazy, if none widget is found, the DRAW flag
     /// of the container turns off
-    fn draw(&mut self, internal: &WidgetInternal<T>) -> bool {
-        self.decorator.before(internal);
+    fn draw(&mut self, internal: &WidgetInternal<T>, ctx: &mut CTX) -> bool {
+        self.decorator.before(internal, ctx);
 
         let count = self
             .widgets_i
@@ -152,7 +153,7 @@ where
             // DRAW | VISIBLE
             .filter(|(w_internal, _)| w_internal.check(0b00001010))
             .fold(0, |_, (w_internal, widget)| {
-                let draw = widget.draw(w_internal);
+                let draw = widget.draw(w_internal, ctx);
                 if !draw {
                     w_internal.off(DRAW);
                 }
@@ -160,8 +161,8 @@ where
                 draw as usize
             });
 
-        self.decorator.after(internal);
-
+        self.decorator.after(internal, ctx);
+        
         count > 0
     }
 

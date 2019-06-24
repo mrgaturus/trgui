@@ -34,12 +34,12 @@ pub mod flags {
 use flags::{DRAW, FOCUS, VISIBLE};
 
 /// Main Widget Trait
-pub trait Widget<T: Sized + Copy + Clone>
+pub trait Widget<T: Sized + Copy + Clone, CTX: Sized>
 where
     T: Add<Output = T> + Sub<Output = T> + PartialOrd + Default,
 {
     /// Draw the widget.
-    fn draw(&mut self, _: &WidgetInternal<T>) -> bool {
+    fn draw(&mut self, _: &WidgetInternal<T>, _: &mut CTX) -> bool {
         false
     }
     /// Update the status of the widget.
