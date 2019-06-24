@@ -364,7 +364,7 @@ where
     }
 
     /// Call the function of the focused widget
-    fn handle_keys(&mut self, internal: &mut WidgetInternal<T>, key: &KeyState) {
+    fn handle_keys(&mut self, internal: &mut WidgetInternal<T>, key: KeyState) {
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
             let widget = &mut self.widgets[id];

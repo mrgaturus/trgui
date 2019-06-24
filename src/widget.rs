@@ -53,7 +53,7 @@ where
     /// call this function.
     fn handle_mouse(&mut self, _: &mut WidgetInternal<T>, _: &MouseState<T>) {}
     /// Handle a keyboard state, it only be called if the widget is focused by a Container.
-    fn handle_keys(&mut self, _: &mut WidgetInternal<T>, _: &KeyState) {}
+    fn handle_keys(&mut self, _: &mut WidgetInternal<T>, _: KeyState) {}
     /// Containers call this function for check if the widget should be focused or not by stepping.
     fn step_focus(&mut self, internal: &mut WidgetInternal<T>, _: bool) -> bool {
         let check = !internal.check(FOCUS);
