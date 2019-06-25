@@ -77,6 +77,8 @@ where
 pub struct WidgetInternal<T> {
     /// Every Widget Flags
     pub flags: Flags,
+    /// Event ID
+    group: Group,
     /// Dimensions
     dim: Dimensions<T>,
     /// Minimun dimensions
@@ -85,8 +87,6 @@ pub struct WidgetInternal<T> {
     p_pos: Position<T>,
     /// Absolute position
     pos: Position<T>,
-    /// Event ID
-    group: Group,
 }
 
 impl<T> WidgetInternal<T> {
@@ -176,24 +176,24 @@ where
     /// Create a new Internal with Flags and Group, all boundaries are initialized with 0
     pub fn new(flags: Flags, group: Group) -> Self {
         WidgetInternal {
+            flags,
+            group,
             dim: (Default::default(), Default::default()),
             min_dim: (Default::default(), Default::default()),
             pos: (Default::default(), Default::default()),
             p_pos: (Default::default(), Default::default()),
-            flags,
-            group,
         }
     }
 
     /// Create a new Internal with Flags, Group, Relative Position and Dimensions
     pub fn new_with(pos: Position<T>, dim: Dimensions<T>, flags: Flags, group: Group) -> Self {
         WidgetInternal {
+            flags,
+            group,
             dim,
             min_dim: (Default::default(), Default::default()),
             pos,
             p_pos: (Default::default(), Default::default()),
-            flags,
-            group,
         }
     }
 
