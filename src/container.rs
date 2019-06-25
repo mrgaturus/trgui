@@ -177,7 +177,7 @@ where
             .zip(self.widgets.iter_mut())
             .filter(|(w_internal, _)| w_internal.check(UPDATE))
             .fold(0, |_, (w_internal, widget)| {
-                let backup = w_internal.flags();
+                let backup = w_internal.flags;
 
                 // DRAW | LAYOUT | PREV_LAYOUT
                 widget.update(w_internal);
@@ -213,7 +213,7 @@ where
             .for_each(|(w_internal, widget)| {
                 w_internal.set_pivot(internal.absolute_pos());
 
-                let backup = w_internal.flags();
+                let backup = w_internal.flags;
                 widget.layout(w_internal, complete);
 
                 // DRAW | UPDATE & LAYOUT | PREV_LAYOUT
@@ -243,13 +243,13 @@ where
                 w_internal.check(SIGNAL) && w_internal.group().check_id(group)
             })
             .for_each(|(n, (w_internal, widget))| {
-                let backup = w_internal.flags();
+                let backup = w_internal.flags;
 
                 widget.handle_signal(w_internal, group);
                 internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));
 
                 // Check if focus flag is changed and check if the widget is focusable
-                if (w_internal.flags() ^ backup) & FOCUS == FOCUS && w_internal.check(FOCUSABLE) {
+                if (w_internal.flags ^ backup) & FOCUS == FOCUS && w_internal.check(FOCUSABLE) {
                     n_focus = Some(n);
                 }
 
@@ -322,7 +322,7 @@ where
                 internal.turn(GRAB, w_internal.check(GRAB));
 
                 // ENABLED | VISIBLE
-                let focus_check = w_internal.flags() & FOCUSABLE ^ 0b00011000;
+                let focus_check = w_internal.flags & FOCUSABLE ^ 0b00011000;
 
                 // Check if FOCUS is turned on and if ENABLED or VISIBLE is turned off
                 if focus_check & FOCUS == FOCUS && focus_check > FOCUS {
@@ -368,7 +368,7 @@ where
         if let Some(id) = self.focus_id {
             let w_internal = &mut self.widgets_i[id];
             let widget = &mut self.widgets[id];
-            let backup = w_internal.flags();
+            let backup = w_internal.flags;
 
             widget.handle_keys(w_internal, key);
             internal.on(w_internal.drain(REACTIVE, PREV_LAYOUT));

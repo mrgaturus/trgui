@@ -9,8 +9,6 @@ pub type Dimensions<T> = (T, T);
 pub type Boundaries<T> = (T, T, T, T);
 
 // BITFLAGS (Sorry for no use the crate)
-
-
 pub mod flags {
     pub type Flags = u16;
     /// Default flags for be added on containers ( ENABLED | VISIBLE )
@@ -77,6 +75,8 @@ where
 
 /// General Widget Data, this is injected as arguments on widget trait functions
 pub struct WidgetInternal<T> {
+    /// Every Widget Flags
+    pub flags: Flags,
     /// Dimensions
     dim: Dimensions<T>,
     /// Minimun dimensions
@@ -85,8 +85,6 @@ pub struct WidgetInternal<T> {
     p_pos: Position<T>,
     /// Absolute position
     pos: Position<T>,
-    /// Every Widget Flags
-    flags: Flags,
     /// Event ID
     group: Group,
 }
@@ -100,12 +98,6 @@ impl<T> WidgetInternal<T> {
         } else {
             self.flags &= !mask;
         }
-    }
-
-    #[inline]
-    /// Replace all flags by others
-    pub fn set_flags(&mut self, flags: Flags) {
-        self.flags = flags;
     }
 
     #[inline]
@@ -163,12 +155,6 @@ impl<T> WidgetInternal<T> {
     /// Get numeric value of the requested flags
     pub fn val(&self, mask: Flags) -> Flags {
         mask & self.flags
-    }
-
-    #[inline]
-    /// Get numeric value of the flags
-    pub fn flags(&self) -> Flags {
-        self.flags
     }
 
     #[inline]
