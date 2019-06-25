@@ -51,11 +51,11 @@ where
     }
 
     /// Applies shrink_to_fit to widget list
-    pub fn pack(mut self) -> Self {
+    pub fn pack(mut self) -> Box<Self> {
         self.widgets_i.shrink_to_fit();
         self.widgets.shrink_to_fit();
 
-        self
+        Box::new(self)
     }
 
     /// Adds a new widget to the list, initial bounds are (0, 0, 0, 0)
