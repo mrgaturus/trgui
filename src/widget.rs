@@ -9,10 +9,10 @@ pub type Dimensions<T> = (T, T);
 pub type Boundaries<T> = (T, T, T, T);
 
 // BITFLAGS (Sorry for no use the crate)
-pub type Flags = u16;
+
 
 pub mod flags {
-    use crate::widget::Flags;
+    pub type Flags = u16;
     /// Default flags for be added on containers ( ENABLED | VISIBLE )
     pub const WIDGET: Flags = 0b00011000;
     /// Default flags for be added on containers, with signal handling enabled
@@ -31,7 +31,7 @@ pub mod flags {
     pub const PREV_LAYOUT: Flags = 0b00000010_00000000;
 }
 
-use flags::{DRAW, FOCUS, VISIBLE};
+use flags::{Flags, DRAW, FOCUS, VISIBLE};
 
 /// Main Widget Trait
 pub trait Widget<T: Sized + Copy + Clone, CTX: Sized>

@@ -6,7 +6,7 @@
 use crate::group::{Group, GroupID};
 use crate::state::{KeyState, MouseState};
 use crate::widget::flags::*;
-use crate::widget::{Boundaries, Dimensions, Flags, Widget, WidgetInternal};
+use crate::widget::{Boundaries, Dimensions, Widget, WidgetInternal};
 use crate::{Decorator, Layout};
 
 use std::ops::{Add, Sub};
@@ -162,7 +162,7 @@ where
             });
 
         self.decorator.after(internal, ctx);
-        
+
         count > 0
     }
 
